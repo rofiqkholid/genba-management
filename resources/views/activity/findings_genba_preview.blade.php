@@ -226,7 +226,7 @@
 @push('scripts')
 <script>
     let stream = null;
-    let newImages = []; // Array of base64 strings
+    let newImages = []; 
     let existingImages = []; // Array of existing paths
 
     document.addEventListener('DOMContentLoaded', function() {

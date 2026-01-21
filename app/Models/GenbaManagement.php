@@ -47,7 +47,8 @@ class GenbaManagement extends Model
             $result->where(function ($q) use ($search) {
                 $q->where('b.Area_Checked', 'LIKE', "%{$search}%")
                     ->orWhere('b.Auditor', 'LIKE', "%{$search}%")
-                    ->orWhere('a.findings', 'LIKE', "%{$search}%");
+                    ->orWhere('a.findings', 'LIKE', "%{$search}%")
+                    ->orWhere(DB::raw("FORMAT(b.Date, 'ddMMyy') + '-' + CAST(a.SysID AS VARCHAR(20))"), 'LIKE', "%{$search}%");
             });
         }
 
@@ -102,7 +103,8 @@ class GenbaManagement extends Model
             $result->where(function ($q) use ($search) {
                 $q->where('a.asign_to_dept', 'LIKE', "%{$search}%")
                     ->orWhere('b.Auditor', 'LIKE', "%{$search}%")
-                    ->orWhere('a.findings', 'LIKE', "%{$search}%");
+                    ->orWhere('a.findings', 'LIKE', "%{$search}%")
+                    ->orWhere(DB::raw("FORMAT(b.Date, 'ddMMyy') + '-' + CAST(a.SysID AS VARCHAR(20))"), 'LIKE', "%{$search}%");
             });
         }
 

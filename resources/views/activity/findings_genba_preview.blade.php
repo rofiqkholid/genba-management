@@ -102,7 +102,7 @@
                     <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3" id="findingImageContainer">
                         @foreach($paths as $path)
                         <div class="relative group aspect-square">
-                            <img src="/findings-photo/{{ $path }}"
+                            <img src="{{ asset('findings-photo/' . $path) }}"
                                 alt="Finding Image"
                                 class="w-full h-full rounded-lg object-cover cursor-pointer hover:opacity-80 transition-opacity"
                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
@@ -182,7 +182,7 @@
                         @if($genba->execution_path)
                         @foreach(explode(',', $genba->execution_path) as $path)
                         <div class="relative group aspect-square">
-                            <img src="/evidence-photo/{{ trim($path) }}" class="w-full h-full object-cover rounded-lg border border-slate-200">
+                            <img src="{{ asset('evidence-photo/' . trim($path)) }}" class="w-full h-full object-cover rounded-lg border border-slate-200">
                             <button type="button" onclick="removeImage(this, '{{ trim($path) }}')" class="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-90 hover:opacity-100 transition-opacity w-6 h-6 flex items-center justify-center">
                                 <i class="fa-solid fa-times text-xs"></i>
                             </button>
@@ -226,7 +226,7 @@
 @push('scripts')
 <script>
     let stream = null;
-    let newImages = []; 
+    let newImages = [];
     let existingImages = []; // Array of existing paths
 
     document.addEventListener('DOMContentLoaded', function() {

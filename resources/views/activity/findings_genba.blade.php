@@ -330,6 +330,8 @@
     // Viewer instance
     var galleryViewer = null;
 
+    const findingPhotoBaseUrl = "{{ asset('findings-photo') }}";
+
     function viewImage(path) {
         // Reset state
         $('#imageContainer').empty().removeClass('hidden');
@@ -348,7 +350,7 @@
         paths.forEach(function(imgName) {
             imgName = imgName.trim();
             if (imgName) {
-                var imagePath = '/findings-photo/' + imgName;
+                var imagePath = findingPhotoBaseUrl + '/' + imgName;
                 var imgHtml = `
                     <div class="relative group cursor-pointer">
                         <img src="${imagePath}" 

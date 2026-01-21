@@ -26,22 +26,17 @@ class ExecutionGenbaController extends Controller
         // Reusing logic from GenbaManagementController for consistency
 
         $columns = array(
-            0 => 'a.SysID',
+            0 => 'a.created_at',
             1 => 'DocNum',
-            2 => 'a.Path',
-            3 => 'b.Date',
+            2 => 'b.Date',
+            3 => 'a.findings',
             4 => 'a.asign_to_dept',
-            5 => 'a.findings',
-            6 => 'b.Auditor',
-            7 => 'a.status',
-            8 => 'a.SysID'
+            5 => 'b.Auditor',
+            6 => 'a.Path',
+            7 => 'a.execution_path',
+            8 => 'status_computed',
+            9 => 'a.SysID'
         );
-
-        // Using the same model method for now. 
-        // We might need to filter for 'Proccess Verification' status specifically if this is strictly for approval.
-        // But usually management wants to see everything or filter.
-        // Let's assume standard list first.
-        // Filter: corrective_action = 1 AND evidence = 1 (Proccess Verification)
         $query = GenbaManagement::get_genba_approval_list($search, $date_from, $date_to, null);
         $query->where('a.corrective_action', 1)->where('a.evidence', 1);
 
@@ -55,6 +50,12 @@ class ExecutionGenbaController extends Controller
 
         $postsQuery = GenbaManagement::get_genba_approval_list($search, $date_from, $date_to, null);
         $postsQuery->where('a.corrective_action', 1)->where('a.evidence', 1);
+        $postsQuery->addSelect(DB::raw("(CASE 
+            WHEN (a.execution_comment IS NULL OR a.execution_comment = '') THEN 'Need Action Plan' 
+            WHEN (a.execution_path IS NULL OR a.execution_path = '') THEN 'Need Evidence' 
+            WHEN (a.verification_result IS NULL OR a.verification_result = '') THEN 'Proccess Verification' 
+            ELSE 'Close' 
+        END) as status_computed"));
 
         $posts = $postsQuery->offset($start)
             ->limit($limit)

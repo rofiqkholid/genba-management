@@ -227,7 +227,7 @@
                 },
                 {
                     data: 'status',
-                    orderable: false,
+                    orderable: true,
                     className: 'text-left',
                 },
                 {

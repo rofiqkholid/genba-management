@@ -4,6 +4,8 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\GenbaManagementController;
 use App\Http\Controllers\ExecutionGenbaController;
+use App\Http\Controllers\DashboardController;
+use Illuminate\Support\Facades\DB;
 
 /*
 |--------------------------------------------------------------------------
@@ -42,6 +44,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/execution_genba', function () {
         return view('approvals.verifikasi_genba');
     })->name('verifikasi_genba');
+
+    // Dashboard Routes
+    Route::get('/dashboard/data_cards', [DashboardController::class, 'data_cards'])->name('dashboard.data_cards');
+
 
     // Genba Header Routes
     Route::post('/genba_header/table', [GenbaManagementController::class, 'genbaHeaderTable'])->name('genba.header.table');

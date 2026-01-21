@@ -205,8 +205,8 @@
                     className: 'text-left',
                     render: function(data, type, row) {
                         if (data) {
-                            // Escape single quotes in findings for the onclick handler
-                            const findings = (row.findings || '').replace(/'/g, "\\'");
+                            // Escape single quotes and double quotes for the onclick handler HTML attribute
+                            const findings = (row.findings || '').replace(/'/g, "\\'").replace(/"/g, "&quot;");
                             return '<button class="w-9 h-9 flex items-center justify-center text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors" onclick="viewImage(\'' + data + '\', \'findings\', \'' + findings + '\')" title="View Before Image"><svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></button>';
                         }
                         return '-';
@@ -218,8 +218,8 @@
                     className: 'text-left',
                     render: function(data, type, row) {
                         if (data) {
-                            // Escape single quotes in execution_comment for the onclick handler
-                            const comment = (row.execution_comment || '').replace(/'/g, "\\'");
+                            // Escape single quotes and double quotes for the onclick handler HTML attribute
+                            const comment = (row.execution_comment || '').replace(/'/g, "\\'").replace(/"/g, "&quot;");
                             return '<button class="w-9 h-9 flex items-center justify-center text-emerald-600 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition-colors" onclick="viewImage(\'' + data + '\', \'evidence\', \'' + comment + '\')" title="View After Image"><svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg></button>';
                         }
                         return '-';

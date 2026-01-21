@@ -1,0 +1,487 @@
+@extends('layouts.app')
+
+@section('title', 'Genba Finding Preview - QMS')
+
+@section('content')
+@include('layouts.sidebar')
+@include('components.toast')
+
+<div class="lg:ml-20 min-h-screen flex flex-col bg-slate-50">
+    @include('layouts.header')
+
+    <main class="flex-1 p-3 sm:p-6">
+        <div class="mb-4 sm:mb-6 flex items-center gap-3 sm:gap-4">
+            <a href="{{ route('genba_mng_management') }}"
+                class="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-blue-50 border border-blue-200 text-blue-600 hover:bg-blue-50 hover:text-blue-900 transition-all duration-200">
+                <i class="fa-solid fa-arrow-left"></i>
+            </a>
+            <div>
+                <h1 class="text-xl sm:text-2xl font-bold text-slate-700">Genba Finding Preview</h1>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg border border-slate-200 p-4 sm:p-8">
+            <div class="grid grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
+                <div class="flex flex-col gap-2">
+                    <label class="text-slate-700 font-medium text-sm">Date</label>
+                    <div class="bg-slate-100 rounded-lg px-3 sm:px-4 py-2 sm:py-3 text-slate-800 text-sm">
+                        {{ \Carbon\Carbon::parse($genba->Date)->format('d/m/Y') }}
+                    </div>
+                </div>
+
+                <div class="flex flex-col gap-2">
+                    <label class="text-slate-700 font-medium text-sm">Station / Mech. Num</label>
+                    <div class="bg-slate-100 rounded-lg px-3 sm:px-4 py-2 sm:py-3 text-slate-800 text-sm">
+                        {{ $genba->Area_Checked }}
+                    </div>
+                </div>
+
+                <div class="flex flex-col gap-2 col-span-2">
+                    <label class="text-slate-700 font-medium text-sm">Document Number</label>
+                    <div class="bg-slate-100 rounded-lg px-3 sm:px-4 py-2 sm:py-3 text-slate-800 font-mono text-sm">
+                        {{ $genba->DocNum }}
+                    </div>
+                </div>
+
+                <!-- Auditor (spanning full width) -->
+                <div class="flex flex-col gap-2 col-span-2">
+                    <label class="text-slate-700 font-medium text-sm">Auditor</label>
+                    <div class="bg-slate-100 rounded-lg px-3 sm:px-4 py-2 sm:py-3 text-slate-800 text-sm">
+                        {{ $genba->Auditor ?? '-' }}
+                    </div>
+                </div>
+
+                <!-- Priority -->
+                @if($genba->priority)
+                <div class="flex flex-col gap-2">
+                    <label class="text-slate-700 font-medium text-sm">Priority</label>
+                    <div class="bg-slate-100 rounded-lg px-3 sm:px-4 py-2 sm:py-3 text-slate-800 text-sm">
+                        {{ $genba->priority }}
+                    </div>
+                </div>
+                @endif
+
+                <!-- Due Date -->
+                <div class="flex flex-col gap-2 @if(!$genba->priority) col-span-2 @endif">
+                    <label class="text-slate-700 font-medium text-sm">Due Date</label>
+                    <div class="bg-slate-100 rounded-lg px-3 sm:px-4 py-2 sm:py-3 text-slate-800 text-sm">
+                        {{ $genba->due_date ? \Carbon\Carbon::parse($genba->due_date)->format('d/m/Y') : '-' }}
+                    </div>
+                </div>
+
+                <!-- Status (spanning full width) -->
+                <div class="flex flex-col gap-2 col-span-2">
+                    <label class="text-slate-700 font-medium text-sm">Status</label>
+                    <div>
+                        <span class="inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium border {{ $genba->statusBadgeClass }}">
+                            {{ $genba->status }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Divider -->
+            <div class="border-t border-slate-200 my-8"></div>
+
+            <!-- Findings -->
+            <div class="flex flex-col sm:grid sm:grid-cols-[180px_1fr] gap-2 sm:gap-4 items-start mb-6">
+                <label class="text-slate-700 font-medium text-sm sm:pt-3">Findings</label>
+                <div class="w-full bg-slate-100 rounded-lg px-4 py-3 text-slate-800 min-h-[100px]">
+                    <p class="whitespace-pre-line">{{ $genba->findings ?? 'No findings recorded' }}</p>
+                </div>
+            </div>
+
+            <!-- Finding Image -->
+            @if($genba->Path)
+            <div class="flex flex-col sm:grid sm:grid-cols-[180px_1fr] gap-2 sm:gap-4 items-start mb-6">
+                <label class="text-slate-700 font-medium text-sm sm:pt-3">Finding Image</label>
+                <div class="w-full bg-slate-100 rounded-lg p-3">
+                    @php
+                    $paths = explode(',', $genba->Path);
+                    @endphp
+                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3" id="findingImageContainer">
+                        @foreach($paths as $path)
+                        <div class="relative group aspect-square">
+                            <img src="/findings-photo/{{ $path }}"
+                                alt="Finding Image"
+                                class="w-full h-full rounded-lg object-cover cursor-pointer hover:opacity-80 transition-opacity"
+                                onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            <div class="hidden flex-col items-center justify-center text-slate-400 gap-2 w-full h-full bg-slate-200 rounded-lg">
+                                <i class="fa-regular fa-image text-2xl"></i>
+                                <span class="text-xs">No image</span>
+                            </div>
+                        </div>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+            @else
+            <div class="flex flex-col sm:grid sm:grid-cols-[180px_1fr] gap-2 sm:gap-4 items-start mb-6">
+                <label class="text-slate-700 font-medium text-sm sm:pt-3">Finding Image</label>
+                <div class="w-full bg-slate-100 rounded-lg p-3 flex items-start">
+                    <div class="flex flex-col items-center justify-center text-slate-400 gap-2 w-24 h-24">
+                        <i class="fa-regular fa-image text-2xl"></i>
+                        <span class="text-xs">No image</span>
+                    </div>
+                </div>
+            </div>
+            @endif
+
+            <!-- Divider -->
+            <div class="border-t border-slate-200 my-8"></div>
+
+
+            <!-- Hidden input for trc_unix_id -->
+            <input type="hidden" id="trc_unix_id" value="{{ $genba->trc_unix_id ?? '' }}">
+
+            <!-- Execution Comment -->
+            <div class="flex flex-col sm:grid sm:grid-cols-[180px_1fr] gap-2 sm:gap-4 items-start mb-6">
+                <label class="text-slate-700 font-medium text-sm sm:pt-3">Action Plan</label>
+                <div class="w-full">
+                    <textarea
+                        id="actionPlanText"
+                        class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none text-sm"
+                        rows="5"
+                        placeholder="Enter action plan...">{{ $genba->execution_comment }}</textarea>
+                </div>
+            </div>
+
+            <!-- Execution Evidence Upload -->
+            <div class="flex flex-col sm:grid sm:grid-cols-[180px_1fr] gap-2 sm:gap-4 items-start mb-6">
+                <label class="text-slate-700 font-medium text-sm sm:pt-3">Evidence</label>
+                <div class="w-full space-y-3">
+                    <div class="flex gap-2 flex-wrap">
+                        <label class="inline-flex items-center px-4 py-2 bg-white border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 cursor-pointer transition-colors text-sm">
+                            <i class="fa-solid fa-upload mr-2"></i>
+                            Choose Files
+                            <input type="file" class="hidden" accept="image/*" id="evidenceFile" onchange="previewFromFile(event)">
+                        </label>
+                        <button type="button" id="btnOpenCamera" onclick="openCameraStream()" class="inline-flex items-center px-4 py-2 bg-blue-50 text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-200 hover:border-blue-400 transition-colors text-sm">
+                            <i class="fa-solid fa-camera mr-2"></i>
+                            Open Camera
+                        </button>
+                        <button type="button" id="btnCloseCamera" onclick="closeCameraStream()" class="hidden inline-flex items-center px-4 py-2 bg-red-50 text-red-600 border border-red-200 rounded-lg hover:bg-red-200 hover:border-red-400 transition-colors text-sm">
+                            <i class="fa-solid fa-times mr-2"></i>
+                            Close Camera
+                        </button>
+                        <button type="button" id="btnCapture" onclick="capturePhotoFromStream()" class="hidden inline-flex items-center px-4 py-2 bg-blue-50 text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-200 hover:border-blue-400 transition-colors text-sm">
+                            <i class="fa-solid fa-camera mr-2"></i>
+                            Capture
+                        </button>
+                    </div>
+
+                    <!-- Camera Preview Container -->
+                    <div id="cameraContainer" class="hidden bg-slate-100 rounded-lg p-4">
+                        <video id="cameraPreview" autoplay playsinline class="w-full h-auto rounded-lg max-h-96 object-contain bg-black"></video>
+                        <canvas id="canvas" class="hidden"></canvas>
+                    </div>
+
+                    <!-- Image Preview Container -->
+                    <!-- Image Preview Container -->
+                    <div id="evidencePreviewContainer" class="grid grid-cols-2 sm:grid-cols-3 gap-3 @if(!$genba->execution_path) hidden @endif">
+                        @if($genba->execution_path)
+                        @foreach(explode(',', $genba->execution_path) as $path)
+                        <div class="relative group aspect-square">
+                            <img src="/evidence-photo/{{ trim($path) }}" class="w-full h-full object-cover rounded-lg border border-slate-200">
+                            <button type="button" onclick="removeImage(this, '{{ trim($path) }}')" class="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-90 hover:opacity-100 transition-opacity w-6 h-6 flex items-center justify-center">
+                                <i class="fa-solid fa-times text-xs"></i>
+                            </button>
+                        </div>
+                        @endforeach
+                        @endif
+                    </div>
+
+                    <div id="placeholderText" class="@if($genba->execution_path) hidden @endif flex flex-col items-center justify-center text-slate-400 gap-2 min-h-[150px] bg-slate-50 rounded-lg border-2 border-dashed border-slate-200">
+                        <i class="fa-regular fa-image text-4xl"></i>
+                        <span class="text-xs">No evidence images</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Save Button -->
+            <div class="flex flex-col sm:grid sm:grid-cols-[180px_1fr] gap-2 sm:gap-4 items-start mb-6">
+                <div></div>
+                <div class="w-full sm:w-auto">
+                    <button type="button" onclick="saveData()"
+                        class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-green-50 text-green-600 border border-green-200 rounded-lg hover:bg-green-200 hover:border-green-400 font-medium transition-colors">
+                        <i class="fa-solid fa-save text-sm"></i>
+                        Save
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    @include('layouts.footer')
+</div>
+
+<!-- Mobile Sidebar Overlay -->
+<div id="sidebar-overlay" class="fixed inset-0 bg-slate-900/50 z-30 hidden lg:hidden"></div>
+
+
+
+@endsection
+
+@push('scripts')
+<script>
+    let stream = null;
+    let newImages = []; // Array of base64 strings
+    let existingImages = []; // Array of existing paths
+
+    // Initialize existing images
+    document.addEventListener('DOMContentLoaded', function() {
+        // Viewer.js initialization (kept as is)
+        const container = document.getElementById('findingImageContainer');
+        if (container) {
+            new Viewer(container, {
+                inline: false,
+                navbar: false,
+                title: false,
+                toolbar: {
+                    zoomIn: 1,
+                    zoomOut: 1,
+                    oneToOne: 1,
+                    reset: 1,
+                    prev: 0,
+                    play: 0,
+                    next: 0,
+                    rotateLeft: 1,
+                    rotateRight: 1,
+                    flipHorizontal: 1,
+                    flipVertical: 1,
+                },
+                zoomRatio: 0.1,
+                minZoomRatio: 0.1,
+                maxZoomRatio: 10,
+                movable: true,
+                rotatable: true,
+                scalable: true,
+                transition: true,
+                fullscreen: true,
+                keyboard: true,
+            });
+        }
+
+        // Initialize existingImages array
+        const initialPaths = <?php echo json_encode($genba->execution_path); ?>;
+        if (initialPaths) {
+            existingImages = initialPaths.split(',').map(p => p.trim());
+        }
+    });
+
+    // ... (Sidebar and Viewer logic logic preserved by context) ...
+
+    // Preview from file upload
+    function previewFromFile(event) {
+        const files = event.target.files;
+        if (!files.length) return;
+
+        const totalImages = existingImages.length + newImages.length + files.length;
+        if (totalImages > 5) {
+            showToast('Maksimal 5 foto bukti allowed', 'error');
+            event.target.value = ''; // Reset input
+            return;
+        }
+
+        Array.from(files).forEach(file => {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const base64Info = e.target.result;
+                newImages.push(base64Info);
+                renderImage(base64Info, 'new');
+            };
+            reader.readAsDataURL(file);
+        });
+
+        event.target.value = ''; // Allow re-selecting same file
+    }
+
+    // Open camera stream (kept mostly same, just check limit)
+    async function openCameraStream() {
+        if (existingImages.length + newImages.length >= 5) {
+            showToast('Maksimal 5 foto. Hapus beberapa untuk mengambil foto baru.', 'warning');
+            return;
+        }
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({
+                video: {
+                    facingMode: 'environment'
+                },
+                audio: false
+            });
+            const video = document.getElementById('cameraPreview');
+            video.srcObject = stream;
+            document.getElementById('cameraContainer').classList.remove('hidden');
+            document.getElementById('evidencePreviewContainer').classList.add('hidden'); // Hide grid while camera open
+            document.getElementById('placeholderText').classList.add('hidden');
+            document.getElementById('btnOpenCamera').classList.add('hidden');
+            document.getElementById('btnCloseCamera').classList.remove('hidden');
+            document.getElementById('btnCapture').classList.remove('hidden');
+        } catch (err) {
+            console.error('Error accessing camera:', err);
+            alert('Tidak dapat mengakses kamera.');
+        }
+    }
+
+    function closeCameraStream() {
+        if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+            stream = null;
+        }
+        document.getElementById('cameraContainer').classList.add('hidden');
+
+        // Show grid if there are images, else show placeholder
+        if (existingImages.length > 0 || newImages.length > 0) {
+            document.getElementById('evidencePreviewContainer').classList.remove('hidden');
+            document.getElementById('placeholderText').classList.add('hidden');
+        } else {
+            document.getElementById('evidencePreviewContainer').classList.add('hidden');
+            document.getElementById('placeholderText').classList.remove('hidden');
+        }
+
+        document.getElementById('btnOpenCamera').classList.remove('hidden');
+        document.getElementById('btnCloseCamera').classList.add('hidden');
+        document.getElementById('btnCapture').classList.add('hidden');
+    }
+
+    function capturePhotoFromStream() {
+        if (existingImages.length + newImages.length >= 5) {
+            showToast('Maksimal 5 foto reached', 'error');
+            return;
+        }
+
+        const video = document.getElementById('cameraPreview');
+        const canvas = document.getElementById('canvas');
+        const context = canvas.getContext('2d');
+
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        const imageDataUrl = canvas.toDataURL('image/jpeg');
+        newImages.push(imageDataUrl);
+        renderImage(imageDataUrl, 'new');
+
+        closeCameraStream();
+    }
+
+    function renderImage(src, type, existingPath = null) {
+        const container = document.getElementById('evidencePreviewContainer');
+        const placeholder = document.getElementById('placeholderText');
+
+        container.classList.remove('hidden');
+        placeholder.classList.add('hidden');
+
+        const div = document.createElement('div');
+        div.className = 'relative group aspect-square';
+
+        // If it's a new base64 image, src is the data. If existing, src might be full URL but we need path for remove logic
+
+        div.innerHTML = `
+            <img src="${src}" class="w-full h-full object-cover rounded-lg border border-slate-200">
+            <button type="button" onclick="removeImage(this, '${type === 'existing' ? existingPath : ''}')" 
+                class="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-90 hover:opacity-100 transition-opacity w-6 h-6 flex items-center justify-center">
+                <i class="fa-solid fa-times text-xs"></i>
+            </button>
+        `;
+
+        // For new images, we just append since existing are already rendered by server-side blade loop for initial load
+        // But wait, the server-side loop has its own onclick. I should unify this or just let the server render the initial state.
+
+        // Actually, this function is mostly for NEW images. Existing images are rendered by Blade.
+        // But if I want to use this for unified rendering, I'd need to clear container first.
+        // For now, let's just append new ones.
+
+        container.appendChild(div);
+
+        // Update index for removal? The removeImage function needs to know ONE thing: is it existing or new?
+        // If new, remove from newImages array by matching src string or index.
+        // Let's modify removeImage to handle the DOM element and data.
+    }
+
+    function removeImage(btn, pathOrIndex) {
+        const parentDiv = btn.closest('.group');
+        const container = document.getElementById('evidencePreviewContainer');
+        const placeholder = document.getElementById('placeholderText');
+
+        // Check if it's existing or new
+        // Existing buttons have a path string. New buttons have empty string passed in my render logic above? 
+        // Actually, let's fix the render logic.
+
+        const img = parentDiv.querySelector('img');
+        const src = img.src;
+
+        if (src.startsWith('data:image')) {
+            // It's a new image
+            const idx = newImages.indexOf(src);
+            if (idx > -1) newImages.splice(idx, 1);
+        } else {
+            // It's an existing image (URL)
+            // pathOrIndex should be the path passed from blade
+            if (pathOrIndex) {
+                const idx = existingImages.indexOf(pathOrIndex);
+                if (idx > -1) existingImages.splice(idx, 1);
+            }
+        }
+
+        parentDiv.remove();
+
+        if (existingImages.length === 0 && newImages.length === 0) {
+            container.classList.add('hidden');
+            placeholder.classList.remove('hidden');
+        }
+    }
+
+    // Save data function
+    function saveData() {
+        const trcUnixId = document.getElementById('trc_unix_id').value;
+        const actionPlan = document.getElementById('actionPlanText').value;
+
+        // Validation
+        if (!actionPlan.trim()) {
+            showToast('Action Plan harus diisi', 'error');
+            return;
+        }
+
+        // Show loading
+        const saveBtn = document.querySelector('button[onclick="saveData()"]');
+        const originalBtnHtml = saveBtn.innerHTML;
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-sm"></i> Saving...';
+
+        fetch("{{ route('genba.save_action_plan') }}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                },
+                body: JSON.stringify({
+                    trc_unix_id: trcUnixId,
+                    action_plan: actionPlan,
+                    dataphoto: newImages, // Array of new base64 strings
+                    existing_photos: existingImages // Array of preserved paths
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                saveBtn.disabled = false;
+                saveBtn.innerHTML = originalBtnHtml;
+
+                if (data.code === 200) {
+                    showToast(data.message, 'success');
+                    // Optional: reload page to refresh state or redirect
+                    setTimeout(() => window.location.reload(), 1000);
+                } else {
+                    showToast(data.message || 'Failed to save data', 'error');
+                }
+            })
+            .catch(err => {
+                saveBtn.disabled = false;
+                saveBtn.innerHTML = originalBtnHtml;
+                console.error('Error saving data:', err);
+                showToast('An error occurred while saving', 'error');
+            });
+    }
+</script>
+@endpush

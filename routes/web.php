@@ -1,0 +1,61 @@
+<?php
+
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\GenbaManagementController;
+
+/*
+|--------------------------------------------------------------------------
+| Web Routes
+|--------------------------------------------------------------------------
+|
+| Here is where you can register web routes for your application. These
+| routes are loaded by the RouteServiceProvider within a group which
+| contains the "web" middleware group. Now create something great!
+|
+*/
+
+// Authentication Routes
+Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
+Route::post('/login', [AuthController::class, 'login'])->name('login.submit');
+Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
+// Protected Routes
+Route::middleware(['auth'])->group(function () {
+    Route::get('/', function () {
+        return view('dashboard');
+    })->name('dashboard');
+
+    Route::get('/dashboard', function () {
+        return view('dashboard');
+    })->name('dashboard.index');
+
+    Route::get('/genba_management', function () {
+        return view('activity.genba_header_form');
+    })->name('genba_management');
+
+    Route::get('/genba_mng_management', function () {
+        return view('activity.findings_genba');
+    })->name('genba_mng_management');
+
+    // Genba Header Routes
+    Route::post('/genba_header/table', [GenbaManagementController::class, 'genbaHeaderTable'])->name('genba.header.table');
+    Route::post('/genba_header/delete', [GenbaManagementController::class, 'genbaHeaderDelete'])->name('genba.header.delete');
+    Route::post('/genba_header/activity', [GenbaManagementController::class, 'form_genba_header_activity'])->name('genba.header.activity');
+    Route::post('/genba_header/add', [GenbaManagementController::class, 'add_genba'])->name('genba.header.add');
+    Route::post('/genba_header/area', [GenbaManagementController::class, 'get_genba_area'])->name('genba.header.area');
+    Route::post('/genba_header/category', [GenbaManagementController::class, 'get_genba_category'])->name('genba.header.category');
+    Route::post('/genba/get_section', [GenbaManagementController::class, 'get_section'])->name('genba.get_section');
+    Route::post('/genba/get_user_data', [GenbaManagementController::class, 'get_user_data'])->name('genba.get_user_data');
+    Route::post('/genba/post_form_spv', [GenbaManagementController::class, 'post_form_spv'])->name('genba.post_form_spv');
+    Route::post('/genba/get_data_photo', [GenbaManagementController::class, 'get_data_photo'])->name('genba.get_data_photo');
+    Route::post('/genba/post_photo_spv', [GenbaManagementController::class, 'post_photo_spv'])->name('genba.post_photo_spv');
+    Route::post('/genba/submit_form_genba', [GenbaManagementController::class, 'submit_form_genba'])->name('genba.submit_form_genba');
+    Route::get('/genba_header/view/{id}', [GenbaManagementController::class, 'genbaHeaderView'])->name('genba.header.view');
+
+    Route::post('/genba/table', [GenbaManagementController::class, 'front_mng_table'])->name('genba.table');
+    Route::post('/genba/delete', [GenbaManagementController::class, 'delete'])->name('genba.delete');
+    Route::post('/genba/mng_activity', [GenbaManagementController::class, 'mng_activity'])->name('genba.mng_activity');
+    Route::get('/genba/preview/{id}', [GenbaManagementController::class, 'preview'])->name('genba.preview');
+    Route::post('/genba/save_action_plan', [GenbaManagementController::class, 'save_action_plan'])->name('genba.save_action_plan');
+});

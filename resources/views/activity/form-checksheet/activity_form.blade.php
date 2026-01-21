@@ -1,0 +1,646 @@
+@extends('layouts.app')
+
+@section('title', 'Genba Form')
+
+@section('content')
+@include('layouts.sidebar')
+
+<x-toast />
+<div class="lg:ml-20 min-h-screen flex flex-col bg-slate-50"
+    x-data="genbaForm()"
+    x-init="initForm()">
+
+    @include('layouts.header')
+
+    <!-- Loading State -->
+    <div x-show="isLoading" class="fixed inset-0 z-[100] flex items-center justify-center">
+        <div class="flex flex-col items-center">
+            <div class="animate-spin rounded-[50%] h-12 w-12 border-b-2 border-blue-600"></div>
+        </div>
+    </div>
+    <!-- Page Content -->
+    <main class="flex-1 p-6">
+
+        <!-- Simple Header -->
+        <div class="mb-6">
+            <div class="flex items-center gap-3">
+                <button onclick="backHome()" class="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-blue-50 border border-blue-200 text-blue-600 hover:bg-blue-50 hover:text-blue-900 transition-all duration-200">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
+                    </svg>
+                </button>
+                <h1 class="text-2xl font-bold text-slate-800">Genba Form</h1>
+            </div>
+        </div>
+
+        <input type="hidden" name="activity_id" value="{{ $id_activity }}" id="activity_id">
+
+        @php
+        $initialAnswers = [];
+        foreach ($scopes as $scope => $items) {
+        foreach ($items as $item) {
+        $initialAnswers[$item['check_item_id']] = $item['result'] > 0 ? (int)$item['result'] : null;
+        }
+        }
+        @endphp
+        <input type="hidden" id="initial_answers_data" value="{{ json_encode($initialAnswers) }}">
+
+        <!-- Scopes & Items -->
+        <div class="space-y-8">
+            @php $no = 0; @endphp
+            @foreach ($scopes as $scope => $items)
+            <div class="bg-white rounded-2xl border border-slate-100 overflow-hidden" id="kt_card_{{ $no }}">
+                <div class="px-8 py-6 flex justify-between items-center">
+                    <h2 class="text-xl font-bold text-slate-800 flex items-center gap-3">
+                        {{ $scope }}
+                    </h2>
+                    <div class="relative" x-data="{ showPopover: false }">
+                        <button @click="showPopover = !showPopover" @click.outside="showPopover = false" class="text-slate-400 hover:text-primary-600 transition-colors">
+                            <i class="fa fa-info-circle text-xl"></i>
+                        </button>
+                        <div x-show="showPopover"
+                            x-transition:enter="transition ease-out duration-200"
+                            x-transition:enter-start="opacity-0 -translate-y-2"
+                            x-transition:enter-end="opacity-100 translate-y-0"
+                            x-transition:leave="transition ease-in duration-150"
+                            x-transition:leave-start="opacity-100 translate-y-0"
+                            x-transition:leave-end="opacity-0 -translate-y-2"
+                            style="display: none;"
+                            class="absolute right-0 top-full mt-2 w-72 p-4 bg-white rounded-xl border border-slate-200 z-[100]">
+                            <h4 class="font-semibold text-slate-800 mb-3">Information</h4>
+                            <div class='text-sm space-y-3 text-slate-600'>
+                                <div class='flex items-start gap-2'>
+                                    <i class='fa fa-circle text-blue-500 mt-1 text-xs'></i>
+                                    <span>Jika telah sesuai dengan persyaratan/ poin cek</span>
+                                </div>
+                                <div class='flex items-start gap-2'>
+                                    <i class='fa fa-exclamation-triangle text-yellow-500 mt-0.5'></i>
+                                    <span>Jika persyaratan/item check sudah dilakukan namun tidak maksimal / tidak konsisten / masih perlu dilakukan improvement</span>
+                                </div>
+                                <div class='flex items-start gap-2'>
+                                    <i class='fa fa-times text-red-500 mt-0.5'></i>
+                                    <span>Jika tidak sesuai dengan persyaratan / poin cek</span>
+                                </div>
+                            </div>
+                            <!-- Arrow -->
+                            <div class="absolute -top-1.5 right-3 w-3 h-3 bg-white border-t border-l border-slate-200 transform rotate-45"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="px-8 pb-8 space-y-6">
+                    @foreach ($items as $item)
+                    @php $itemId = $item['check_item_id']; @endphp
+                    <div class="group relative rounded-xl border bg-white p-5 transition-all duration-300"
+                        :style="answers[{{ $itemId }}] == 3 ? 'border-color: #fecaca; background-color: rgba(254, 242, 242, 0.1);' : (answers[{{ $itemId }}] == 2 ? 'border-color: #fef08a; background-color: rgba(254, 252, 232, 0.1);' : 'border-color: #f1f5f9;')">
+
+                        <div class="flex flex-col lg:flex-row gap-6">
+                            <!-- Question -->
+                            <div class="flex-1">
+                                <div class="flex items-start gap-3">
+                                    <span class="flex-shrink-0 w-6 h-6 rounded-full bg-slate-100 text-slate-500 text-xs font-bold flex items-center justify-center mt-0.5">
+                                        {{ $loop->iteration }}
+                                    </span>
+                                    <div>
+                                        <p class="text-slate-800 font-medium text-base leading-relaxed">{{ $item['check_item'] }}</p>
+                                        <p class="text-slate-500 text-sm mt-1">{{ $item['check_item_eng'] }}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Action Area -->
+                            <div class="flex-shrink-0 flex flex-col sm:flex-row gap-4 lg:w-[450px]">
+                                <!-- Radio Options -->
+                                <div class="flex items-center justify-center gap-2 bg-slate-50 rounded-lg p-1.5 self-start">
+                                    <input type="hidden" id="scope_id_{{ $itemId }}" value="{{ $item['scope_id'] }}">
+
+                                    @foreach([1 => ['icon' => 'fa-circle', 'textColor' => '#22c55e', 'bgColor' => '#f0fdf4'],
+                                    2 => ['icon' => 'fa-exclamation-triangle', 'textColor' => '#eab308', 'bgColor' => '#fefce8'],
+                                    3 => ['icon' => 'fa-times', 'textColor' => '#ef4444', 'bgColor' => '#fef2f2']] as $val => $style)
+                                    <label class="cursor-pointer relative">
+                                        <input type="radio"
+                                            name="answers[{{ $itemId }}]"
+                                            value="{{ $val }}"
+                                            class="peer sr-only"
+                                            @click="updateAnswer({{ $itemId }}, {{ $val }})"
+                                            {{ $item['result'] == $val ? 'checked' : '' }}>
+                                        <div class="w-10 h-10 rounded-md flex items-center justify-center text-slate-300 hover:bg-white hover:text-slate-400 transition-all peer-checked:ring-1 peer-checked:ring-offset-1 peer-checked:ring-slate-200"
+                                            style="--checked-bg: {{ $style['bgColor'] }}; --checked-text: {{ $style['textColor'] }};"
+                                            :style="answers[{{ $itemId }}] == {{ $val }} ? 'background-color: {{ $style['bgColor'] }}; color: {{ $style['textColor'] }};' : ''">
+                                            <i class="fas {{ $style['icon'] }} text-lg"></i>
+                                        </div>
+                                    </label>
+                                    @endforeach
+                                </div>
+
+                                <!-- Camera/Evidences Trigger -->
+                                <div x-show="answers[{{ $itemId }}] > 1"
+                                    x-transition:enter="transition ease-out duration-200"
+                                    x-transition:enter-start="opacity-0 translate-x-4"
+                                    x-transition:enter-end="opacity-100 translate-x-0"
+                                    class="flex-1">
+                                    <button @click="openModal({{ $itemId }}, '{{ $item['scope_id'] }}')"
+                                        class="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors border border-blue-100 group-hover:border-blue-200">
+                                        <i class="fas fa-camera"></i>
+                                        <span class="font-medium text-sm">Add Evidence</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Modal for Item {{ $itemId }} -->
+                    <div x-show="activeModal === {{ $itemId }}"
+                        style="display: none;"
+                        class="fixed inset-0 z-[60] overflow-hidden"
+                        aria-labelledby="modal-title" role="dialog" aria-modal="true">
+                        <div class="fixed inset-0 flex items-center justify-center p-0 md:p-4">
+                            <div x-show="activeModal === {{ $itemId }}"
+                                x-transition:enter="ease-out duration-300"
+                                x-transition:enter-start="opacity-0"
+                                x-transition:enter-end="opacity-100"
+                                x-transition:leave="ease-in duration-200"
+                                x-transition:leave-start="opacity-100"
+                                x-transition:leave-end="opacity-0"
+                                class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
+                                @click="closeModal()"></div>
+
+                            <div x-show="activeModal === {{ $itemId }}"
+                                x-transition:enter="ease-out duration-300"
+                                x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                                x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                                x-transition:leave="ease-in duration-200"
+                                x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+                                x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                                class="relative bg-white text-left overflow-hidden transform transition-all flex flex-col w-full h-full rounded-none md:w-[95vw] md:max-w-6xl md:max-h-[90vh] md:rounded-2xl">
+
+                                <!-- Modal Header -->
+                                <div class="bg-white border-b border-slate-200 px-8 py-5 flex justify-between items-center flex-shrink-0">
+                                    <h3 class="text-xl font-bold text-gray-800">Findings Photo</h3>
+                                    <button @click="closeModal()" class="text-slate-400 hover:text-slate-600 transition-colors p-1">
+                                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    </button>
+                                </div>
+
+                                <!-- Modal Body - 2 Column Layout -->
+                                <div class="px-8 py-6 bg-slate-50 flex-1 overflow-y-auto">
+                                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                        <!-- Left Column: Evidence Photos -->
+                                        <div class="bg-white p-5 rounded-xl border border-slate-200">
+                                            <h4 class="font-semibold text-slate-800 mb-4 flex items-center gap-2 text-base">
+                                                <i class="fas fa-image text-blue-500"></i> Findings Captured
+                                            </h4>
+
+                                            <!-- Video Preview -->
+                                            <div x-show="cameraActive" class="relative rounded-lg overflow-hidden bg-black aspect-video mb-4">
+                                                <video id="video_{{ $itemId }}" class="w-full h-full object-cover"></video>
+                                                <div class="absolute bottom-4 left-0 right-0 flex justify-center gap-4">
+                                                    <button @click="capturePhoto({{ $itemId }})" class="bg-white text-blue-600 rounded-full p-3 hover:scale-110 transition-transform">
+                                                        <i class="fas fa-camera text-2xl"></i>
+                                                    </button>
+                                                    <button @click="stopCamera({{ $itemId }})" class="bg-white/20 text-white rounded-full p-3 hover:bg-white/30 transition-colors">
+                                                        <i class="fas fa-times text-xl"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            <div class="grid grid-cols-2 gap-3">
+                                                <button x-show="!cameraActive" @click="startCamera({{ $itemId }})" class="flex flex-col items-center justify-center p-4 border-2 border-dashed border-blue-200 rounded-lg hover:bg-blue-50 hover:border-blue-300 transition-all group">
+                                                    <div class="w-10 h-10 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
+                                                        <i class="fas fa-camera"></i>
+                                                    </div>
+                                                    <span class="text-sm font-medium text-blue-600">Take Photo</span>
+                                                </button>
+
+                                                <div class="flex flex-col items-center justify-center p-4 border-2 border-dashed border-slate-200 rounded-lg hover:bg-slate-50 transition-all relative">
+                                                    <input type="file" id="uploadImage_{{ $itemId }}" multiple accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" @change="handleFileUpload($event, {{ $itemId }})">
+                                                    <div class="w-10 h-10 bg-slate-100 text-slate-500 rounded-full flex items-center justify-center mb-2">
+                                                        <i class="fas fa-cloud-upload-alt"></i>
+                                                    </div>
+                                                    <span class="text-sm font-medium text-slate-600">Upload Files</span>
+                                                </div>
+                                            </div>
+
+                                            <!-- Thumbnails -->
+                                            <div class="mt-4 grid grid-cols-4 gap-2" id="preview_container_{{ $itemId }}">
+                                                <!-- Dynamic content via JS -->
+                                            </div>
+                                            <input type="hidden" name="photo_names[]" id="photoname_{{ $itemId }}">
+                                        </div>
+
+                                        <!-- Right Column: Form Fields -->
+                                        <div class="space-y-5">
+                                            <div class="bg-white p-5 rounded-xl border border-slate-200">
+                                                <x-searchable-select
+                                                    id="asign_to_dept_{{ $itemId }}"
+                                                    name="asign_to_dept_{{ $itemId }}"
+                                                    label="Assign to"
+                                                    :apiUrl="route('genba.get_section')" />
+                                            </div>
+
+                                            <div class="bg-white p-5 rounded-xl border border-slate-200">
+                                                <label class="block text-sm font-semibold text-slate-700 mb-2">Findings / Comments <span class="text-red-500">*</span></label>
+                                                <textarea id="findings_{{ $itemId }}" name="findings" rows="5" class="w-full rounded-lg border-slate-300 focus:border-blue-500 focus:ring-blue-500 text-sm outline-none" placeholder="Describe the issue..."></textarea>
+                                            </div>
+
+                                            <div class="bg-white p-5 rounded-xl border border-slate-200">
+                                                <label class="block text-sm font-semibold text-slate-700 mb-2">Detailed Area</label>
+                                                <div class="text-slate-600 text-sm">{{ $process }}</div>
+                                                <input type="hidden" id="area_detail_{{ $itemId }}" value="{{ $process }}">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Modal Footer -->
+                                <div class="bg-white border-t border-slate-200 px-8 py-4 flex justify-end gap-3 flex-shrink-0">
+                                    <button @click="closeModal()" type="button" class="px-5 py-2.5 bg-white text-slate-700 border border-slate-300 rounded-lg hover:bg-slate-50 font-medium">
+                                        Cancel
+                                    </button>
+                                    <button @click="saveEvidence({{ $itemId }})" type="button" class="px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">
+                                        Save Evidence
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    @endforeach
+                </div>
+            </div>
+            @php $no++; @endphp
+            @endforeach
+        </div>
+
+        <!-- Submit Button at Bottom -->
+        <div class="mt-8 mb-8 flex justify-end">
+            <button @click="submitForm()"
+                class="flex items-center gap-2 bg-green-50 hover:bg-green-100 text-green-600 border border-green-400 px-8 py-3 rounded-xl    font-bold text-lg">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                </svg>
+                <span>Submit Audit</span>
+            </button>
+        </div>
+    </main>
+</div>
+
+<!-- Mobile Sidebar Overlay -->
+<div id="sidebar-overlay" class="fixed inset-0 bg-slate-900/50 z-30 hidden lg:hidden"></div>
+
+@push('scripts')
+<script>
+    const initialGenbaAnswers = JSON.parse(document.getElementById('initial_answers_data').value || '{}');
+
+    document.addEventListener('alpine:init', () => {
+        Alpine.data('genbaForm', () => ({
+            isLoading: false,
+            answers: initialGenbaAnswers,
+            activeModal: null,
+            cameraActive: false,
+            stream: null,
+
+            initForm() {
+                console.log('Genba Form Initialized');
+
+                // Mobile sidebar toggle
+                const sidebar = document.getElementById('sidebar');
+                const sidebarToggle = document.getElementById('sidebar-toggle');
+                const sidebarOverlay = document.getElementById('sidebar-overlay');
+
+                if (sidebarToggle) {
+                    sidebarToggle.addEventListener('click', () => {
+                        sidebar.classList.toggle('-translate-x-full');
+                        sidebarOverlay.classList.toggle('hidden');
+                    });
+                }
+
+                if (sidebarOverlay) {
+                    sidebarOverlay.addEventListener('click', () => {
+                        sidebar.classList.add('-translate-x-full');
+                        sidebarOverlay.classList.add('hidden');
+                    });
+                }
+            },
+
+            updateAnswer(itemId, val) {
+                this.answers[itemId] = val;
+
+                // AJAX Sync to Backend
+                let scopeId = document.getElementById(`scope_id_${itemId}`).value;
+                let token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+                let activityId = document.getElementById('activity_id').value;
+
+                // Optimistic update - no loader for radio clicks to feel snappy
+                fetch("{{ route('genba.post_form_spv') }}", {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': token
+                        },
+                        body: JSON.stringify({
+                            activity_id: activityId,
+                            scope_id: scopeId,
+                            check_item_id: itemId,
+                            answer: val,
+                            _token: token
+                        })
+                    }).then(res => res.json())
+                    .catch(err => console.error('Sync error:', err));
+            },
+
+            openModal(itemId, scopeId) {
+                this.activeModal = itemId;
+                this.cameraActive = false;
+                document.body.style.overflow = 'hidden';
+
+                // Fetch existing evidence data
+                let activityId = document.getElementById('activity_id').value;
+                let token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+                fetch("{{ route('genba.get_data_photo') }}", {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': token
+                        },
+                        body: JSON.stringify({
+                            activity_id: activityId,
+                            scope_id: scopeId,
+                            check_item_id: itemId,
+                            _token: token
+                        })
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        // Populate findings
+                        if (data.findings) {
+                            document.getElementById(`findings_${itemId}`).value = data.findings;
+                        }
+
+                        // Populate photos if exist
+                        if (data.photo && Array.isArray(data.photo) && data.photo.length > 0) {
+                            const container = document.getElementById(`preview_container_${itemId}`);
+                            container.innerHTML = ''; // Clear existing thumbnails
+                            data.photo.forEach(photoPath => {
+                                if (photoPath && photoPath.trim() !== '') {
+                                    const div = document.createElement('div');
+                                    div.className = "relative group rounded-lg overflow-hidden aspect-square bg-slate-100 border border-slate-200";
+                                    div.innerHTML = `
+                                    <img src="/findings-photo/${photoPath}" class="w-full h-full object-cover">
+                                    <button onclick="this.parentElement.remove()" class="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <i class="fas fa-times text-xs"></i>
+                                    </button>
+                                `;
+                                    container.appendChild(div);
+                                }
+                            });
+                        }
+
+                        // Populate assign_to_dept dropdown if exists
+                        if (data.asign_to_dept) {
+                            const hiddenInput = document.getElementById(`asign_to_dept_${itemId}`);
+                            if (hiddenInput) {
+                                // Set hidden input value with jQuery
+                                $(`#asign_to_dept_${itemId}`).val(data.asign_to_dept);
+
+                                // Find the Alpine.js container (parent div with x-data)
+                                const alpineContainer = hiddenInput.closest('[x-data]');
+                                if (alpineContainer && alpineContainer._x_dataStack) {
+                                    const alpineData = alpineContainer._x_dataStack[0];
+                                    if (alpineData) {
+                                        alpineData.selectedId = data.asign_to_dept;
+                                        alpineData.selectedName = data.asign_to_dept_name || data.asign_to_dept;
+                                        alpineData.search = data.asign_to_dept_name || data.asign_to_dept;
+                                    }
+                                }
+                            }
+                        }
+                    })
+                    .catch(err => console.error('Error fetching evidence data:', err));
+            },
+
+            closeModal() {
+                if (this.cameraActive) {
+                    this.stopCamera(this.activeModal);
+                }
+                this.activeModal = null;
+                document.body.style.overflow = '';
+            },
+
+            // Camera Logic
+            async startCamera(itemId) {
+                this.cameraActive = true;
+                try {
+                    const video = document.getElementById(`video_${itemId}`);
+                    this.stream = await navigator.mediaDevices.getUserMedia({
+                        video: {
+                            facingMode: "environment"
+                        }
+                    });
+                    video.srcObject = this.stream;
+                    video.play();
+                } catch (err) {
+                    console.error("Camera Error:", err);
+                    alert("Could not access camera");
+                    this.cameraActive = false;
+                }
+            },
+
+            stopCamera(itemId) {
+                if (this.stream) {
+                    this.stream.getTracks().forEach(track => track.stop());
+                }
+                this.cameraActive = false;
+            },
+
+            capturePhoto(itemId) {
+                const container = document.getElementById(`preview_container_${itemId}`);
+                const currentCount = container.querySelectorAll('img').length;
+
+                if (currentCount >= 5) {
+                    showToast('Max 5 photos allowed', 'error');
+                    return;
+                }
+
+                const video = document.getElementById(`video_${itemId}`);
+                const canvas = document.createElement('canvas');
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                canvas.getContext('2d').drawImage(video, 0, 0);
+
+                const imgUrl = canvas.toDataURL('image/png');
+                this.addThumbnail(itemId, imgUrl);
+                this.stopCamera(itemId);
+            },
+
+            handleFileUpload(event, itemId) {
+                const container = document.getElementById(`preview_container_${itemId}`);
+                const currentCount = container.querySelectorAll('img').length;
+                const files = event.target.files;
+
+                if (currentCount + files.length > 5) {
+                    showToast('Max 5 photos allowed', 'error');
+                    event.target.value = ''; // Reset input
+                    return;
+                }
+
+                if (files.length > 0) {
+                    for (let i = 0; i < files.length; i++) {
+                        const reader = new FileReader();
+                        reader.onload = (e) => this.addThumbnail(itemId, e.target.result);
+                        reader.readAsDataURL(files[i]);
+                    }
+                }
+            },
+
+            addThumbnail(itemId, url) {
+                const container = document.getElementById(`preview_container_${itemId}`);
+                const div = document.createElement('div');
+                div.className = "relative group rounded-lg overflow-hidden aspect-square bg-slate-100 border border-slate-200";
+                div.innerHTML = `
+                        <img src="${url}" class="w-full h-full object-cover">
+                        <button onclick="this.parentElement.remove()" class="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                            <i class="fas fa-times text-xs"></i>
+                        </button>
+                    `;
+                container.appendChild(div);
+            },
+
+            saveEvidence(itemId) {
+                // Collect photos from preview container
+                const container = document.getElementById(`preview_container_${itemId}`);
+                const images = container.querySelectorAll('img');
+                const dataphoto = [];
+                const existing_photos = [];
+
+                images.forEach(img => {
+                    const src = img.src;
+                    // Only add base64 images (newly captured/uploaded), not existing /storage/ images
+                    if (src.startsWith('data:image')) {
+                        dataphoto.push(src);
+                    } else if (src.includes('/findings-photo/')) {
+                        const parts = src.split('/findings-photo/');
+                        if (parts.length > 1) {
+                            existing_photos.push(parts[1]);
+                        }
+                    }
+                });
+
+                if (dataphoto.length + existing_photos.length > 5) {
+                    showToast('Max 5 photos allowed', 'error');
+                    return;
+                }
+
+                // Get form values
+                const findings = document.getElementById(`findings_${itemId}`).value;
+                const scopeId = document.getElementById(`scope_id_${itemId}`).value;
+                const activityId = document.getElementById('activity_id').value;
+                const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+                // Get assign_to_dept value from searchable-select
+                // The hidden input has the same ID as the component
+                const hiddenInput = document.getElementById(`asign_to_dept_${itemId}`);
+                let asignToDept = '';
+                let asignToDeptName = '';
+                if (hiddenInput) {
+                    asignToDept = hiddenInput.value;
+                    // Get the display text from the text input (sibling of hidden input)
+                    const textInput = hiddenInput.nextElementSibling?.querySelector('input[type="text"]');
+                    if (textInput) asignToDeptName = textInput.value;
+                }
+
+                // Get area_detail value
+                const areaDetailInput = document.getElementById(`area_detail_${itemId}`);
+                const detailArea = areaDetailInput ? areaDetailInput.value : '';
+
+                this.isLoading = true;
+
+                fetch("{{ route('genba.post_photo_spv') }}", {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': token
+                        },
+                        body: JSON.stringify({
+                            activity_id: activityId,
+                            scope_id: scopeId,
+                            check_item_id: itemId,
+                            findings: findings,
+                            dataphoto: dataphoto.length > 0 ? dataphoto : null,
+                            existing_photos: existing_photos,
+                            asign_to_dept: asignToDept,
+                            asign_to_dept_name: asignToDeptName,
+                            detail_area: detailArea,
+                            _token: token
+                        })
+                    })
+                    .then(res => {
+                        if (!res.ok) {
+                            return res.json().then(data => Promise.reject(data));
+                        }
+                        return res.json();
+                    })
+                    .then(data => {
+                        this.isLoading = false;
+                        if (data.message) {
+                            showToast(data.message, 'success');
+                        }
+                        this.closeModal();
+                    })
+                    .catch(err => {
+                        this.isLoading = false;
+                        console.error('Error saving evidence:', err);
+                        if (err.message) {
+                            showToast(err.message, 'error');
+                        } else {
+                            showToast('Gagal menyimpan evidence', 'error');
+                        }
+                    });
+            },
+
+            submitForm() {
+                this.isLoading = true;
+
+                const activityId = document.getElementById('activity_id').value;
+                const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+                fetch("{{ route('genba.submit_form_genba') }}", {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': token
+                        },
+                        body: JSON.stringify({
+                            genba_id: activityId,
+                            _token: token
+                        })
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        this.isLoading = false;
+                        if (data.code === 200) {
+                            showToast(data.message, 'success');
+                            setTimeout(() => {
+                                window.location.href = "{{ route('genba_management') }}";
+                            }, 1500);
+                        } else {
+                            showToast(data.message, 'error');
+                        }
+                    })
+                    .catch(err => {
+                        this.isLoading = false;
+                        console.error('Error submitting form:', err);
+                        showToast('Gagal submit audit', 'error');
+                    });
+            }
+        }))
+    });
+
+    function backHome() {
+        window.history.back();
+    }
+</script>
+@endpush
+@endsection

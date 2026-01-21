@@ -1,0 +1,237 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* =========================================
+   Custom DataTable Styles
+   ========================================= */
+
+/* Hide default DataTables search and length controls */
+.dataTables_wrapper .dataTables_length,
+.dataTables_wrapper .dataTables_filter {
+    display: none;
+}
+
+/* DataTables Info */
+.dataTables_wrapper .dataTables_info {
+    padding: 1rem 1.5rem;
+    color: #64748b;
+    font-size: 0.875rem;
+}
+
+/* DataTables Pagination */
+.dataTables_wrapper .dataTables_paginate {
+    padding: 1rem 1.5rem;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button {
+    padding: 0.5rem 0.75rem;
+    margin: 0 0.25rem;
+    border-radius: 2px;
+    border: 1px solid #e2e8f0 !important;
+    background: white !important;
+    color: #475569 !important;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button.current {
+    background: #3b82f6 !important;
+    color: white !important;
+    border-color: #3b82f6 !important;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button:hover:not(.current):not(.disabled) {
+    background: #f1f5f9 !important;
+    color: #1e293b !important;
+    border-color: #cbd5e1 !important;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* =========================================
+   Custom Table Styles (.qms-table)
+   ========================================= */
+
+.qms-table {
+    border-collapse: collapse;
+    width: 100%;
+    border: 1px solid #e5e7eb;
+    /* gray-200 */
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+/* Table Header Styles */
+.qms-table thead,
+table.qms-table thead,
+table.dataTable.qms-table thead {
+    background: #f1f5f9 !important;
+    /* slate-100 */
+}
+
+.qms-table thead tr,
+table.qms-table thead tr,
+table.dataTable.qms-table thead tr {
+    border-top: none !important;
+    border-bottom: none !important;
+}
+
+.qms-table thead th,
+table.qms-table thead th,
+table.dataTable.qms-table thead th {
+    padding: 1.25rem 0.75rem !important;
+    font-size: 0.7rem !important;
+    font-weight: 600 !important;
+    color: #475569 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.05em !important;
+    text-align: left !important;
+    white-space: nowrap !important;
+    position: relative !important;
+    border-bottom: none !important;
+    background: transparent !important;
+}
+
+/* Optional: Add left border accent on first column */
+.qms-table thead th:first-child {
+    padding-left: 1rem;
+}
+
+/* Sorting indicator styles - Override DataTables defaults */
+.qms-table thead th.sorting,
+.qms-table thead th.sorting_asc,
+.qms-table thead th.sorting_desc {
+    cursor: pointer;
+    padding-right: 1.25rem !important;
+    background-image: none !important;
+    /* Remove default DataTables icons */
+}
+
+/* Hide default DataTables sorting icons (::before) */
+.qms-table thead th.sorting::before,
+.qms-table thead th.sorting_asc::before,
+.qms-table thead th.sorting_desc::before {
+    display: none !important;
+    content: none !important;
+}
+
+.qms-table thead th.sorting::after,
+.qms-table thead th.sorting_asc::after,
+.qms-table thead th.sorting_desc::after {
+    font-family: 'Font Awesome 6 Free' !important;
+    font-weight: 900 !important;
+    position: absolute !important;
+    right: 0.25rem !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    font-size: 0.55rem !important;
+    color: #94a3b8 !important;
+}
+
+.qms-table thead th.sorting::after {
+    content: "\f078" !important;
+    /* fa-chevron-down */
+}
+
+.qms-table thead th.sorting_asc::after {
+    content: "\f077" !important;
+    /* fa-chevron-up */
+    color: #3b82f6 !important;
+}
+
+.qms-table thead th.sorting_desc::after {
+    content: "\f078" !important;
+    /* fa-chevron-down */
+    color: #3b82f6 !important;
+}
+
+/* Table Body Styles */
+.qms-table tbody tr,
+table.qms-table tbody tr,
+table.dataTable.qms-table tbody tr {
+    border-bottom: 1px solid #e5e7eb !important;
+    /* gray-200 */
+    transition: background-color 0.15s ease;
+}
+
+/* Alternating row colors - odd rows white, even rows gray-100 */
+.qms-table tbody tr:nth-child(odd),
+table.qms-table tbody tr:nth-child(odd),
+table.dataTable.qms-table tbody tr:nth-child(odd),
+table.dataTable.qms-table tbody tr.odd {
+    background-color: #ffffff !important;
+}
+
+.qms-table tbody tr:nth-child(even),
+table.qms-table tbody tr:nth-child(even),
+table.dataTable.qms-table tbody tr:nth-child(even),
+table.dataTable.qms-table tbody tr.even {
+    background-color: #f4f4f4 !important;
+    /* gray-100 */
+}
+
+.qms-table tbody tr:hover,
+table.qms-table tbody tr:hover,
+table.dataTable.qms-table tbody tr:hover,
+table.dataTable.qms-table tbody tr.odd:hover,
+table.dataTable.qms-table tbody tr.even:hover {
+    background-color: #e2e8f0 !important;
+    /* slate-200 for better hover contrast */
+}
+
+.qms-table tbody td,
+table.qms-table tbody td,
+table.dataTable.qms-table tbody td {
+    padding: 1.25rem 0.75rem !important;
+    font-size: 0.875rem !important;
+    color: #334155 !important;
+    vertical-align: middle !important;
+    border-top: none !important;
+    border-left: none !important;
+    border-right: none !important;
+}
+
+/* Processing/Loading state */
+.dataTables_wrapper .dataTables_processing {
+    background: rgba(255, 255, 255, 0.95);
+}
+
+/* =========================================
+   Page Loading Progress Bar Animation
+   ========================================= */
+
+@keyframes progress-bar {
+    0% {
+        width: 0%;
+        margin-left: 0%;
+    }
+
+    25% {
+        width: 40%;
+        margin-left: 0%;
+    }
+
+    50% {
+        width: 40%;
+        margin-left: 30%;
+    }
+
+    75% {
+        width: 40%;
+        margin-left: 60%;
+    }
+
+    100% {
+        width: 0%;
+        margin-left: 100%;
+    }
+}
+
+.animate-progress-bar {
+    animation: progress-bar 1.2s ease-in-out infinite;
+}

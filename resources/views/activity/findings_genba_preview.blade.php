@@ -229,7 +229,6 @@
     let newImages = []; // Array of base64 strings
     let existingImages = []; // Array of existing paths
 
-    // Initialize existing images
     document.addEventListener('DOMContentLoaded', function() {
         // Viewer.js initialization (kept as is)
         const container = document.getElementById('findingImageContainer');

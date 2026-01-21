@@ -120,6 +120,7 @@ class ExecutionGenbaController extends Controller
                 $nestedData['status'] = '<span class="' . $badge . '">' . $status . '</span>';
                 $nestedData['action'] = $button;
                 $nestedData['auditor'] = $post->Auditor;
+                $nestedData['execution_comment'] = $post->execution_comment;
 
                 $data[] = $nestedData;
             }

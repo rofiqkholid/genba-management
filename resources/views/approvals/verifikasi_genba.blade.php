@@ -99,13 +99,17 @@
     <div class="fixed inset-0 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl transform transition-all">
             <!-- Header -->
-            <div class="flex items-center justify-between p-4 border-b border-slate-200">
-                <h3 id="modalTitle" class="text-lg font-semibold text-slate-800">Picture Before / Findings</h3>
-                <button type="button" onclick="closeImageModal()" class="text-slate-400 hover:text-slate-600 transition-colors">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                </button>
+            <div class="flex flex-col p-4 border-b border-slate-200">
+                <div class="flex items-center justify-between mb-2">
+                    <h3 id="modalTitle" class="text-lg font-semibold text-slate-800">Picture Before / Findings</h3>
+                    <button type="button" onclick="closeImageModal()" class="text-slate-400 hover:text-slate-600 transition-colors">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+                <!-- Caption -->
+                <p id="modalCaption" class="text-sm text-slate-600 font-medium"></p>
             </div>
 
             <!-- Content -->
@@ -201,7 +205,9 @@
                     className: 'text-left',
                     render: function(data, type, row) {
                         if (data) {
-                            return '<button class="w-9 h-9 flex items-center justify-center text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors" onclick="viewImage(\'' + data + '\')" title="View Before Image"><svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></button>';
+                            // Escape single quotes in findings for the onclick handler
+                            const findings = (row.findings || '').replace(/'/g, "\\'");
+                            return '<button class="w-9 h-9 flex items-center justify-center text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors" onclick="viewImage(\'' + data + '\', \'findings\', \'' + findings + '\')" title="View Before Image"><svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></button>';
                         }
                         return '-';
                     }
@@ -212,7 +218,9 @@
                     className: 'text-left',
                     render: function(data, type, row) {
                         if (data) {
-                            return '<button class="w-9 h-9 flex items-center justify-center text-emerald-600 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition-colors" onclick="viewImage(\'' + data + '\', \'evidence\')" title="View After Image"><svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg></button>';
+                            // Escape single quotes in execution_comment for the onclick handler
+                            const comment = (row.execution_comment || '').replace(/'/g, "\\'");
+                            return '<button class="w-9 h-9 flex items-center justify-center text-emerald-600 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition-colors" onclick="viewImage(\'' + data + '\', \'evidence\', \'' + comment + '\')" title="View After Image"><svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg></button>';
                         }
                         return '-';
                     }
@@ -307,7 +315,7 @@
     const findingPhotoBaseUrl = "{{ asset('findings-photo') }}";
     const evidencePhotoBaseUrl = "{{ asset('evidence-photo') }}";
 
-    function viewImage(path, type = 'findings') {
+    function viewImage(path, type = 'findings', caption = '') {
         // Reset state
         $('#imageContainer').empty().removeClass('hidden');
         $('#noImageContainer').addClass('hidden').removeClass('flex');
@@ -315,6 +323,9 @@
         // Set Title based on type
         var title = (type === 'evidence') ? 'Picture After / Evidence' : 'Picture Before / Findings';
         $('#modalTitle').text(title);
+
+        // Set Caption
+        $('#modalCaption').text(caption);
 
         if (!path) {
             $('#imageContainer').addClass('hidden');

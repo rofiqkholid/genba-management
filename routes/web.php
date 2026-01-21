@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\GenbaManagementController;
+use App\Http\Controllers\ExecutionGenbaController;
 
 /*
 |--------------------------------------------------------------------------
@@ -38,6 +39,10 @@ Route::middleware(['auth'])->group(function () {
         return view('activity.findings_genba');
     })->name('genba_mng_management');
 
+    Route::get('/execution_genba', function () {
+        return view('approvals.verifikasi_genba');
+    })->name('verifikasi_genba');
+
     // Genba Header Routes
     Route::post('/genba_header/table', [GenbaManagementController::class, 'genbaHeaderTable'])->name('genba.header.table');
     Route::post('/genba_header/delete', [GenbaManagementController::class, 'genbaHeaderDelete'])->name('genba.header.delete');
@@ -58,4 +63,9 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/genba/mng_activity', [GenbaManagementController::class, 'mng_activity'])->name('genba.mng_activity');
     Route::get('/genba/preview/{id}', [GenbaManagementController::class, 'preview'])->name('genba.preview');
     Route::post('/genba/save_action_plan', [GenbaManagementController::class, 'save_action_plan'])->name('genba.save_action_plan');
+
+    // Execution Genba Routes
+    Route::post('/execution_genba/table', [ExecutionGenbaController::class, 'table'])->name('execution_genba.table');
+    Route::post('/execution_genba/approve', [ExecutionGenbaController::class, 'approve'])->name('execution_genba.approve');
+    Route::post('/execution_genba/rollback', [ExecutionGenbaController::class, 'rollback'])->name('execution_genba.rollback');
 });

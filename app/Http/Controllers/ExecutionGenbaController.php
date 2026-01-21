@@ -30,7 +30,7 @@ class ExecutionGenbaController extends Controller
             1 => 'DocNum',
             2 => 'a.Path',
             3 => 'b.Date',
-            4 => 'b.Area_Checked',
+            4 => 'a.asign_to_dept',
             5 => 'a.findings',
             6 => 'b.Auditor',
             7 => 'a.status',
@@ -42,7 +42,7 @@ class ExecutionGenbaController extends Controller
         // But usually management wants to see everything or filter.
         // Let's assume standard list first.
         // Filter: corrective_action = 1 AND evidence = 1 (Proccess Verification)
-        $query = GenbaManagement::get_genba_mng_activity_list($search, $date_from, $date_to, null);
+        $query = GenbaManagement::get_genba_approval_list($search, $date_from, $date_to, null);
         $query->where('a.corrective_action', 1)->where('a.evidence', 1);
 
         $totalData = $query->count();
@@ -53,7 +53,7 @@ class ExecutionGenbaController extends Controller
         $order = ($request->input('order.0.column') == 0 ? $columns[0] : $columns[$request->input('order.0.column')]);
         $dir = ($request->input('order.0.column') == 0 ? 'desc' : $request->input('order.0.dir'));
 
-        $postsQuery = GenbaManagement::get_genba_mng_activity_list($search, $date_from, $date_to, null);
+        $postsQuery = GenbaManagement::get_genba_approval_list($search, $date_from, $date_to, null);
         $postsQuery->where('a.corrective_action', 1)->where('a.evidence', 1);
 
         $posts = $postsQuery->offset($start)
@@ -115,7 +115,7 @@ class ExecutionGenbaController extends Controller
                 $nestedData['path'] = $post->Path;
                 $nestedData['execution_path'] = $post->execution_path;
                 $nestedData['date'] = $date;
-                $nestedData['area_checked'] = $post->Area_Checked;
+                $nestedData['asign_to_dept'] = $post->asign_to_dept;
                 $nestedData['findings'] = $post->findings;
                 $nestedData['status'] = '<span class="' . $badge . '">' . $status . '</span>';
                 $nestedData['action'] = $button;

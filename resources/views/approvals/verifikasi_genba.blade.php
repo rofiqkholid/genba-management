@@ -69,7 +69,7 @@
                             <th class="w-[8%]">DocNum</th>
                             <th class="w-[10%]">DocDate</th>
                             <th class="w-[23%]">Findings</th>
-                            <th class="w-[9%]">Area Checked</th>
+                            <th class="w-[9%]">Asign to Dept</th>
                             <th class="w-[12%]">Auditor</th>
                             <th class="w-[5%]">PICT. Before</th>
                             <th class="w-[5%]">PICT. After</th>
@@ -182,7 +182,7 @@
                     }
                 },
                 {
-                    data: 'area_checked',
+                    data: 'asign_to_dept',
                     className: 'text-slate-700',
                     render: function(data, type, row) {
                         return '<span class="text-sm">' + data + '</span>';

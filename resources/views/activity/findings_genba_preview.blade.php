@@ -3,6 +3,9 @@
 @section('title', 'Genba Finding Preview - QMS')
 
 @section('content')
+@php
+$isClosed = $genba->status === 'Close';
+@endphp
 @include('layouts.sidebar')
 @include('components.toast')
 
@@ -140,8 +143,9 @@
                 <div class="w-full">
                     <textarea
                         id="actionPlanText"
-                        class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none text-sm"
+                        class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none text-sm disabled:bg-slate-100 disabled:text-slate-500"
                         rows="5"
+                        @if($isClosed) disabled @endif
                         placeholder="Enter action plan...">{{ $genba->execution_comment }}</textarea>
                 </div>
             </div>
@@ -150,6 +154,7 @@
             <div class="flex flex-col sm:grid sm:grid-cols-[180px_1fr] gap-2 sm:gap-4 items-start mb-6">
                 <label class="text-slate-700 font-medium text-sm sm:pt-3">Evidence</label>
                 <div class="w-full space-y-3">
+                    @if(!$isClosed)
                     <div class="flex gap-2 flex-wrap">
                         <label class="inline-flex items-center px-4 py-2 bg-white border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 cursor-pointer transition-colors text-sm">
                             <i class="fa-solid fa-upload mr-2"></i>
@@ -169,6 +174,7 @@
                             Capture
                         </button>
                     </div>
+                    @endif
 
                     <!-- Camera Preview Container -->
                     <div id="cameraContainer" class="hidden bg-slate-100 rounded-lg p-4">
@@ -183,9 +189,11 @@
                         @foreach(explode(',', $genba->execution_path) as $path)
                         <div class="relative group aspect-square">
                             <img src="{{ asset('evidence-photo/' . trim($path)) }}" class="w-full h-full object-cover rounded-lg border border-slate-200">
+                            @if(!$isClosed)
                             <button type="button" onclick="removeImage(this, '{{ trim($path) }}')" class="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-90 hover:opacity-100 transition-opacity w-6 h-6 flex items-center justify-center">
                                 <i class="fa-solid fa-times text-xs"></i>
                             </button>
+                            @endif
                         </div>
                         @endforeach
                         @endif
@@ -199,6 +207,7 @@
             </div>
 
             <!-- Save Button -->
+            @if(!$isClosed)
             <div class="flex flex-col sm:grid sm:grid-cols-[180px_1fr] gap-2 sm:gap-4 items-start mb-6">
                 <div></div>
                 <div class="w-full sm:w-auto">
@@ -209,6 +218,9 @@
                     </button>
                 </div>
             </div>
+            @else
+            <div class="h-6"></div>
+            @endif
 
         </div>
     </main>

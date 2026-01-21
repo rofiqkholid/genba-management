@@ -65,6 +65,61 @@ class GenbaManagement extends Model
 
         return $result;
     }
+    public static function get_genba_approval_list($search, $date_from = null, $date_to = null, $auditor = null)
+    {
+        // $my_id = Auth::user()->username;
+        // $qems = ['121020-002', '031114-001', '260422-001'];
+        $result = DB::connection('sqlsrv')->table('GenbaProcAuditDtl as a')
+            ->leftJoin('GenbaProcAudit as b', 'b.SysID', '=', 'a.genba_id')
+            ->join('GenbaCategory as c', 'c.SysID', '=', 'b.Category_id')
+            ->select(
+                'a.SysID',
+                'b.Date',
+                'a.asign_to_dept',
+                'a.findings',
+                'a.Path',
+                'a.asign_to',
+                'a.asign_to_dept',
+                'a.priority',
+                'a.area_detail',
+                'a.corrective_action',
+                'a.evidence',
+                'a.status',
+                'a.due_date',
+                'a.complete_date',
+                'a.execution_comment',
+                'a.execution_path',
+                'a.verification_result',
+                'a.verification_result',
+                'b.Auditor',
+                DB::raw("FORMAT(b.Date, 'ddMMyy') + '-' + CAST(a.SysID AS VARCHAR(20)) as DocNum")
+            )
+            ->where('b.IsDelete', 0)
+            ->orderBy('a.created_at', 'DESC')
+            ->where('a.result', '!=', 1);
+
+        if ($search) {
+            $result->where(function ($q) use ($search) {
+                $q->where('a.asign_to_dept', 'LIKE', "%{$search}%")
+                    ->orWhere('b.Auditor', 'LIKE', "%{$search}%")
+                    ->orWhere('a.findings', 'LIKE', "%{$search}%");
+            });
+        }
+
+        if (!empty($date_from) && !empty($date_to)) {
+            $result->where(DB::raw('CAST(b.Date AS DATE)'), '>=', $date_from)->where(DB::raw('CAST(b.Date AS DATE)'), '<=', $date_to);
+        } elseif (!empty($date_from)) {
+            $result->where(DB::raw('CAST(b.Date AS DATE)'), '>=', $date_from);
+        } elseif (!empty($date_to)) {
+            $result->where(DB::raw('CAST(b.Date AS DATE)'), '<=', $date_to);
+        }
+
+        if (!empty($auditor)) {
+            $result->where('b.Auditor', 'LIKE', '%' . $auditor . '%');
+        }
+
+        return $result;
+    }
 
     public static function get_genba_activity_list($search, $status_id)
     {

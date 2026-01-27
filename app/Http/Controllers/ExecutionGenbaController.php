@@ -97,19 +97,37 @@ class ExecutionGenbaController extends Controller
                            </div>';
                 }
 
+                // Stepper Logic
+                // Connecting line
+                $line = '<div class="w-8 h-0.5 bg-gray-200"></div>';
+                $activeLine = '<div class="w-8 h-0.5 bg-blue-200"></div>';
+
+                // Steps
+                // 1. Action Plan
+                // 2. Evidence
+                // 3. Close
+
+                // Icons - simplified to circles for a cleaner stepper look, or sticking to squares if preferred.
+                // Let's use squares but smaller and connected.
+                $emptyStep = '<div class="w-10 h-10 rounded-full border border-gray-200 bg-white"></div>';
+                // Active Step with SVG Check
+                $activeStep = '<div class="w-10 h-10 rounded-full bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-500">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>
+                               </div>';
+
                 if ($execution_comment == '' || $execution_comment == null) {
-                    $status = 'Need Action Plan';
-                    $badge = 'inline-flex items-center px-2.5 font-semibold py-1 bg-amber-50 text-amber-600 rounded-md text-sm font-base border border-amber-200';
+                    $steps = $emptyStep . $line . $emptyStep . $line . $emptyStep;
                 } else if ($execution_path == '' || $execution_path == null) {
-                    $status = 'Need Evidence';
-                    $badge = 'inline-flex items-center px-2.5 font-semibold py-1 bg-amber-50 text-amber-700 rounded-md text-sm font-base border border-amber-200';
+                    $steps = $activeStep . $line . $emptyStep . $line . $emptyStep;
                 } else if ($verification_result == '' || $verification_result == null) {
-                    $status = 'Proccess Verification';
-                    $badge = 'inline-flex items-center px-2.5 font-semibold py-1 bg-blue-50 text-blue-700 rounded-md text-sm font-base border border-blue-200';
+                    $steps = $activeStep . $activeLine . $activeStep . $line . $emptyStep;
                 } else {
-                    $status = "Close";
-                    $badge = 'inline-flex items-center px-2.5 font-semibold py-1 bg-emerald-50 text-emerald-700 rounded-md text-sm font-base border border-emerald-200';
+                    $steps = $activeStep . $activeLine . $activeStep . $activeLine . $activeStep;
                 }
+
+                $statusIcons = '<div class="flex items-center gap-0.5">' . $steps . '</div>';
 
                 $nestedData['no'] = $no;
                 $nestedData['DocNum'] = $post->DocNum;
@@ -118,7 +136,7 @@ class ExecutionGenbaController extends Controller
                 $nestedData['date'] = $date;
                 $nestedData['asign_to_dept'] = $post->asign_to_dept;
                 $nestedData['findings'] = $post->findings;
-                $nestedData['status'] = '<span class="' . $badge . '">' . $status . '</span>';
+                $nestedData['status'] = $statusIcons;
                 $nestedData['action'] = $button;
                 $nestedData['auditor'] = $post->Auditor;
                 $nestedData['execution_comment'] = $post->execution_comment;

@@ -68,10 +68,9 @@
                             <th class="w-[4%] text-center">No</th>
                             <th class="w-[8%]">DocNum</th>
                             <th class="w-[10%]">DocDate</th>
-                            <th class="w-[23%]">Findings</th>
+                            <th class="w-[5%]">Pict</th>
                             <th class="w-[9%]">Asign to Dept</th>
                             <th class="w-[12%]">Auditor</th>
-                            <th class="w-[5%]">Pict</th>
                             <th class="w-[14%]">Status</th>
                             <th class="w-[8%]">Approve</th>
                         </tr>
@@ -113,7 +112,7 @@
                     <!-- Before Section -->
                     <div class="bg-slate-50/50 rounded-2xl p-5 border border-slate-100 h-full flex flex-col">
                         <div class="flex items-center gap-3 mb-4 pb-3 border-b border-slate-200/60">
-                            
+
                             <div>
                                 <h4 class="text-sm font-bold text-slate-800">Before Condition</h4>
                             </div>
@@ -143,7 +142,7 @@
                     <!-- After Section -->
                     <div class="bg-slate-50/50 rounded-2xl p-5 border border-slate-100 h-full flex flex-col">
                         <div class="flex items-center gap-3 mb-4 pb-3 border-b border-slate-200/60">
-                            
+
                             <div>
                                 <h4 class="text-sm font-bold text-slate-800">After Condition</h4>
                             </div>
@@ -225,9 +224,34 @@
                     }
                 },
                 {
-                    data: 'findings',
+                    data: 'path', // Using path as the data source, but accessing other fields in render
+                    orderable: false,
+                    className: 'text-left',
                     render: function(data, type, row) {
-                        return '<div class="text-sm text-slate-600">' + (data || '') + '</div>';
+                        const hasBefore = row.path ? true : false;
+                        const hasAfter = row.execution_path ? true : false;
+
+                        if (hasBefore || hasAfter) {
+                            const findings = encodeURIComponent(row.findings || '').replace(/'/g, "%27");
+                            const comment = encodeURIComponent(row.execution_comment || '').replace(/'/g, "%27");
+                            const pathBefore = row.path || '';
+                            const pathAfter = row.execution_path || '';
+
+                            return `
+                                <div class="flex items-center justify-start w-full">
+                                    <button class="w-9 h-9 inline-flex items-center justify-center text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors ring-1 ring-slate-200" 
+                                        onclick="viewGenbaImages('${pathBefore}', '${pathAfter}', '${findings}', '${comment}')" 
+                                        title="View Images">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                            <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                                            <polyline points="21 15 16 10 5 21"></polyline>
+                                        </svg>
+                                    </button>
+                                </div>
+                            `;
+                        }
+                        return '<span class="text-slate-300">-</span>';
                     }
                 },
                 {
@@ -245,38 +269,9 @@
                     }
                 },
                 {
-                    data: 'path', // Using path as the data source, but accessing other fields in render
-                    orderable: false,
-                    className: 'text-center',
-                    render: function(data, type, row) {
-                        const hasBefore = row.path ? true : false;
-                        const hasAfter = row.execution_path ? true : false;
-
-                        if (hasBefore || hasAfter) {
-                            const findings = encodeURIComponent(row.findings || '').replace(/'/g, "%27");
-                            const comment = encodeURIComponent(row.execution_comment || '').replace(/'/g, "%27");
-                            const pathBefore = row.path || '';
-                            const pathAfter = row.execution_path || '';
-
-                            return `
-                                <button class="w-9 h-9 inline-flex items-center justify-center text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors ring-1 ring-slate-200" 
-                                    onclick="viewGenbaImages('${pathBefore}', '${pathAfter}', '${findings}', '${comment}')" 
-                                    title="View Images">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                                        <circle cx="8.5" cy="8.5" r="1.5"></circle>
-                                        <polyline points="21 15 16 10 5 21"></polyline>
-                                    </svg>
-                                </button>
-                            `;
-                        }
-                        return '<span class="text-slate-300">-</span>';
-                    }
-                },
-                {
                     data: 'status',
                     orderable: true,
-                    className: 'text-left',
+                    className: 'text-center',
                 },
                 {
                     data: 'action',

@@ -122,6 +122,8 @@
                             class="px-4 py-2 border border-slate-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm outline-none">
                     </div>
 
+
+
                     <!-- Filter Button -->
                     <button type="button" id="btnFilter"
                         class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-base transition-colors">
@@ -158,10 +160,12 @@
                     </tbody>
                 </table>
             </div>
+
+            <!-- Data Count Component -->
+            <x-data-table tableId="findingsTable" />
         </div>
 
     </main>
-
     @include('layouts.footer')
 </div>
 
@@ -410,6 +414,9 @@
         $('#btnFilter').click(function() {
             table.ajax.reload();
         });
+
+
+
 
         // Reset button
         $('#btnReset').click(function() {

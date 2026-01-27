@@ -79,10 +79,12 @@
                     </tbody>
                 </table>
             </div>
+            <!-- Data Count Component -->
+            <x-data-table tableId="findingsTable" />
         </div>
     </main>
-
     @include('layouts.footer')
+    
 </div>
 
 <!-- Mobile Sidebar Overlay -->
@@ -311,6 +313,8 @@
         $('#btnFilter').click(function() {
             table.ajax.reload();
         });
+
+
 
         // Reset button
         $('#btnReset').click(function() {

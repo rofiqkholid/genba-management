@@ -96,19 +96,33 @@ class GenbaManagementController extends Controller
                 $verification_result = $post->verification_result;
                 $execution_path = $post->execution_path;
 
+                // Stepper Logic
+                $line = '<div class="w-8 h-0.5 bg-gray-200"></div>';
+                $activeLine = '<div class="w-8 h-0.5 bg-blue-200"></div>';
+
+                // Icons
+                $emptyStep = '<div class="w-10 h-10 rounded-full border border-gray-200 bg-white"></div>';
+                $activeStep = '<div class="w-10 h-10 rounded-full bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-500">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>
+                               </div>';
+
                 if ($execution_comment == '' || $execution_comment == null) {
-                    $status = 'Need Action Plan';
-                    $badge = 'inline-flex items-center px-2.5 font-semibold py-1 bg-amber-50 text-amber-600 rounded-md text-sm font-base border border-amber-200';
+                    // Need Action Plan
+                    $steps = $emptyStep . $line . $emptyStep . $line . $emptyStep;
                 } else if ($execution_path == '' || $execution_path == null) {
-                    $status = 'Need Evidence';
-                    $badge = 'inline-flex items-center px-2.5 font-semibold py-1 bg-amber-50 text-amber-700 rounded-md text-sm font-base border border-amber-200';
+                    // Need Evidence
+                    $steps = $activeStep . $line . $emptyStep . $line . $emptyStep;
                 } else if ($verification_result == '' || $verification_result == null) {
-                    $status = 'Proccess Verification';
-                    $badge = 'inline-flex items-center px-2.5 font-semibold py-1 bg-blue-50 text-blue-700 rounded-md text-sm font-base border border-blue-200';
+                    // Process Verification
+                    $steps = $activeStep . $activeLine . $activeStep . $line . $emptyStep;
                 } else {
-                    $status = "Close";
-                    $badge = 'inline-flex items-center px-2.5 font-semibold py-1 bg-emerald-50 text-emerald-700 rounded-md text-sm font-base border border-emerald-200';
+                    // Closed
+                    $steps = $activeStep . $activeLine . $activeStep . $activeLine . $activeStep;
                 }
+
+                $status = '<div class="flex items-center gap-0.5">' . $steps . '</div>';
 
                 $nestedData['no'] = $no;
                 $nestedData['DocNum'] = $post->DocNum;
@@ -120,7 +134,7 @@ class GenbaManagementController extends Controller
                 $nestedData['due_date'] = $post->due_date;
                 $nestedData['execution_comment'] = $post->execution_comment;
                 $nestedData['execution_path'] = '<button class="btn btn-sm w-9 h-9 flex items-center justify-center bg-blue-600 text-white hover:bg-blue-700 rounded-lg transition-colors" id="btn_corrective_path_' . $no . '" onclick="btn_corrective(' . $sys_id . ',' . $no . ')"><i class="fa fa-camera"></i></button>';
-                $nestedData['status'] = '<span class="' . $badge . '">' . $status . '</span>';
+                $nestedData['status'] = $status;
                 $nestedData['action'] = $button;
                 $nestedData['auditor'] = $post->Auditor;
                 $data[] = $nestedData;

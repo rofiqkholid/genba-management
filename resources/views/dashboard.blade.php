@@ -148,7 +148,7 @@
                             <th class="w-[5%]">Picture</th>
                             <th class="w-[10%]">DocDate</th>
                             <th class="w-[9%]">Area Checked</th>
-                            <th class="w-[23%]">Findings</th>
+                            <th class="w-[7%]">Dept</th>
                             <th class="w-[12%]">Auditor</th>
                             <th class="w-[14%]">Status</th>
                             <th class="w-[8%]">Action</th>
@@ -366,7 +366,7 @@
                     }
                 },
                 {
-                    data: 'findings',
+                    data: 'dept',
                     render: function(data, type, row) {
                         return '<div class="text-sm text-slate-600">' + (data || '') + '</div>';
                     }

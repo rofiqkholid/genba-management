@@ -200,7 +200,7 @@ class DashboardController extends Controller
 
                 $nestedData['area_checked'] = $post->Area_Checked;
                 $nestedData['path'] = $post->Path;
-                $nestedData['findings'] = $post->findings;
+                $nestedData['dept'] = $post->asign_to_dept;
                 $nestedData['due_date'] = $post->due_date;
                 $nestedData['execution_comment'] = $post->execution_comment;
                 $nestedData['execution_path'] = '<button class="btn btn-sm w-9 h-9 flex items-center justify-center bg-blue-600 text-white hover:bg-blue-700 rounded-lg transition-colors" id="btn_corrective_path_' . $no . '" onclick="btn_corrective(' . $sys_id . ',' . $no . ')"><i class="fa fa-camera"></i></button>';

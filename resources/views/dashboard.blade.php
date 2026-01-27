@@ -96,9 +96,8 @@
             </div>
         </div>
 
-        <!-- Findings Genba Table Section (Ported) -->
         <!-- Department Chart Section -->
-        <div class="bg-white rounded-2xl p-6 border border-slate-100 mb-8">
+        <div class="bg-white rounded-2xl p-5 border border-slate-100 mb-8">
             <div class="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
                 <div>
                     <h3 class="text-lg font-bold text-slate-800">Department Performance</h3>
@@ -112,12 +111,8 @@
             <div class="relative h-96 w-full">
                 <canvas id="deptChart"></canvas>
             </div>
-        </div>
-
-        <div class="bg-white rounded-lg border border-slate-200 mb-8">
-            <!-- Filter Section -->
-            <div class="p-6 border-b border-slate-200 bg-slate-50/50">
-                <div class="flex flex-wrap items-center gap-3">
+            <div class="overflow-x-auto p-6">
+                <div class="flex flex-wrap items-center gap-3 mb-5 border-t border-slate-200 pt-5">
                     <!-- Search -->
                     <div class="flex-1 min-w-[200px]">
                         <div class="relative">
@@ -155,10 +150,6 @@
                         Reset
                     </button>
                 </div>
-            </div>
-
-            <!-- Table Section -->
-            <div class="overflow-x-auto p-6">
                 <table id="findingsTable" class="qms-table w-full">
                     <thead>
                         <tr>
@@ -177,10 +168,9 @@
                     </tbody>
                 </table>
             </div>
-
-            <!-- Data Count Component -->
-            <x-data-table tableId="findingsTable" />
         </div>
+
+
 
     </main>
     @include('layouts.footer')

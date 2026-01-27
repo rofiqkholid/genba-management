@@ -71,8 +71,7 @@
                             <th class="w-[23%]">Findings</th>
                             <th class="w-[9%]">Asign to Dept</th>
                             <th class="w-[12%]">Auditor</th>
-                            <th class="w-[5%]">PICT. Before</th>
-                            <th class="w-[5%]">PICT. After</th>
+                            <th class="w-[5%]">Pict</th>
                             <th class="w-[14%]">Status</th>
                             <th class="w-[8%]">Approve</th>
                         </tr>
@@ -97,42 +96,88 @@
 
     <!-- Modal -->
     <div class="fixed inset-0 flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl transform transition-all">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl transform transition-all h-[90vh] flex flex-col">
             <!-- Header -->
-            <div class="flex flex-col p-4 border-b border-slate-200">
-                <div class="flex items-center justify-between mb-2">
-                    <h3 id="modalTitle" class="text-lg font-semibold text-slate-800">Picture Before / Findings</h3>
-                    <button type="button" onclick="closeImageModal()" class="text-slate-400 hover:text-slate-600 transition-colors">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    </button>
-                </div>
-                <!-- Caption -->
-                <p id="modalCaption" class="text-sm text-slate-600 font-medium"></p>
+            <div class="flex items-center justify-between p-4 border-b border-slate-200">
+                <h3 id="modalTitle" class="text-lg font-semibold text-slate-800">Findings & Evidence</h3>
+                <button type="button" onclick="closeImageModal()" class="text-slate-400 hover:text-slate-600 transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
             </div>
 
             <!-- Content -->
-            <div class="p-6 overflow-y-auto max-h-[80vh]">
-                <div id="imageContainer" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <!-- Images will be inserted here dynamically -->
-                </div>
+            <div class="p-6 overflow-y-auto flex-1">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 h-full">
+                    <!-- Before Section -->
+                    <div class="bg-slate-50/50 rounded-2xl p-5 border border-slate-100 h-full flex flex-col">
+                        <div class="flex items-center gap-3 mb-4 pb-3 border-b border-slate-200/60">
+                            
+                            <div>
+                                <h4 class="text-sm font-bold text-slate-800">Before Condition</h4>
+                            </div>
+                        </div>
 
-                <!-- Fallback for no images -->
-                <div id="noImageContainer" class="hidden flex-col items-center justify-center min-h-[300px] text-slate-400">
-                    <svg class="w-24 h-24 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 3l18 18" />
-                    </svg>
-                    <p class="text-sm">Image not available</p>
+                        <!-- Findings Text -->
+                        <div class="mb-4">
+                            <div class="relative bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm">
+                                <p id="modalCaptionBefore" class="text-slate-600 font-medium text-sm leading-relaxed"></p>
+                            </div>
+                        </div>
+
+                        <!-- Images -->
+                        <div id="imageContainerBefore" class="grid grid-cols-2 gap-3 content-start"></div>
+
+                        <!-- Empty State -->
+                        <div id="noImageBefore" class="hidden flex-1 flex flex-col items-center justify-center min-h-[140px] bg-slate-100/50 rounded-xl border border-dashed border-slate-300/60 mt-auto">
+                            <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center mb-2 shadow-sm border border-slate-100">
+                                <svg class="w-5 h-5 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                            </div>
+                            <span class="text-xs font-medium text-slate-400">No finding images</span>
+                        </div>
+                    </div>
+
+                    <!-- After Section -->
+                    <div class="bg-slate-50/50 rounded-2xl p-5 border border-slate-100 h-full flex flex-col">
+                        <div class="flex items-center gap-3 mb-4 pb-3 border-b border-slate-200/60">
+                            
+                            <div>
+                                <h4 class="text-sm font-bold text-slate-800">After Condition</h4>
+                            </div>
+                        </div>
+
+                        <!-- Evidence Text -->
+                        <div class="mb-4">
+                            <div class="relative bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm">
+                                <p id="modalCaptionAfter" class="text-slate-600 font-medium text-sm leading-relaxed"></p>
+                                <!-- Simple arrow decoration -->
+                            </div>
+                        </div>
+
+                        <!-- Images -->
+                        <div id="imageContainerAfter" class="grid grid-cols-2 gap-3 content-start"></div>
+
+                        <!-- Empty State -->
+                        <div id="noImageAfter" class="hidden flex-1 flex flex-col items-center justify-center min-h-[140px] bg-slate-100/50 rounded-xl border border-dashed border-slate-300/60 mt-auto">
+                            <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center mb-2 shadow-sm border border-slate-100">
+                                <svg class="w-5 h-5 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </div>
+                            <span class="text-xs font-medium text-slate-400">No evidence images</span>
+                        </div>
+                    </div>
                 </div>
             </div>
 
             <!-- Footer -->
-            <div class="flex justify-end p-4 border-t border-slate-200">
+            <div class="flex justify-end p-4 border-t border-slate-200 bg-slate-50 rounded-b-2xl">
                 <button type="button" onclick="closeImageModal()"
-                    class="px-6 py-2.5 bg-slate-100 text-slate-700 rounded-xl font-medium hover:bg-slate-200 transition-colors">
-                    Close
+                    class="px-6 py-2.5 bg-white border border-slate-300 text-slate-700 rounded-xl font-medium hover:bg-slate-50 transition-colors shadow-sm">
+                    Close Preview
                 </button>
             </div>
         </div>
@@ -200,29 +245,32 @@
                     }
                 },
                 {
-                    data: 'path',
+                    data: 'path', // Using path as the data source, but accessing other fields in render
                     orderable: false,
-                    className: 'text-left',
+                    className: 'text-center',
                     render: function(data, type, row) {
-                        if (data) {
-                            // Use encodeURIComponent to safely pass the string, replacing single quotes as they are not encoded by default
+                        const hasBefore = row.path ? true : false;
+                        const hasAfter = row.execution_path ? true : false;
+
+                        if (hasBefore || hasAfter) {
                             const findings = encodeURIComponent(row.findings || '').replace(/'/g, "%27");
-                            return '<button class="w-9 h-9 flex items-center justify-center text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors" onclick="viewImage(\'' + data + '\', \'findings\', \'' + findings + '\')" title="View Before Image"><svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></button>';
-                        }
-                        return '-';
-                    }
-                },
-                {
-                    data: 'execution_path',
-                    orderable: false,
-                    className: 'text-left',
-                    render: function(data, type, row) {
-                        if (data) {
-                            // Use encodeURIComponent to safely pass the string, replacing single quotes as they are not encoded by default
                             const comment = encodeURIComponent(row.execution_comment || '').replace(/'/g, "%27");
-                            return '<button class="w-9 h-9 flex items-center justify-center text-emerald-600 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition-colors" onclick="viewImage(\'' + data + '\', \'evidence\', \'' + comment + '\')" title="View After Image"><svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg></button>';
+                            const pathBefore = row.path || '';
+                            const pathAfter = row.execution_path || '';
+
+                            return `
+                                <button class="w-9 h-9 inline-flex items-center justify-center text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors ring-1 ring-slate-200" 
+                                    onclick="viewGenbaImages('${pathBefore}', '${pathAfter}', '${findings}', '${comment}')" 
+                                    title="View Images">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                        <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                                        <polyline points="21 15 16 10 5 21"></polyline>
+                                    </svg>
+                                </button>
+                            `;
                         }
-                        return '-';
+                        return '<span class="text-slate-300">-</span>';
                     }
                 },
                 {
@@ -315,51 +363,68 @@
     const findingPhotoBaseUrl = "{{ asset('findings-photo') }}";
     const evidencePhotoBaseUrl = "{{ asset('evidence-photo') }}";
 
-    function viewImage(path, type = 'findings', caption = '') {
+    function viewGenbaImages(pathBefore, pathAfter, captionBefore, captionAfter) {
         // Reset state
-        $('#imageContainer').empty().removeClass('hidden');
-        $('#noImageContainer').addClass('hidden').removeClass('flex');
+        $('#imageContainerBefore, #imageContainerAfter').empty();
+        $('#noImageBefore, #noImageAfter').addClass('hidden');
 
-        // Set Title based on type
-        var title = (type === 'evidence') ? 'Picture After / Evidence' : 'Picture Before / Findings';
-        $('#modalTitle').text(title);
+        // Convert captions
+        $('#modalCaptionBefore').text(decodeURIComponent(captionBefore));
+        $('#modalCaptionAfter').text(decodeURIComponent(captionAfter));
 
-        // Set Caption
-        $('#modalCaption').text(decodeURIComponent(caption));
-
-        if (!path) {
-            $('#imageContainer').addClass('hidden');
-            $('#noImageContainer').removeClass('hidden').addClass('flex');
-            $('#imagePreviewModal').removeClass('hidden');
-            return;
+        // Logic to Populate BEFORE Images
+        if (pathBefore && pathBefore.trim() !== '') {
+            const paths = pathBefore.split(',');
+            paths.forEach(imgName => {
+                imgName = imgName.trim();
+                if (imgName) {
+                    const fullPath = findingPhotoBaseUrl + '/' + imgName;
+                    const imgHtml = `
+                        <div class="relative group cursor-zoom-in overflow-hidden rounded-lg bg-slate-100 border border-slate-200 aspect-[4/3]">
+                            <img src="${fullPath}" 
+                                 class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" 
+                                 alt="Before Image"
+                                 onerror="this.parentElement.style.display='none'">
+                        </div>
+                     `;
+                    $('#imageContainerBefore').append(imgHtml);
+                }
+            });
+        } else {
+            $('#noImageBefore').removeClass('hidden').addClass('flex');
         }
 
-        // Split path by comma to handle multiple images
-        var paths = path.split(',');
-        var baseUrl = (type === 'evidence') ? evidencePhotoBaseUrl : findingPhotoBaseUrl;
+        // Logic to Populate AFTER Images
+        if (pathAfter && pathAfter.trim() !== '') {
+            const paths = pathAfter.split(',');
+            paths.forEach(imgName => {
+                imgName = imgName.trim();
+                if (imgName) {
+                    const fullPath = evidencePhotoBaseUrl + '/' + imgName;
+                    const imgHtml = `
+                        <div class="relative group cursor-zoom-in overflow-hidden rounded-lg bg-slate-100 border border-slate-200 aspect-[4/3]">
+                            <img src="${fullPath}" 
+                                 class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" 
+                                 alt="After Image"
+                                 onerror="this.parentElement.style.display='none'">
+                        </div>
+                     `;
+                    $('#imageContainerAfter').append(imgHtml);
+                }
+            });
+        } else {
+            $('#noImageAfter').removeClass('hidden').addClass('flex');
+        }
 
-        paths.forEach(function(imgName) {
-            imgName = imgName.trim();
-            if (imgName) {
-                var imagePath = baseUrl + '/' + imgName;
-                var imgHtml = `
-                    <div class="relative group cursor-pointer">
-                        <img src="${imagePath}" 
-                             class="w-full h-auto rounded-lg object-contain border border-slate-200 hover:opacity-90 transition-opacity" 
-                             alt="Finding Image"
-                             onerror="this.parentElement.style.display='none'">
-                    </div>
-                `;
-                $('#imageContainer').append(imgHtml);
-            }
-        });
-
-        // Initialize Viewer.js
+        // Initialize Viewer
         if (galleryViewer) {
             galleryViewer.destroy();
         }
 
-        var container = document.getElementById('imageContainer');
+        // We can create a viewer for the whole modal content wrapper so it picks up all images
+        // Or we can just create one for the whole .p-6 container
+        var container = document.querySelector('#imagePreviewModal .p-6');
+
         galleryViewer = new Viewer(container, {
             toolbar: {
                 zoomIn: 1,
@@ -374,7 +439,7 @@
                 flipHorizontal: 1,
                 flipVertical: 1,
             },
-            title: false,
+            title: false, // Hide title to avoid clutter
             transition: true,
         });
 
@@ -384,8 +449,7 @@
 
     function closeImageModal() {
         $('#imagePreviewModal').addClass('hidden');
-        $('#imageContainer').empty();
-
+        // Clear logic if needed
         if (galleryViewer) {
             galleryViewer.destroy();
             galleryViewer = null;
@@ -404,9 +468,10 @@
         modal.querySelector('#modalTitle').innerText = 'Approve Finding?';
         modal.querySelector('#modalMessage').innerHTML = 'Are you sure you want to approve this finding?<br>This action cannot be undone.';
 
-        // Icon (Green Check)
+        // Icon
         const iconContainer = modal.querySelector('#modalIcon');
         iconContainer.className = 'w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-5';
+
         iconContainer.innerHTML = `<svg class="w-8 h-8 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>`;
 
         // Confirm Button (Green)

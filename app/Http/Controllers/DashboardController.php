@@ -227,4 +227,121 @@ class DashboardController extends Controller
         );
         echo json_encode($json_data);
     }
+
+    public function chart_all_dept($yearMonth)
+    {
+        [$year, $month] = explode('-', $yearMonth);
+        $year = (int) $year;
+        $month = (int) $month;
+
+        $departments = [
+            'PUR',
+            'HRGA',
+            'QC',
+            'TMF',
+            'SLS',
+            'FA',
+            'TMC',
+            'NPC',
+            'PPIC',
+            'DPC',
+            'ICT',
+            'STP',
+            'ASSY',
+            'MTC'
+        ];
+
+        // 1. Ambil department dari DB (Filter Deleted juga agar konsisten)
+        $deptFromDb = DB::connection('sqlsrv')
+            ->table('GenbaProcAuditDtl as g') // Alias g
+            ->join('GenbaProcAudit as b', 'g.genba_id', '=', 'b.SysID') // Join tabel header
+            ->distinct()
+            ->whereNotNull('g.asign_to_dept') // g.asign_to_dept
+            ->where(function ($q) {
+                $q->where('b.IsDelete', '!=', 1)
+                    ->orWhereNull('b.IsDelete');
+            })
+            ->pluck('g.asign_to_dept')
+            ->toArray();
+
+        $allDepartments = array_unique(array_merge($departments, $deptFromDb));
+
+        // 2. Query Open & Close (Filter Deleted)
+        $results = DB::connection('sqlsrv')
+            ->table('GenbaProcAuditDtl as g')
+            ->join('GenbaProcAudit as b', 'g.genba_id', '=', 'b.SysID')
+            ->select(
+                'g.asign_to_dept',
+                DB::raw("
+                SUM(CASE WHEN g.verification_result IS NULL
+                         AND CAST(g.due_date AS DATE) >= CAST(GETDATE() AS DATE)
+                         THEN 1 ELSE 0 END) AS TotalOpen
+            "),
+                DB::raw("
+                SUM(CASE WHEN g.verification_result = 1
+                         THEN 1 ELSE 0 END) AS TotalClose
+            ")
+            )
+            // Filter Data Delete
+            ->where(function ($q) {
+                $q->where('b.IsDelete', '!=', 1)
+                    ->orWhereNull('b.IsDelete');
+            })
+            ->whereYear('g.created_at', $year)
+            ->whereMonth('g.created_at', $month)
+            ->whereNotNull('g.asign_to_dept')
+            ->groupBy('g.asign_to_dept')
+            ->get()
+            ->keyBy('asign_to_dept');
+
+        // 3. Query Overdue (Tambahkan Join & Filter Deleted)
+        $overdueResults = DB::connection('sqlsrv')
+            ->table('GenbaProcAuditDtl as g')
+            ->join('GenbaProcAudit as b', 'g.genba_id', '=', 'b.SysID') // Join ditambahkan
+            ->select(
+                'g.asign_to_dept',
+                DB::raw("
+                SUM(CASE WHEN g.verification_result IS NULL
+                         AND CAST(g.due_date AS DATE) < CAST(GETDATE() AS DATE)
+                         THEN 1 ELSE 0 END) AS TotalOverdue
+            ")
+            )
+            // Filter Data Delete
+            ->where(function ($q) {
+                $q->where('b.IsDelete', '!=', 1)
+                    ->orWhereNull('b.IsDelete');
+            })
+            ->whereNotNull('g.asign_to_dept')
+            ->groupBy('g.asign_to_dept')
+            ->get()
+            ->keyBy('asign_to_dept');
+
+        $data = [];
+        foreach ($allDepartments as $dept) {
+            $open = $results[$dept]->TotalOpen ?? 0;
+            $close = $results[$dept]->TotalClose ?? 0;
+            $overdue = $overdueResults[$dept]->TotalOverdue ?? 0;
+
+            $deptName = $dept;
+            if ($deptName === 'TS') $deptName = 'Mtc';
+
+            $data[] = [
+                'name' => $deptName,
+                'open' => (int) $open,
+                'close' => (int) $close,
+                'overdue' => (int) $overdue,
+            ];
+        }
+
+        usort($data, function ($a, $b) {
+            return $b['close'] <=> $a['close'];
+        });
+
+        return response()->json([
+            'data_total_open' => array_column($data, 'open'),
+            'data_total_close' => array_column($data, 'close'),
+            'data_total_overdue' => array_column($data, 'overdue'),
+            'data_name_dept' => array_column($data, 'name'),
+        ]);
+    }
 }

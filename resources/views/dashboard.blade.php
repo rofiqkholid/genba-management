@@ -21,7 +21,7 @@
         <!-- Stats Cards -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
             <!-- Card 0: All Findings -->
-            <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 hover:shadow-md transition-shadow">
+            <div class="bg-white rounded-2xl p-4 border border-slate-100">
                 <div class="flex items-center gap-4">
                     <div class="w-12 h-12 bg-purple-50 rounded-xl flex items-center justify-center shrink-0">
                         <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -36,7 +36,7 @@
             </div>
 
             <!-- Card 1: Findings Open -->
-            <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 hover:shadow-md transition-shadow">
+            <div class="bg-white rounded-2xl p-4 border border-slate-100">
                 <div class="flex items-center gap-4">
                     <div class="w-12 h-12 bg-red-50 rounded-xl flex items-center justify-center shrink-0">
                         <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -51,7 +51,7 @@
             </div>
 
             <!-- Card 2: Need Approve -->
-            <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 hover:shadow-md transition-shadow">
+            <div class="bg-white rounded-2xl p-4 border border-slate-100">
                 <div class="flex items-center gap-4">
                     <div class="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center shrink-0">
                         <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -66,7 +66,7 @@
             </div>
 
             <!-- Card 3: Due Date (Overdue) -->
-            <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 hover:shadow-md transition-shadow">
+            <div class="bg-white rounded-2xl p-4 border border-slate-100">
                 <div class="flex items-center gap-4">
                     <div class="w-12 h-12 bg-amber-50 rounded-xl flex items-center justify-center shrink-0">
                         <svg class="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -81,7 +81,7 @@
             </div>
 
             <!-- Card 4: Closed -->
-            <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 hover:shadow-md transition-shadow">
+            <div class="bg-white rounded-2xl p-4 border border-slate-100">
                 <div class="flex items-center gap-4">
                     <div class="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center shrink-0">
                         <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -97,6 +97,23 @@
         </div>
 
         <!-- Findings Genba Table Section (Ported) -->
+        <!-- Department Chart Section -->
+        <div class="bg-white rounded-2xl p-6 border border-slate-100 mb-8">
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
+                <div>
+                    <h3 class="text-lg font-bold text-slate-800">Department Performance</h3>
+                    <p class="text-slate-500 text-sm">Findings status per department</p>
+                </div>
+                <div>
+                    <input type="month" id="chartFilterDate" value="{{ date('Y-m') }}"
+                        class="px-4 py-2 border border-slate-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm outline-none bg-slate-50">
+                </div>
+            </div>
+            <div class="relative h-96 w-full">
+                <canvas id="deptChart"></canvas>
+            </div>
+        </div>
+
         <div class="bg-white rounded-lg border border-slate-200 mb-8">
             <!-- Filter Section -->
             <div class="p-6 border-b border-slate-200 bg-slate-50/50">
@@ -181,7 +198,7 @@
 
     <!-- Modal -->
     <div class="fixed inset-0 flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-5xl transform transition-all h-[90vh] flex flex-col">
+        <div class="bg-white rounded-2xl w-full max-w-5xl transform transition-all h-[90vh] flex flex-col">
             <!-- Header -->
             <div class="flex items-center justify-between p-4 border-b border-slate-200">
                 <h3 class="text-lg font-semibold text-slate-800">Findings & Evidence Preview</h3>
@@ -205,7 +222,7 @@
 
                         <!-- Findings Text -->
                         <div class="mb-4">
-                            <div class="relative bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm">
+                            <div class="relative bg-white p-3.5 rounded-xl border border-slate-200">
                                 <p id="modalCaptionBefore" class="text-slate-600 font-medium text-sm leading-relaxed"></p>
                             </div>
                         </div>
@@ -215,7 +232,7 @@
 
                         <!-- Empty State -->
                         <div id="noImageBefore" class="hidden flex-1 flex flex-col items-center justify-center min-h-[140px] bg-slate-100/50 rounded-xl border border-dashed border-slate-300/60 mt-auto">
-                            <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center mb-2 shadow-sm border border-slate-100">
+                            <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center mb-2 border border-slate-100">
                                 <svg class="w-5 h-5 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                 </svg>
@@ -234,7 +251,7 @@
 
                         <!-- Evidence Text -->
                         <div class="mb-4">
-                            <div class="relative bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm">
+                            <div class="relative bg-white p-3.5 rounded-xl border border-slate-200">
                                 <p id="modalCaptionAfter" class="text-slate-600 font-medium text-sm leading-relaxed"></p>
                             </div>
                         </div>
@@ -244,7 +261,7 @@
 
                         <!-- Empty State -->
                         <div id="noImageAfter" class="hidden flex-1 flex flex-col items-center justify-center min-h-[140px] bg-slate-100/50 rounded-xl border border-dashed border-slate-300/60 mt-auto">
-                            <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center mb-2 shadow-sm border border-slate-100">
+                            <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center mb-2 border border-slate-100">
                                 <svg class="w-5 h-5 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
@@ -291,6 +308,135 @@
                 $('#val_dueDateCount').text('Error');
                 $('#val_findingsClose').text('Error');
             }
+        });
+    });
+
+    // --- Department Chart Logic ---
+    let deptChart = null;
+
+    function loadDeptChart(yearMonth) {
+        $.ajax({
+            url: "{{ route('dashboard.chart_data', ':yearMonth') }}".replace(':yearMonth', yearMonth),
+            type: "GET",
+            dataType: "json",
+            success: function(response) {
+                const ctx = document.getElementById('deptChart').getContext('2d');
+
+                if (deptChart) {
+                    deptChart.destroy();
+                }
+
+                deptChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: response.data_name_dept,
+                        datasets: [{
+                                label: 'Open',
+                                data: response.data_total_open,
+                                backgroundColor: '#f59e0b', // amber-500 (Yellow)
+                            },
+                            {
+                                label: 'Close',
+                                data: response.data_total_close,
+                                backgroundColor: '#22c55e', // green-500
+                            },
+                            {
+                                label: 'Overdue',
+                                data: response.data_total_overdue,
+                                backgroundColor: '#ef4444', // red-500
+                            }
+                        ]
+                    },
+                    plugins: [{
+                        id: 'customLabels',
+                        afterDatasetsDraw: (chart) => {
+                            const {
+                                ctx
+                            } = chart;
+                            chart.data.datasets.forEach((dataset, i) => {
+                                const meta = chart.getDatasetMeta(i);
+                                if (!meta.hidden) {
+                                    meta.data.forEach((element, index) => {
+                                        const data = dataset.data[index];
+                                        if (data > 0) {
+                                            ctx.fillStyle = '#334155'; // slate-700
+                                            ctx.font = 'bold 11px sans-serif';
+                                            ctx.textAlign = 'center';
+                                            ctx.textBaseline = 'bottom';
+
+                                            // Adjust position based on bar
+                                            const xPos = element.x;
+                                            const yPos = element.y - 3;
+
+                                            ctx.fillText(data, xPos, yPos);
+                                        }
+                                    });
+                                }
+                            });
+                        }
+                    }],
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        interaction: {
+                            intersect: false,
+                            mode: 'index',
+                        },
+                        scales: {
+                            x: {
+                                grid: {
+                                    display: false
+                                }
+                            },
+                            y: {
+                                beginAtZero: true,
+                                grid: {
+                                    borderDash: [2, 2]
+                                },
+                                ticks: {
+                                    maxTicksLimit: 6
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    usePointStyle: true,
+                                    padding: 20
+                                }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        let label = context.dataset.label || '';
+                                        if (label) {
+                                            label += ': ';
+                                        }
+                                        if (context.parsed.y !== null) {
+                                            label += context.parsed.y;
+                                        }
+                                        return label;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            },
+            error: function(xhr) {
+                console.error("Failed to load chart data:", xhr);
+            }
+        });
+    }
+
+    // Initialize Chart
+    $(document).ready(function() {
+        const initialDate = $('#chartFilterDate').val();
+        loadDeptChart(initialDate);
+
+        $('#chartFilterDate').change(function() {
+            loadDeptChart($(this).val());
         });
     });
 

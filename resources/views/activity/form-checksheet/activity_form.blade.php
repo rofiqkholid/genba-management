@@ -142,7 +142,7 @@
                                     <button @click="openModal({{ $itemId }}, '{{ $item['scope_id'] }}')"
                                         class="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors border border-blue-100 group-hover:border-blue-200">
                                         <i class="fas fa-camera"></i>
-                                        <span class="font-medium text-sm">Add Evidence</span>
+                                        <span class="font-medium text-sm">Add Finding</span>
                                     </button>
                                 </div>
                             </div>

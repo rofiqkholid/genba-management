@@ -48,6 +48,7 @@ Route::middleware(['auth'])->group(function () {
     // Dashboard Routes
     Route::get('/dashboard/data_cards', [DashboardController::class, 'data_cards'])->name('dashboard.data_cards');
     Route::post('/dashboard/table', [DashboardController::class, 'table'])->name('dashboard.table');
+    Route::get('/dashboard/chart-data/{yearMonth}', [DashboardController::class, 'chart_all_dept'])->name('dashboard.chart_data');
 
 
     // Genba Header Routes

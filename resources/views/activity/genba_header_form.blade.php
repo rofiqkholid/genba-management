@@ -192,7 +192,7 @@
 
     <!-- Modal -->
     <div class="fixed inset-0 flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md transform transition-all">
+        <div class="bg-white rounded-2xl w-full max-w-md transform transition-all">
             <!-- Header -->
             <div class="p-6 text-center">
                 <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-red-100 mb-4">

@@ -97,7 +97,7 @@
 
     <!-- Modal -->
     <div class="fixed inset-0 flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl transform transition-all h-[90vh] flex flex-col">
+        <div class="bg-white rounded-2xl w-full max-w-4xl transform transition-all h-[90vh] flex flex-col">
             <!-- Header -->
             <div class="flex items-center justify-between p-4 border-b border-slate-200">
                 <h3 id="modalTitle" class="text-lg font-semibold text-slate-800">Findings & Evidence</h3>
@@ -122,7 +122,7 @@
 
                         <!-- Findings Text -->
                         <div class="mb-4">
-                            <div class="relative bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm">
+                            <div class="relative bg-white p-3.5 rounded-xl border border-slate-200">
                                 <p id="modalCaptionBefore" class="text-slate-600 font-medium text-sm leading-relaxed"></p>
                             </div>
                         </div>
@@ -132,7 +132,7 @@
 
                         <!-- Empty State -->
                         <div id="noImageBefore" class="hidden flex-1 flex flex-col items-center justify-center min-h-[140px] bg-slate-100/50 rounded-xl border border-dashed border-slate-300/60 mt-auto">
-                            <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center mb-2 shadow-sm border border-slate-100">
+                            <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center mb-2 border border-slate-100">
                                 <svg class="w-5 h-5 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                 </svg>
@@ -152,7 +152,7 @@
 
                         <!-- Evidence Text -->
                         <div class="mb-4">
-                            <div class="relative bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm">
+                            <div class="relative bg-white p-3.5 rounded-xl border border-slate-200">
                                 <p id="modalCaptionAfter" class="text-slate-600 font-medium text-sm leading-relaxed"></p>
                                 <!-- Simple arrow decoration -->
                             </div>
@@ -163,7 +163,7 @@
 
                         <!-- Empty State -->
                         <div id="noImageAfter" class="hidden flex-1 flex flex-col items-center justify-center min-h-[140px] bg-slate-100/50 rounded-xl border border-dashed border-slate-300/60 mt-auto">
-                            <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center mb-2 shadow-sm border border-slate-100">
+                            <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center mb-2 border border-slate-100">
                                 <svg class="w-5 h-5 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
@@ -177,7 +177,7 @@
             <!-- Footer -->
             <div class="flex justify-end p-4 border-t border-slate-200 bg-slate-50 rounded-b-2xl">
                 <button type="button" onclick="closeImageModal()"
-                    class="px-6 py-2.5 bg-white border border-slate-300 text-slate-700 rounded-xl font-medium hover:bg-slate-50 transition-colors shadow-sm">
+                    class="px-6 py-2.5 bg-white border border-slate-300 text-slate-700 rounded-xl font-medium hover:bg-slate-50 transition-colors">
                     Close Preview
                 </button>
             </div>
@@ -558,7 +558,7 @@
 
     <!-- Modal -->
     <div class="fixed inset-0 flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md transform transition-all p-6 text-center border border-slate-100">
+        <div class="bg-white rounded-2xl w-full max-w-md transform transition-all p-6 text-center border border-slate-100">
 
             <div id="modalIcon" class="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-5">
                 <!-- Icon injected by JS -->
@@ -575,7 +575,7 @@
                     Cancel
                 </button>
                 <button id="confirmBtn" onclick="submitConfirmation()"
-                    class="px-5 py-2.5 bg-green-600 text-white font-medium rounded-xl hover:bg-green-700 transition-colors shadow-lg shadow-green-200">
+                    class="px-5 py-2.5 bg-green-600 text-white font-medium rounded-xl hover:bg-green-700 transition-colors">
                     Yes
                 </button>
             </div>

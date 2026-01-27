@@ -19,7 +19,7 @@
 
         <div class="relative">
             <button @click="open = !open"
-                class="flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-200 rounded-lg shadow-sm hover:bg-slate-50 hover:border-slate-300 transition-all outline-none min-w-[70px] justify-between group">
+                class="flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 hover:border-slate-300 transition-all outline-none min-w-[70px] justify-between group">
                 <span x-text="selected" class="text-sm font-semibold text-slate-700"></span>
                 <i class="fa-solid fa-chevron-up text-[10px] text-slate-400 group-hover:text-slate-600 transition-transform duration-200"
                     :class="open ? 'rotate-180' : ''"></i>
@@ -33,7 +33,7 @@
                 x-transition:leave="transition ease-in duration-75"
                 x-transition:leave-start="opacity-100 translate-y-0"
                 x-transition:leave-end="opacity-0 translate-y-2"
-                class="absolute bottom-full left-0 mb-2 w-full min-w-[70px] bg-white border border-slate-100 rounded-lg shadow-xl overflow-hidden z-50">
+                class="absolute bottom-full left-0 mb-2 w-full min-w-[70px] bg-white border border-slate-100 rounded-lg overflow-hidden z-50">
                 <template x-for="val in [10, 50, 100]">
                     <button @click="select(val)"
                         class="block w-full text-left px-3 py-2 text-sm transition-colors border-b border-slate-50 last:border-0"

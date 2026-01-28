@@ -159,14 +159,15 @@
                 <table id="findingsTable" class="qms-table w-full">
                     <thead>
                         <tr>
-                            <th class="w-[4%] text-center">No</th>
-                            <th class="w-[8%]">DocNum</th>
+                            <th class="w-[12%] text-center">No</th>
+                            <th class="w-[13%]">DocNum</th>
                             <th class="w-[5%]">Picture</th>
-                            <th class="w-[10%]">Genba Date</th>
-                            <th class="w-[9%]">Area Checked</th>
-                            <th class="w-[7%]">Dept</th>
-                            <th class="w-[12%]">Auditor</th>
-                            <th class="w-[14%]">Status</th>
+                            <th class="w-[18%]">Finding</th>
+                            <th class="w-[12%]">Genba Date</th>
+                            <th class="w-[12%]">Area Checked</th>
+                            <th class="w-[8%]">Dept</th>
+                            <th class="w-[15%]">Auditor</th>
+                            <th class="w-[18%]">Status</th>
                             <th class="w-[8%]">Action</th>
                         </tr>
                     </thead>
@@ -492,10 +493,26 @@
                     orderable: false,
                     className: 'text-left',
                     render: function(data, type, row) {
-                        if (data) {
-                            return '<button class="w-9 h-9 flex items-center justify-center text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors" onclick="viewImage(\'' + data + '\')" title="View Image"><svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></button>';
-                        }
-                        return '<button class="w-9 h-9 flex items-center justify-center text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors" onclick="viewImage(\'' + data + '\')" title="View Image"><svg xmlns="http://www.w3.000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></button>';
+                        // Pass findings and execution details to viewGenbaImages
+                        // Escape quotes for JS string passing
+                        const findings = (row.findings || '').replace(/'/g, "\\'");
+                        const execComment = (row.execution_comment || '').replace(/'/g, "\\'");
+                        const pathAfter = (row.execution_path || '');
+
+                        return `<button class="w-9 h-9 flex items-center justify-center text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors" 
+                                onclick="viewGenbaImages('${data}', '${pathAfter}', '${findings}', '${execComment}')" title="View Image">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                                </button>`;
+                    }
+                },
+                {
+                    data: 'findings',
+                    className: 'text-slate-700 font-medium',
+                    render: function(data, type, row) {
+                        if (!data) return '<span class="text-slate-400 italic">No description</span>';
+                        // Truncate for table view
+                        return data.length > 50 ? data.substring(0, 50) + '...' : data;
                     }
                 },
                 {

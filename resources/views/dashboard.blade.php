@@ -495,8 +495,8 @@
                     render: function(data, type, row) {
                         // Pass findings and execution details to viewGenbaImages
                         // Escape quotes for JS string passing
-                        const findings = (row.findings || '').replace(/'/g, "\\'");
-                        const execComment = (row.execution_comment || '').replace(/'/g, "\\'");
+                        const findings = encodeURIComponent(row.findings || '');
+                        const execComment = encodeURIComponent(row.execution_comment || '');
                         const pathAfter = (row.execution_path || '');
 
                         return `<button class="w-9 h-9 flex items-center justify-center text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors" 

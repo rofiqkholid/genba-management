@@ -101,29 +101,32 @@ class GenbaManagementController extends Controller
                 $line = '<div class="w-8 h-0.5 bg-gray-200"></div>';
                 $activeLine = '<div class="w-8 h-0.5 bg-blue-200"></div>';
 
-                // Icons
-                $emptyStep = '<div class="w-10 h-10 rounded-full border border-gray-200 bg-white"></div>';
-                $activeStep = '<div class="w-10 h-10 rounded-full bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-500">
+                // Helper for progress circles
+                $renderCircle = function ($isActive) {
+                    return $isActive
+                        ? '<div class="w-10 h-10 rounded-full bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-500 shadow-sm">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
                                     <polyline points="20 6 9 17 4 12"></polyline>
                                 </svg>
-                               </div>';
+                           </div>'
+                        : '<div class="w-10 h-10 rounded-full border border-slate-200 bg-white shadow-sm"></div>';
+                };
 
                 if ($execution_comment == '' || $execution_comment == null) {
                     // Need Action Plan
-                    $steps = $emptyStep . $line . $emptyStep . $line . $emptyStep;
+                    $steps = $renderCircle(false) . $line . $renderCircle(false) . $line . $renderCircle(false);
                 } else if ($execution_path == '' || $execution_path == null) {
                     // Need Evidence
-                    $steps = $activeStep . $line . $emptyStep . $line . $emptyStep;
+                    $steps = $renderCircle(true) . $line . $renderCircle(false) . $line . $renderCircle(false);
                 } else if ($verification_result == '' || $verification_result == null) {
                     // Process Verification
-                    $steps = $activeStep . $activeLine . $activeStep . $line . $emptyStep;
+                    $steps = $renderCircle(true) . $activeLine . $renderCircle(true) . $line . $renderCircle(false);
                 } else {
                     // Closed
-                    $steps = $activeStep . $activeLine . $activeStep . $activeLine . $activeStep;
+                    $steps = $renderCircle(true) . $activeLine . $renderCircle(true) . $activeLine . $renderCircle(true);
                 }
 
-                $status = '<div class="flex items-center gap-0.5">' . $steps . '</div>';
+                $status = '<div class="flex items-center justify-center gap-0 py-1">' . $steps . '</div>';
 
                 $nestedData['no'] = $no;
                 $nestedData['DocNum'] = $post->DocNum;

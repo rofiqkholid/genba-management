@@ -79,7 +79,18 @@
                             <th class="w-[9%]">Area Checked</th>
                             <th class="w-[23%]">Findings</th>
                             <th class="w-[12%]">Auditor</th>
-                            <th class="w-[14%]">Status</th>
+                            <th class="w-[18%]">
+                                <div class="flex flex-col items-center gap-1.5">
+                                    <span>Status</span>
+                                    <div class="flex items-center gap-4 text-[10px] font-bold text-slate-400 tracking-wider leading-none normal-case">
+                                        <span>Action</span>
+                                        <span class="w-0.5 h-0.5 bg-slate-300 rounded-full shrink-0"></span>
+                                        <span>Evidence</span>
+                                        <span class="w-0.5 h-0.5 bg-slate-300 rounded-full shrink-0"></span>
+                                        <span>Close</span>
+                                    </div>
+                                </div>
+                            </th>
                             <th class="w-[8%]">Action</th>
                         </tr>
                     </thead>

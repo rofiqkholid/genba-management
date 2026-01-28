@@ -99,36 +99,35 @@ class ExecutionGenbaController extends Controller
                 }
 
                 // Stepper Logic
-                // Connecting line
                 $line = '<div class="w-8 h-0.5 bg-gray-200"></div>';
                 $activeLine = '<div class="w-8 h-0.5 bg-blue-200"></div>';
 
-                // Steps
-                // 1. Action Plan
-                // 2. Evidence
-                // 3. Close
-
-                // Icons - simplified to circles for a cleaner stepper look, or sticking to squares if preferred.
-                // Let's use squares but smaller and connected.
-                $emptyStep = '<div class="w-10 h-10 rounded-full border border-gray-200 bg-white"></div>';
-                // Active Step with SVG Check
-                $activeStep = '<div class="w-10 h-10 rounded-full bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-500">
+                // Helper for progress circles
+                $renderCircle = function ($isActive) {
+                    return $isActive
+                        ? '<div class="w-10 h-10 rounded-full bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-500 shadow-sm">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
                                     <polyline points="20 6 9 17 4 12"></polyline>
                                 </svg>
-                               </div>';
+                           </div>'
+                        : '<div class="w-10 h-10 rounded-full border border-slate-200 bg-white shadow-sm"></div>';
+                };
 
                 if ($execution_comment == '' || $execution_comment == null) {
-                    $steps = $emptyStep . $line . $emptyStep . $line . $emptyStep;
+                    // Need Action Plan
+                    $steps = $renderCircle(false) . $line . $renderCircle(false) . $line . $renderCircle(false);
                 } else if ($execution_path == '' || $execution_path == null) {
-                    $steps = $activeStep . $line . $emptyStep . $line . $emptyStep;
+                    // Need Evidence
+                    $steps = $renderCircle(true) . $line . $renderCircle(false) . $line . $renderCircle(false);
                 } else if ($verification_result == '' || $verification_result == null) {
-                    $steps = $activeStep . $activeLine . $activeStep . $line . $emptyStep;
+                    // Process Verification
+                    $steps = $renderCircle(true) . $activeLine . $renderCircle(true) . $line . $renderCircle(false);
                 } else {
-                    $steps = $activeStep . $activeLine . $activeStep . $activeLine . $activeStep;
+                    // Closed
+                    $steps = $renderCircle(true) . $activeLine . $renderCircle(true) . $activeLine . $renderCircle(true);
                 }
 
-                $statusIcons = '<div class="flex items-center gap-0.5">' . $steps . '</div>';
+                $statusIcons = '<div class="flex items-center justify-center gap-0 py-1">' . $steps . '</div>';
 
                 $nestedData['no'] = $no;
                 $nestedData['DocNum'] = $post->DocNum;

@@ -159,15 +159,25 @@
                 <table id="findingsTable" class="qms-table w-full">
                     <thead>
                         <tr>
-                            <th class="w-[12%] text-center">No</th>
-                            <th class="w-[13%]">DocNum</th>
+                            <th class="w-[3%] text-center">No</th>
+                            <th class="w-[6%]">DocNum</th>
                             <th class="w-[5%]">Picture</th>
-                            <th class="w-[18%]">Finding</th>
                             <th class="w-[12%]">Genba Date</th>
                             <th class="w-[12%]">Area Checked</th>
                             <th class="w-[8%]">Dept</th>
                             <th class="w-[15%]">Auditor</th>
-                            <th class="w-[18%]">Status</th>
+                            <th class="w-[18%]">
+                                <div class="flex flex-col items-center gap-1.5">
+                                    <span>Status</span>
+                                    <div class="flex items-center gap-4 text-[10px] font-bold text-slate-400 tracking-wider leading-none normal-case">
+                                        <span>Action</span>
+                                        <span class="w-0.5 h-0.5 bg-slate-300 rounded-full shrink-0"></span>
+                                        <span>Evidence</span>
+                                        <span class="w-0.5 h-0.5 bg-slate-300 rounded-full shrink-0"></span>
+                                        <span>Close</span>
+                                    </div>
+                                </div>
+                            </th>
                             <th class="w-[8%]">Action</th>
                         </tr>
                     </thead>
@@ -504,15 +514,6 @@
                                 <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
                                 </button>`;
-                    }
-                },
-                {
-                    data: 'findings',
-                    className: 'text-slate-700 font-medium',
-                    render: function(data, type, row) {
-                        if (!data) return '<span class="text-slate-400 italic">No description</span>';
-                        // Truncate for table view
-                        return data.length > 50 ? data.substring(0, 50) + '...' : data;
                     }
                 },
                 {

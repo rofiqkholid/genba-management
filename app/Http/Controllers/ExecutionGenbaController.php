@@ -21,6 +21,7 @@ class ExecutionGenbaController extends Controller
         $search = $request->search;
         $date_from = $request->date_from;
         $date_to = $request->date_to;
+        $dept = $request->dept;
 
         // For Verification/Approval, we might want to see all or filter by specific status
         // Reusing logic from GenbaManagementController for consistency
@@ -37,7 +38,7 @@ class ExecutionGenbaController extends Controller
             8 => 'status_computed',
             9 => 'a.SysID'
         );
-        $query = GenbaManagement::get_genba_approval_list($search, $date_from, $date_to, null);
+        $query = GenbaManagement::get_genba_approval_list($search, $date_from, $date_to, null, $dept);
         $query->where('a.corrective_action', 1)->where('a.evidence', 1);
 
         $totalData = $query->count();
@@ -48,7 +49,7 @@ class ExecutionGenbaController extends Controller
         $order = ($request->input('order.0.column') == 0 ? $columns[0] : $columns[$request->input('order.0.column')]);
         $dir = ($request->input('order.0.column') == 0 ? 'desc' : $request->input('order.0.dir'));
 
-        $postsQuery = GenbaManagement::get_genba_approval_list($search, $date_from, $date_to, null);
+        $postsQuery = GenbaManagement::get_genba_approval_list($search, $date_from, $date_to, null, $dept);
         $postsQuery->where('a.corrective_action', 1)->where('a.evidence', 1);
         $postsQuery->addSelect(DB::raw("(CASE 
             WHEN (a.execution_comment IS NULL OR a.execution_comment = '') THEN 'Need Action Plan' 

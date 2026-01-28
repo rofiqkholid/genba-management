@@ -10,7 +10,41 @@ use Carbon\Carbon;
 class GenbaManagement extends Model
 {
 
-    public static function get_genba_mng_activity_list($search, $date_from = null, $date_to = null, $auditor = null)
+    public static function get_all_departments()
+    {
+        $departments = [
+            'PUR',
+            'HRGA',
+            'QC',
+            'TMF',
+            'SLS',
+            'FA',
+            'TMC',
+            'NPC',
+            'PPIC',
+            'DPC',
+            'ICT',
+            'STP',
+            'ASSY',
+            'MTC'
+        ];
+
+        // Fetch distinct departments from DB to ensure we don't miss any dynamic ones
+        $deptFromDb = DB::connection('sqlsrv')
+            ->table('GenbaProcAuditDtl')
+            ->select('asign_to_dept')
+            ->distinct()
+            ->whereNotNull('asign_to_dept')
+            ->pluck('asign_to_dept')
+            ->toArray();
+
+        $allDepartments = array_unique(array_merge($departments, $deptFromDb));
+        sort($allDepartments);
+
+        return $allDepartments;
+    }
+
+    public static function get_genba_mng_activity_list($search, $date_from = null, $date_to = null, $auditor = null, $dept = null)
     {
         // $my_id = Auth::user()->username;
         // $qems = ['121020-002', '031114-001', '260422-001'];
@@ -64,9 +98,13 @@ class GenbaManagement extends Model
             $result->where('b.Auditor', 'LIKE', '%' . $auditor . '%');
         }
 
+        if (!empty($dept)) {
+            $result->where('a.asign_to_dept', $dept);
+        }
+
         return $result;
     }
-    public static function get_genba_approval_list($search, $date_from = null, $date_to = null, $auditor = null)
+    public static function get_genba_approval_list($search, $date_from = null, $date_to = null, $auditor = null, $dept = null)
     {
         // $my_id = Auth::user()->username;
         // $qems = ['121020-002', '031114-001', '260422-001'];
@@ -118,6 +156,10 @@ class GenbaManagement extends Model
 
         if (!empty($auditor)) {
             $result->where('b.Auditor', 'LIKE', '%' . $auditor . '%');
+        }
+
+        if (!empty($dept)) {
+            $result->where('a.asign_to_dept', $dept);
         }
 
         return $result;

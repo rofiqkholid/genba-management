@@ -10,12 +10,15 @@
 'changeEvent' => null,
 'dependencyParam' => null,
 'initialOptions' => [],
-'valueField' => 'id'
+'valueField' => 'id',
+'hideLabel' => false
 ])
 
-<div class="grid grid-cols-3 gap-4 items-center">
+<div class="@if(!$hideLabel) grid grid-cols-3 gap-4 items-center @else w-full @endif">
+    @if(!$hideLabel)
     <label class="text-sm text-slate-600">{{ $label }} @if($required)<span class="text-red-500">*</span>@endif</label>
-    <div class="col-span-2 relative" x-data="{
+    @endif
+    <div class="@if(!$hideLabel) col-span-2 @else w-full @endif relative" x-data="{
         open: false,
         search: '',
         selectedName: '',
@@ -172,7 +175,11 @@
                 } 
             }));
             @endif
+
+            // Trigger standard change event on hidden input
+            document.getElementById('{{ $id }}').dispatchEvent(new Event('change'));
         },
+
 
         toggle() {
             if (this.open) {
@@ -195,7 +202,7 @@
         <div class="relative">
             <input type="text" x-model="search" @input.debounce.300ms="onSearch" @click="toggle" @click.outside="open = false"
                 placeholder="Select {{ $label }}..."
-                class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm outline-none">
+                class="w-full px-4 py-[9px] border border-slate-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm outline-none text-slate-700">
             <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-slate-400">
                 <i class="fa-solid fa-chevron-down text-xs transition-transform duration-200" :class="open ? 'rotate-180' : ''"></i>
             </div>

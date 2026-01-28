@@ -24,6 +24,7 @@ class GenbaManagementController extends Controller
         $date_from = $request->date_from;
         $date_to = $request->date_to;
         $auditor = $request->auditor;
+        $dept = $request->dept;
         $columns = array(
             0 => 'a.SysID',
             1 => 'DocNum',
@@ -35,25 +36,25 @@ class GenbaManagementController extends Controller
             7 => 'a.status',
             8 => 'a.SysID'
         );
-        $totalData = GenbaManagement::get_genba_mng_activity_list($search, $date_from, $date_to, $auditor)->count();
+        $totalData = GenbaManagement::get_genba_mng_activity_list($search, $date_from, $date_to, $auditor, $dept)->count();
         $totalFiltered = $totalData;
         $limit = $request->input('length');
         $start = $request->input('start');
         $order = ($request->input('order.0.column') == 0 ? $columns[0] : $columns[$request->input('order.0.column')]);
         $dir = ($request->input('order.0.column') == 0 ? 'desc' : $request->input('order.0.dir'));
         if (empty($search)) {
-            $posts = GenbaManagement::get_genba_mng_activity_list($search, $date_from, $date_to, $auditor)
+            $posts = GenbaManagement::get_genba_mng_activity_list($search, $date_from, $date_to, $auditor, $dept)
                 ->offset($start)
                 ->limit($limit)
                 ->reorder($order, $dir)
                 ->get();
         } else {
-            $posts = GenbaManagement::get_genba_mng_activity_list($search, $date_from, $date_to, $auditor)
+            $posts = GenbaManagement::get_genba_mng_activity_list($search, $date_from, $date_to, $auditor, $dept)
                 ->offset($start)
                 ->limit($limit)
                 ->reorder($order, $dir)
                 ->get();
-            $totalFiltered = GenbaManagement::get_genba_mng_activity_list($search, $date_from, $date_to, $auditor)->count();
+            $totalFiltered = GenbaManagement::get_genba_mng_activity_list($search, $date_from, $date_to, $auditor, $dept)->count();
         }
         $data = array();
         if (!empty($posts)) {

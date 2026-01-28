@@ -2,7 +2,9 @@
 
 namespace App\Providers;
 
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
+use App\Models\GenbaManagement;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -23,6 +25,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        //
+        View::composer(['dashboard', 'activity.findings_genba', 'approvals.verifikasi_genba'], function ($view) {
+            $view->with('departments', GenbaManagement::get_all_departments());
+        });
     }
 }

@@ -134,14 +134,20 @@
                             class="px-4 py-2 border border-slate-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm outline-none">
                     </div>
 
+                    <!-- Department Filer -->
+                    <div class="min-w-[200px]">
+                        <x-searchable-select
+                            name="dept"
+                            id="deptFilter"
+                            label="Department"
+                            :initialOptions="collect($departments)->map(fn($d) => ['id' => $d, 'name' => $d])->values()->toArray()"
+                            valueField="name"
+                            hideLabel="true" />
+                    </div>
 
 
-                    <!-- Filter Button -->
-                    <button type="button" id="btnFilter"
-                        class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-base transition-colors">
-                        <i class="fa-solid fa-filter text-sm"></i>
-                        Filter
-                    </button>
+
+
 
                     <!-- Reset Button -->
                     <button type="button" id="btnReset"
@@ -156,7 +162,7 @@
                             <th class="w-[4%] text-center">No</th>
                             <th class="w-[8%]">DocNum</th>
                             <th class="w-[5%]">Picture</th>
-                            <th class="w-[10%]">DocDate</th>
+                            <th class="w-[10%]">Genba Date</th>
                             <th class="w-[9%]">Area Checked</th>
                             <th class="w-[7%]">Dept</th>
                             <th class="w-[12%]">Auditor</th>
@@ -463,6 +469,7 @@
                     d.front_table_search = $('#searchInput').val();
                     d.date_from = $('#dateFrom').val();
                     d.date_to = $('#dateTo').val();
+                    d.dept = $('#deptFilter').val();
                 }
             },
             columns: [{
@@ -488,7 +495,7 @@
                         if (data) {
                             return '<button class="w-9 h-9 flex items-center justify-center text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors" onclick="viewImage(\'' + data + '\')" title="View Image"><svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></button>';
                         }
-                        return '<button class="w-9 h-9 flex items-center justify-center text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors" onclick="viewImage(\'' + data + '\')" title="View Image"><svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></button>';
+                        return '<button class="w-9 h-9 flex items-center justify-center text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors" onclick="viewImage(\'' + data + '\')" title="View Image"><svg xmlns="http://www.w3.000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></button>';
                     }
                 },
                 {
@@ -546,28 +553,35 @@
             }
         });
 
-        // Filter button
-        $('#btnFilter').click(function() {
+        // Auto-filter on change
+        $('#dateFrom, #dateTo, #deptFilter').on('change', function() {
             table.ajax.reload();
         });
-
-
-
 
         // Reset button
         $('#btnReset').click(function() {
             $('#searchInput').val('');
             $('#dateFrom').val('');
             $('#dateTo').val('');
+            $('#deptFilter').val('');
             table.ajax.reload();
         });
 
         // Search on enter
-        $('#searchInput').keypress(function(e) {
-            if (e.which == 13) {
-                table.ajax.reload();
-            }
-        });
+        // Debounce function
+        function debounce(func, wait) {
+            let timeout;
+            return function(...args) {
+                const context = this;
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(context, args), wait);
+            };
+        }
+
+        // Auto-search with debounce
+        $('#searchInput').on('keyup', debounce(function() {
+            table.ajax.reload();
+        }, 500));
     });
 
     function document_preview(id, no) {

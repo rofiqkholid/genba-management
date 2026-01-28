@@ -68,7 +68,7 @@
                         <thead>
                             <tr>
                                 <th class="w-[4%] text-center">No</th>
-                                <th class="w-[12%]">DocDate</th>
+                                <th class="w-[12%]">Genba Date</th>
                                 <th class="w-[15%]">Process</th>
                                 <th class="w-[15%]">Station / Mech. Num</th>
                                 <th class="w-[12%]">Line Checked</th>

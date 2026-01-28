@@ -192,7 +192,7 @@ class GenbaManagementController extends Controller
                     'a.Path',
                     'a.asign_to',
                     'a.asign_to_dept',
-                    'a.priority',
+                    'a.type',
                     'a.area_detail',
                     'a.corrective_action',
                     'a.evidence',
@@ -584,7 +584,8 @@ class GenbaManagementController extends Controller
                         'c.result as Hasil',
                         'c.Path'
                     )
-                    ->get();
+                    ->get()
+                    ->unique('check_item_id');
 
                 $scopes = [];
                 foreach ($dbScopes as $item) {
@@ -599,7 +600,35 @@ class GenbaManagementController extends Controller
                     ];
                 }
 
+                // --- NEW: Fetch all finding rows to determine status of distinct findings (1, 2, 3) ---
+                $allFindings = DB::table('GenbaProcAuditDtl')
+                    ->where('genba_id', $insert)
+                    ->orderBy('SysID', 'asc') // Important: Order by SysID correlates to Index 1, 2, 3
+                    ->get();
+
+                $findingStatus = [];
+                $itemCounts = []; // Helper to track index per check_item_id
+
+                foreach ($allFindings as $finding) {
+                    $itemId = $finding->check_item_id;
+
+                    if (!isset($itemCounts[$itemId])) {
+                        $itemCounts[$itemId] = 0;
+                    }
+                    $itemCounts[$itemId]++;
+                    $currentIndex = $itemCounts[$itemId];
+
+                    // Mark as true if there is content (findings text or photos path)
+                    $hasContent = !empty($finding->findings) || !empty($finding->Path);
+
+                    $findingStatus["{$itemId}_{$currentIndex}"] = $hasContent;
+                }
+
                 $data["scopes"] = $scopes;
+                $data["finding_status"] = $findingStatus;
+                $data["finding_types"] = collect(['Quality', 'Safety & Environment', 'Cost', 'Delivery'])->map(function ($t) {
+                    return ['id' => $t, 'name' => $t];
+                })->toArray();
                 // Double check view path for standard activity
                 return view('activity.form-checksheet.activity_form', $data); // Assuming standard path
             }
@@ -687,30 +716,72 @@ class GenbaManagementController extends Controller
         $activity_id = $request->input('activity_id');
         $scope_id = $request->input('scope_id');
         $check_item_id = $request->input('check_item_id');
-        $db = GenbaManagement::get_genba_activity_detail($activity_id, $scope_id, $check_item_id);
-        if ($db->count() == 0) {
-            $data['photo'] = '';
+        $finding_index = $request->input('finding_index', 1); // Default to 1
+
+        // Fetch all rows for this item, sorted by ID to ensure finding 1 is first
+        $existingRows = DB::table('GenbaProcAuditDtl')
+            ->where('genba_id', $activity_id)
+            ->where('scope_id', $scope_id)
+            ->where('check_item_id', $check_item_id)
+            ->orderBy('SysID', 'asc')
+            ->get();
+
+        if ($existingRows->count() == 0) {
+            $data['photo'] = []; // Array for frontend
             $data['findings'] = '';
             $data['asign_to'] = '';
             $data['asign_to_name'] = '';
             $data['asign_to_dept'] = '';
             $data['asign_to_dept_name'] = '';
-            $data['priority'] = '';
+            $data['type'] = '';
             $data['area_detail'] = '';
             echo json_encode($data);
         } else {
-            $dt = $db->get();
-            foreach ($dt as $item) {
-                $photo = explode(',', $item->Path);
-                $data['photo'] = $photo;
-                $data['findings'] = $item->findings;
-                $data['asign_to'] = $item->asign_to;
-                $data['asign_to_name'] = $item->asign_to_name;
-                $data['asign_to_dept'] = $item->asign_to_dept;
-                $data['asign_to_dept_name'] = $item->asign_to_dept_name;
-                $data['priority'] = $item->priority;
-                $data['area_detail'] = $item->area_detail;
+            $targetRow = null;
+            $currentIndex = 1;
+
+            // Iterate to find the row corresponding to finding_index
+            foreach ($existingRows as $row) {
+                if ($currentIndex == $finding_index) {
+                    $targetRow = $row;
+                    break;
+                }
+                $currentIndex++;
             }
+
+            if ($targetRow) {
+                // Return data specific to this row
+                // Decode fields if they are JSON, though mostly they should be strings now.
+                // However, for compatibility if they are still JSON arrays in DB, we treat them as strings if they are simple values.
+                // Assuming the new storage logic sets them as plain strings (imploded arrays/text).
+
+                // BUT: We stored implode(',', photoPaths) in 'Path'
+                // and 'findings' text in 'findings'
+                // so we don't need JSON decoding anymore for the main fields.
+
+                $photoString = $targetRow->Path ?? '';
+                $data['photo'] = !empty($photoString) ? explode(',', $photoString) : [];
+
+                $data['findings'] = $targetRow->findings ?? '';
+                $data['asign_to'] = $targetRow->asign_to ?? '';
+                $data['asign_to_name'] = $targetRow->asign_to_name ?? '';
+                $data['asign_to_dept'] = $targetRow->asign_to_dept ?? '';
+                $data['asign_to_dept_name'] = $targetRow->asign_to_dept_name ?? '';
+                $data['type'] = $targetRow->type ?? '';
+                $data['area_detail'] = $targetRow->area_detail ?? '';
+                $data['type'] = $targetRow->type ?? '';
+            } else {
+                // Row for this index doesn't exist yet
+                $data['photo'] = [];
+                $data['findings'] = '';
+                $data['asign_to'] = '';
+                $data['asign_to_name'] = '';
+                $data['asign_to_dept'] = '';
+                $data['asign_to_dept_name'] = '';
+                $data['type'] = '';
+                $data['area_detail'] = '';
+            }
+
             echo json_encode($data);
         }
     }
@@ -721,19 +792,35 @@ class GenbaManagementController extends Controller
         $id_activity = $request->input('activity_id');
         $scope_id = $request->input('scope_id');
         $check_item_id = $request->input('check_item_id');
-        $findings = $request->input('findings');
-        $photo = $request->input('photos', []);
+        $finding_index = $request->input('finding_index', 1); // Default to 1
+        $dataphoto = $request->input('dataphoto');
+        if (!is_array($dataphoto)) $dataphoto = [];
+
+        $findings_text = $request->input('findings');
         $asign_to = $request->input('asign_to');
         $asign_to_name = $request->input('asign_to_name');
         $asign_to_dept_name = $request->input('asign_to_dept_name');
         $asign_to_dept = $request->input('asign_to_dept');
+
         $detail_area = $request->input('detail_area');
-        $dataphoto = $request->input('dataphoto', []);
+        $due_date = $request->input('due_date');
+        $type = $request->input('type');
+
+        if (!$due_date) {
+            $check_date = GenbaManagement::check_date_activity($id_activity);
+            $date_header = null;
+            foreach ($check_date->get() as $d) {
+                $date_header = $d->Date;
+            }
+            if ($date_header) {
+                $due_date = Carbon::parse($date_header)->addWeeks(2)->format('Y-m-d');
+            }
+        }
 
         // Validation - check required fields
         $errors = [];
 
-        if (empty($findings)) {
+        if (empty($findings_text)) {
             $errors[] = 'Findings are required';
         }
 
@@ -749,19 +836,6 @@ class GenbaManagementController extends Controller
             $existing_photos = $request->input('existing_photos', []);
             if (is_array($existing_photos)) {
                 $photoPaths = $existing_photos;
-            }
-        } else {
-            // Fallback for backward compatibility or if existing_photos not sent
-            if (empty($dataphoto) || (is_array($dataphoto) && count($dataphoto) == 0)) {
-                $check = DB::table('GenbaProcAuditDtl')
-                    ->where('genba_id', $id_activity)
-                    ->where('scope_id', $scope_id)
-                    ->where('check_item_id', $check_item_id)
-                    ->select('Path')
-                    ->first();
-                if ($check && !empty($check->Path)) {
-                    $photoPaths = explode(',', $check->Path);
-                }
             }
         }
 
@@ -813,21 +887,78 @@ class GenbaManagementController extends Controller
             ], 422);
         }
 
-        $photoPathsString = implode(',', $photoPaths);
-        $updates = DB::table('GenbaProcAuditDtl')
+        // --- Row-Based Storage Logic ---
+
+        // Fetch all rows for this item, ordered by SysID
+        $existingRows = DB::table('GenbaProcAuditDtl')
             ->where('genba_id', $id_activity)
             ->where('scope_id', $scope_id)
             ->where('check_item_id', $check_item_id)
-            ->update([
-                'Path' => $photoPathsString,
-                'findings' => $findings,
-                'asign_to' => $asign_to,
-                'asign_to_name' => $asign_to_name,
-                'asign_to_dept' => $asign_to_dept,
-                'asign_to_dept_name' => $asign_to_dept_name,
-                'area_detail' => $detail_area,
-                'updated_at' => Carbon::now()
+            ->orderBy('SysID', 'asc')
+            ->get();
+
+        $targetRow = null;
+        $rowExists = false;
+
+        // Ensure we have enough rows for the requested index
+        // If we want Finding 3 but have 0 rows, we need to create Row 1, Row 2, Row 3.
+        while ($existingRows->count() < $finding_index) {
+            // Create New SysID (Insert new row)
+            $result = 2;
+            if ($existingRows->count() > 0) {
+                $result = $existingRows->first()->result;
+            }
+
+            DB::table('GenbaProcAuditDtl')->insert([
+                'genba_id' => $id_activity,
+                'scope_id' => $scope_id,
+                'check_item_id' => $check_item_id,
+                'result' => $result,
+                'user_id' => $my_id,
+                'due_date' => $due_date,
+                'type' => $type,
+                'created_at' => \Carbon\Carbon::now(),
+                'updated_at' => \Carbon\Carbon::now()
             ]);
+
+            // Refresh count locally or re-fetch? 
+            // Better to re-fetch after loop to get IDs correct.
+            // But to loop condition work, we must increment count reference or just break and refetch.
+            // Actually, let's just re-fetch the collection after padding.
+            $existingRows = DB::table('GenbaProcAuditDtl')
+                ->where('genba_id', $id_activity)
+                ->where('scope_id', $scope_id)
+                ->where('check_item_id', $check_item_id)
+                ->orderBy('SysID', 'asc')
+                ->get();
+        }
+
+        // Now we definitely have the row at index ($finding_index - 1)
+        // Access 0-based index from the collection
+        $targetRow = $existingRows->get($finding_index - 1);
+
+        $photoPathsString = implode(',', $photoPaths);
+
+        $updates = false;
+
+        if ($targetRow) {
+            // Update existing row
+            $updates = DB::table('GenbaProcAuditDtl')
+                ->where('SysID', $targetRow->SysID)
+                ->update([
+                    'Path' => $photoPathsString,
+                    'findings' => $findings_text,
+                    'asign_to' => $asign_to,
+                    'asign_to_name' => $asign_to_name,
+                    'asign_to_dept' => $asign_to_dept,
+                    'asign_to_dept_name' => $asign_to_dept_name,
+                    'area_detail' => $detail_area,
+                    'due_date' => $due_date,
+                    'type' => $type,
+                    'updated_at' => \Carbon\Carbon::now()
+                ]);
+            $updates = true;
+        }
 
         if ($updates) {
             return response()->json([
@@ -836,8 +967,8 @@ class GenbaManagementController extends Controller
             ]);
         } else {
             return response()->json([
-                'message' => 'Foto gagal disimpan.',
-                'photos' => ''
+                'message' => 'Foto berhasil disimpan (no changes detected).',
+                'photos' => $photoPaths
             ]);
         }
     }

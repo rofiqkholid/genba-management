@@ -44,6 +44,7 @@
         }
         @endphp
         <input type="hidden" id="initial_answers_data" value="{{ json_encode($initialAnswers) }}">
+        <input type="hidden" id="initial_finding_status" value="{{ json_encode($finding_status ?? []) }}">
 
         <!-- Scopes & Items -->
         <div class="space-y-8">
@@ -109,22 +110,22 @@
                             </div>
 
                             <!-- Action Area -->
-                            <div class="flex-shrink-0 flex flex-col sm:flex-row gap-4 lg:w-[450px]">
+                            <div class="flex-shrink-0 flex flex-col sm:flex-row gap-4 lg:w-[550px]">
                                 <!-- Radio Options -->
-                                <div class="flex items-center justify-center gap-2 bg-slate-50 rounded-lg p-1.5 self-start">
+                                <div class="grid grid-cols-3 sm:flex sm:items-center sm:justify-center gap-2 bg-slate-50 rounded-lg p-1.5 w-full sm:w-auto self-start">
                                     <input type="hidden" id="scope_id_{{ $itemId }}" value="{{ $item['scope_id'] }}">
 
                                     @foreach([1 => ['icon' => 'fa-circle', 'textColor' => '#22c55e', 'bgColor' => '#f0fdf4'],
                                     2 => ['icon' => 'fa-exclamation-triangle', 'textColor' => '#eab308', 'bgColor' => '#fefce8'],
                                     3 => ['icon' => 'fa-times', 'textColor' => '#ef4444', 'bgColor' => '#fef2f2']] as $val => $style)
-                                    <label class="cursor-pointer relative">
+                                    <label class="cursor-pointer relative w-full sm:w-auto flex justify-center">
                                         <input type="radio"
                                             name="answers[{{ $itemId }}]"
                                             value="{{ $val }}"
                                             class="peer sr-only"
                                             @click="updateAnswer({{ $itemId }}, {{ $val }})"
                                             {{ $item['result'] == $val ? 'checked' : '' }}>
-                                        <div class="w-10 h-10 rounded-md flex items-center justify-center text-slate-300 hover:bg-white hover:text-slate-400 transition-all peer-checked:ring-1 peer-checked:ring-offset-1 peer-checked:ring-slate-200"
+                                        <div class="w-full sm:w-10 h-10 rounded-md flex items-center justify-center text-slate-300 hover:bg-white hover:text-slate-400 transition-all peer-checked:ring-1 peer-checked:ring-offset-1 peer-checked:ring-slate-200"
                                             style="--checked-bg: {{ $style['bgColor'] }}; --checked-text: {{ $style['textColor'] }};"
                                             :style="answers[{{ $itemId }}] == {{ $val }} ? 'background-color: {{ $style['bgColor'] }}; color: {{ $style['textColor'] }};' : ''">
                                             <i class="fas {{ $style['icon'] }} text-lg"></i>
@@ -139,11 +140,16 @@
                                     x-transition:enter-start="opacity-0 translate-x-4"
                                     x-transition:enter-end="opacity-100 translate-x-0"
                                     class="flex-1">
-                                    <button @click="openModal({{ $itemId }}, '{{ $item['scope_id'] }}')"
-                                        class="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors border border-blue-100 group-hover:border-blue-200">
-                                        <i class="fas fa-camera"></i>
-                                        <span class="font-medium text-sm">Add Finding</span>
-                                    </button>
+                                    <div class="grid grid-cols-3 gap-2">
+                                        @for ($i = 1; $i <= 3; $i++)
+                                            <button @click="openModal({{ $itemId }}, '{{ $item['scope_id'] }}', {{ $i }})"
+                                            class="w-full flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 px-1 sm:px-2 py-2 sm:py-3 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors border border-blue-100 group-hover:border-blue-200"
+                                            :class="hasFinding({{ $itemId }}, {{ $i }}) ? 'bg-green-50 text-green-600 border-green-200 hover:bg-green-100' : ''">
+                                            <i class="fas text-sm sm:text-base" :class="hasFinding({{ $itemId }}, {{ $i }}) ? 'fa-check-circle' : 'fa-camera'"></i>
+                                            <span class="font-medium text-[10px] sm:text-xs whitespace-nowrap">Finding {{ $i }}</span>
+                                            </button>
+                                            @endfor
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -176,7 +182,7 @@
 
                                 <!-- Modal Header -->
                                 <div class="bg-white border-b border-slate-200 px-8 py-5 flex justify-between items-center flex-shrink-0">
-                                    <h3 class="text-xl font-bold text-gray-800">Findings Photo</h3>
+                                    <h3 class="text-xl font-bold text-gray-800">Finding Photo</h3>
                                     <button @click="closeModal()" class="text-slate-400 hover:text-slate-600 transition-colors p-1">
                                         <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -190,7 +196,7 @@
                                         <!-- Left Column: Evidence Photos -->
                                         <div class="bg-white p-5 rounded-xl border border-slate-200">
                                             <h4 class="font-semibold text-slate-800 mb-4 flex items-center gap-2 text-base">
-                                                <i class="fas fa-image text-blue-500"></i> Findings Captured
+                                                <i class="fas fa-image text-blue-500"></i> Finding Captured
                                             </h4>
 
                                             <!-- Video Preview -->
@@ -237,17 +243,32 @@
                                                     id="asign_to_dept_{{ $itemId }}"
                                                     name="asign_to_dept_{{ $itemId }}"
                                                     label="Assign to"
-                                                    :apiUrl="route('genba.get_section')" />
+                                                    :apiUrl="route('genba.get_section')"
+                                                    required="true" />
                                             </div>
 
                                             <div class="bg-white p-5 rounded-xl border border-slate-200">
-                                                <label class="block text-sm font-semibold text-slate-700 mb-2">Findings / Comments <span class="text-red-500">*</span></label>
+                                                <x-searchable-select
+                                                    id="type_{{ $itemId }}"
+                                                    name="type"
+                                                    label="Related"
+                                                    :initialOptions="$finding_types"
+                                                    required="true" />
+                                            </div>
+
+                                            <div class="bg-white p-5 rounded-xl border border-slate-200">
+                                                <label class="block text-sm font-semibold text-slate-700 mb-2">Finding / Comments <span class="text-red-500">*</span></label>
                                                 <textarea id="findings_{{ $itemId }}" name="findings" rows="5" class="w-full rounded-lg border-slate-300 focus:border-blue-500 focus:ring-blue-500 text-sm outline-none" placeholder="Describe the issue..."></textarea>
                                             </div>
 
                                             <div class="bg-white p-5 rounded-xl border border-slate-200">
-                                                <label class="block text-sm font-semibold text-slate-700 mb-2">Detailed Area</label>
-                                                <div class="text-slate-600 text-sm">{{ $process }}</div>
+                                                <div class="grid grid-cols-3 gap-4 items-center">
+                                                    <label class="text-sm text-slate-600 font-semibold">Detailed Area</label>
+                                                    <div class="col-span-2">
+                                                        <input type="text" value="{{ $process }}" disabled
+                                                            class="w-full px-4 py-[9px] bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-500 cursor-not-allowed outline-none">
+                                                    </div>
+                                                </div>
                                                 <input type="hidden" id="area_detail_{{ $itemId }}" value="{{ $process }}">
                                             </div>
                                         </div>
@@ -292,12 +313,15 @@
 @push('scripts')
 <script>
     const initialGenbaAnswers = JSON.parse(document.getElementById('initial_answers_data').value || '{}');
+    const initialFindingStatus = JSON.parse(document.getElementById('initial_finding_status').value || '{}');
 
     document.addEventListener('alpine:init', () => {
         Alpine.data('genbaForm', () => ({
             isLoading: false,
             answers: initialGenbaAnswers,
             activeModal: null,
+            activeFindingIndex: 1, // Track which finding we are editing (1, 2, or 3)
+            findingStatus: initialFindingStatus, // Initialized from backend map
             cameraActive: false,
             stream: null,
 
@@ -322,6 +346,19 @@
                         sidebarOverlay.classList.add('hidden');
                     });
                 }
+
+                // Initialize finding status (can be populated via API later if needed, 
+                // but for now we rely on user interaction or fetching data)
+                // We'll fetch status for all items on load if needed, or just lazy load.
+                // For better UX, we might want to know immediately which findings exist.
+                // For now, let's keep it simple and update on save.
+            },
+
+            hasFinding(itemId, index) {
+                // Check if we have record of this finding being filled
+                // This logic might need to be robustly hydrated from server on load
+                const key = `${itemId}_${index}`;
+                return this.findingStatus[key] === true;
             },
 
             updateAnswer(itemId, val) {
@@ -350,10 +387,17 @@
                     .catch(err => console.error('Sync error:', err));
             },
 
-            openModal(itemId, scopeId) {
+            openModal(itemId, scopeId, findingIndex = 1) {
                 this.activeModal = itemId;
+                this.activeFindingIndex = findingIndex; // Set active index
                 this.cameraActive = false;
                 document.body.style.overflow = 'hidden';
+
+                // Clear previous form data to avoid flickering old data
+                document.getElementById(`findings_${itemId}`).value = '';
+                const container = document.getElementById(`preview_container_${itemId}`);
+                if (container) container.innerHTML = '';
+                // Reset select if possible (might need more complex logic for component)
 
                 // Fetch existing evidence data
                 let activityId = document.getElementById('activity_id').value;
@@ -369,6 +413,7 @@
                             activity_id: activityId,
                             scope_id: scopeId,
                             check_item_id: itemId,
+                            finding_index: findingIndex, // Pass index
                             _token: token
                         })
                     })
@@ -377,6 +422,21 @@
                         // Populate findings
                         if (data.findings) {
                             document.getElementById(`findings_${itemId}`).value = data.findings;
+                        }
+
+                        // Populate type
+                        const typeHidden = document.getElementById(`type_${itemId}`);
+                        if (typeHidden) {
+                            $(`#type_${itemId}`).val(data.type || '');
+                            const typeAlpine = typeHidden.closest('[x-data]');
+                            if (typeAlpine && typeAlpine._x_dataStack) {
+                                const typeData = typeAlpine._x_dataStack[0];
+                                if (typeData) {
+                                    typeData.selectedId = data.type || '';
+                                    typeData.selectedName = data.type || '';
+                                    typeData.search = data.type || '';
+                                }
+                            }
                         }
 
                         // Populate photos if exist
@@ -413,6 +473,34 @@
                                         alpineData.selectedId = data.asign_to_dept;
                                         alpineData.selectedName = data.asign_to_dept_name || data.asign_to_dept;
                                         alpineData.search = data.asign_to_dept_name || data.asign_to_dept;
+                                    }
+                                }
+                            }
+                        } else {
+                            // Reset if no data
+                            const typeHidden = document.getElementById(`type_${itemId}`);
+                            if (typeHidden) {
+                                $(`#type_${itemId}`).val('');
+                                const typeAlpine = typeHidden.closest('[x-data]');
+                                if (typeAlpine && typeAlpine._x_dataStack) {
+                                    const typeData = typeAlpine._x_dataStack[0];
+                                    if (typeData) {
+                                        typeData.selectedId = '';
+                                        typeData.selectedName = '';
+                                        typeData.search = '';
+                                    }
+                                }
+                            }
+                            const hiddenInput = document.getElementById(`asign_to_dept_${itemId}`);
+                            if (hiddenInput) {
+                                $(`#asign_to_dept_${itemId}`).val('');
+                                const alpineContainer = hiddenInput.closest('[x-data]');
+                                if (alpineContainer && alpineContainer._x_dataStack) {
+                                    const alpineData = alpineContainer._x_dataStack[0];
+                                    if (alpineData) {
+                                        alpineData.selectedId = '';
+                                        alpineData.selectedName = '';
+                                        alpineData.search = '';
                                     }
                                 }
                             }
@@ -555,6 +643,14 @@
                 const areaDetailInput = document.getElementById(`area_detail_${itemId}`);
                 const detailArea = areaDetailInput ? areaDetailInput.value : '';
 
+                const typeValue = document.getElementById(`type_${itemId}`).value;
+
+                if (!typeValue) {
+                    showToast('Finding Type is required', 'error');
+                    this.isLoading = false;
+                    return;
+                }
+
                 this.isLoading = true;
 
                 fetch("{{ route('genba.post_photo_spv') }}", {
@@ -567,12 +663,14 @@
                             activity_id: activityId,
                             scope_id: scopeId,
                             check_item_id: itemId,
+                            finding_index: this.activeFindingIndex, // Pass active index
                             findings: findings,
                             dataphoto: dataphoto.length > 0 ? dataphoto : null,
                             existing_photos: existing_photos,
                             asign_to_dept: asignToDept,
                             asign_to_dept_name: asignToDeptName,
                             detail_area: detailArea,
+                            type: typeValue,
                             _token: token
                         })
                     })
@@ -587,6 +685,10 @@
                         if (data.message) {
                             showToast(data.message, 'success');
                         }
+
+                        // Update local status to show checkmark
+                        this.findingStatus[`${itemId}_${this.activeFindingIndex}`] = true;
+
                         this.closeModal();
                     })
                     .catch(err => {

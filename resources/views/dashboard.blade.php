@@ -21,7 +21,7 @@
         <!-- Stats Cards -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
             <!-- Card 0: All Findings -->
-            <div class="bg-white rounded-2xl p-4 border border-slate-100">
+            <div class="bg-white rounded-2xl p-4 border border-gray-200">
                 <div class="flex items-center gap-4">
                     <div class="w-12 h-12 bg-purple-50 rounded-xl flex items-center justify-center shrink-0">
                         <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -36,7 +36,7 @@
             </div>
 
             <!-- Card 1: Findings Open -->
-            <div class="bg-white rounded-2xl p-4 border border-slate-100">
+            <div class="bg-white rounded-2xl p-4 border border-gray-200">
                 <div class="flex items-center gap-4">
                     <div class="w-12 h-12 bg-red-50 rounded-xl flex items-center justify-center shrink-0">
                         <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -51,7 +51,7 @@
             </div>
 
             <!-- Card 2: Need Approve -->
-            <div class="bg-white rounded-2xl p-4 border border-slate-100">
+            <div class="bg-white rounded-2xl p-4 border border-gray-200">
                 <div class="flex items-center gap-4">
                     <div class="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center shrink-0">
                         <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -66,7 +66,7 @@
             </div>
 
             <!-- Card 3: Due Date (Overdue) -->
-            <div class="bg-white rounded-2xl p-4 border border-slate-100">
+            <div class="bg-white rounded-2xl p-4 border border-gray-200">
                 <div class="flex items-center gap-4">
                     <div class="w-12 h-12 bg-amber-50 rounded-xl flex items-center justify-center shrink-0">
                         <svg class="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -81,7 +81,7 @@
             </div>
 
             <!-- Card 4: Closed -->
-            <div class="bg-white rounded-2xl p-4 border border-slate-100">
+            <div class="bg-white rounded-2xl p-4 border border-gray-200">
                 <div class="flex items-center gap-4">
                     <div class="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center shrink-0">
                         <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -97,7 +97,7 @@
         </div>
 
         <!-- Department Chart Section -->
-        <div class="bg-white rounded-2xl p-5 border border-slate-100 mb-8">
+        <div class="bg-white rounded-2xl p-5 border border-gray-200 mb-8">
             <div class="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
                 <div>
                     <h3 class="text-lg font-bold text-slate-800">Department Performance</h3>

@@ -74,10 +74,7 @@
                                     <i class='fa fa-circle text-blue-500 mt-1 text-xs'></i>
                                     <span>Jika telah sesuai dengan persyaratan/ poin cek</span>
                                 </div>
-                                <div class='flex items-start gap-2'>
-                                    <i class='fa fa-exclamation-triangle text-yellow-500 mt-0.5'></i>
-                                    <span>Jika persyaratan/item check sudah dilakukan namun tidak maksimal / tidak konsisten / masih perlu dilakukan improvement</span>
-                                </div>
+
                                 <div class='flex items-start gap-2'>
                                     <i class='fa fa-times text-red-500 mt-0.5'></i>
                                     <span>Jika tidak sesuai dengan persyaratan / poin cek</span>
@@ -93,7 +90,7 @@
                     @foreach ($items as $item)
                     @php $itemId = $item['check_item_id']; @endphp
                     <div class="group relative rounded-xl border bg-white p-5 transition-all duration-300"
-                        :style="answers[{{ $itemId }}] == 3 ? 'border-color: #fecaca; background-color: rgba(254, 242, 242, 0.1);' : (answers[{{ $itemId }}] == 2 ? 'border-color: #fef08a; background-color: rgba(254, 252, 232, 0.1);' : 'border-color: #f1f5f9;')">
+                        :style="answers[{{ $itemId }}] == 3 ? 'border-color: #fecaca; background-color: rgba(254, 242, 242, 0.1);' : 'border-color: #f1f5f9;'">
 
                         <div class="flex flex-col lg:flex-row gap-6">
                             <!-- Question -->
@@ -112,11 +109,10 @@
                             <!-- Action Area -->
                             <div class="flex-shrink-0 flex flex-col sm:flex-row gap-4 lg:w-[550px]">
                                 <!-- Radio Options -->
-                                <div class="grid grid-cols-3 sm:flex sm:items-center sm:justify-center gap-2 bg-slate-50 rounded-lg p-1.5 w-full sm:w-auto self-start">
+                                <div class="grid grid-cols-2 sm:flex sm:items-center sm:justify-center gap-2 bg-slate-50 rounded-lg p-1.5 w-full sm:w-auto self-start">
                                     <input type="hidden" id="scope_id_{{ $itemId }}" value="{{ $item['scope_id'] }}">
 
                                     @foreach([1 => ['icon' => 'fa-circle', 'textColor' => '#22c55e', 'bgColor' => '#f0fdf4'],
-                                    2 => ['icon' => 'fa-exclamation-triangle', 'textColor' => '#eab308', 'bgColor' => '#fefce8'],
                                     3 => ['icon' => 'fa-times', 'textColor' => '#ef4444', 'bgColor' => '#fef2f2']] as $val => $style)
                                     <label class="cursor-pointer relative w-full sm:w-auto flex justify-center">
                                         <input type="radio"
@@ -135,7 +131,7 @@
                                 </div>
 
                                 <!-- Camera/Evidences Trigger -->
-                                <div x-show="answers[{{ $itemId }}] > 1"
+                                <div x-show="answers[{{ $itemId }}] == 3"
                                     x-transition:enter="transition ease-out duration-200"
                                     x-transition:enter-start="opacity-0 translate-x-4"
                                     x-transition:enter-end="opacity-100 translate-x-0"

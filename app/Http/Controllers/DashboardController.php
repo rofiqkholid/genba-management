@@ -640,8 +640,8 @@ class DashboardController extends Controller
                       ->whereColumn('car.audit_detail_id', 'd.id')
                       ->whereNotNull('car.finding')
                       ->where('car.finding', '<>', '')
-                      ->whereNotNull('car.requirement_no')
-                      ->where('car.requirement_no', '<>', '');
+                      ->whereNotNull('car.clause_title')
+                      ->where('car.clause_title', '<>', '');
                 })
                 ->count();
             $major = (clone $query)->where('d.judgment', 'Mayor')
@@ -651,8 +651,8 @@ class DashboardController extends Controller
                       ->whereColumn('car.audit_detail_id', 'd.id')
                       ->whereNotNull('car.finding')
                       ->where('car.finding', '<>', '')
-                      ->whereNotNull('car.requirement_no')
-                      ->where('car.requirement_no', '<>', '');
+                      ->whereNotNull('car.clause_title')
+                      ->where('car.clause_title', '<>', '');
                 })
                 ->count();
             $ofi = (clone $query)->where('d.judgment', 'OFI')->count();
@@ -699,6 +699,10 @@ class DashboardController extends Controller
                 ->where('car.finding_category', 'Minor')
                 ->where('car.status', 'Closed')
                 ->whereNotNull('car.qmr_approved_at')
+                ->whereNotNull('car.clause_title')
+                ->where('car.clause_title', '<>', '')
+                ->whereNotNull('car.finding')
+                ->where('car.finding', '<>', '')
                 ->whereYear('h.audit_date', $year)
                 ->whereMonth('h.audit_date', $month)
                 ->count();
@@ -710,6 +714,10 @@ class DashboardController extends Controller
                 ->where('car.finding_category', 'Mayor')
                 ->where('car.status', 'Closed')
                 ->whereNotNull('car.qmr_approved_at')
+                ->whereNotNull('car.clause_title')
+                ->where('car.clause_title', '<>', '')
+                ->whereNotNull('car.finding')
+                ->where('car.finding', '<>', '')
                 ->whereYear('h.audit_date', $year)
                 ->whereMonth('h.audit_date', $month)
                 ->count();
@@ -726,6 +734,10 @@ class DashboardController extends Controller
                     $q->whereNull('act.action_status')
                       ->orWhereNotIn('act.action_status', ['open_verif', 'approve_superior', 'verified']);
                 })
+                ->whereNotNull('car.clause_title')
+                ->where('car.clause_title', '<>', '')
+                ->whereNotNull('car.finding')
+                ->where('car.finding', '<>', '')
                 ->whereYear('h.audit_date', $year)
                 ->whereMonth('h.audit_date', $month)
                 ->count();
@@ -742,6 +754,10 @@ class DashboardController extends Controller
                     $q->whereNull('act.action_status')
                       ->orWhereNotIn('act.action_status', ['open_verif', 'approve_superior', 'verified']);
                 })
+                ->whereNotNull('car.clause_title')
+                ->where('car.clause_title', '<>', '')
+                ->whereNotNull('car.finding')
+                ->where('car.finding', '<>', '')
                 ->whereYear('h.audit_date', $year)
                 ->whereMonth('h.audit_date', $month)
                 ->count();
@@ -761,6 +777,10 @@ class DashboardController extends Controller
                            ->whereIn('act.action_status', ['open_verif', 'approve_superior']);
                     });
                 })
+                ->whereNotNull('car.clause_title')
+                ->where('car.clause_title', '<>', '')
+                ->whereNotNull('car.finding')
+                ->where('car.finding', '<>', '')
                 ->whereYear('h.audit_date', $year)
                 ->whereMonth('h.audit_date', $month)
                 ->count();
@@ -795,6 +815,8 @@ class DashboardController extends Controller
             ->join('CsAuditHeader as h', 'h.id', '=', 'd.audit_header_id')
             ->whereNotNull('car.clause_title')
             ->where('car.clause_title', '<>', '')
+            ->whereNotNull('car.finding')
+            ->where('car.finding', '<>', '')
             ->whereYear('h.audit_date', $year)
             ->whereMonth('h.audit_date', $month)
             ->select(

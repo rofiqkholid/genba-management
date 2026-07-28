@@ -1529,14 +1529,11 @@ class InternalAuditController extends Controller
                 ->leftJoin('CsAuditDetail as b', 'b.id', '=', 'a.audit_detail_id')
                 ->leftJoin('CsAuditHeader as c', 'c.id', '=', 'b.audit_header_id')
                 ->whereNotNull('a.department')
-                ->where('a.department', '<>', '');
-
-            if (!$request->input('is_dashboard')) {
-                $query->whereNotNull('a.finding')
-                      ->where('a.finding', '<>', '')
-                      ->whereNotNull('a.requirement_no')
-                      ->where('a.requirement_no', '<>', '');
-            }
+                ->where('a.department', '<>', '')
+                ->whereNotNull('a.finding')
+                ->where('a.finding', '<>', '')
+                ->whereNotNull('a.clause_title')
+                ->where('a.clause_title', '<>', '');
 
             $query->select('a.*', 'b.checksheet_item_id', 'c.hash_id as schedule_hash_id', 'c.auditee as header_auditee', 'b.note', 'c.audit_date');
 

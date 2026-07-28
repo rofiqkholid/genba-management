@@ -1261,7 +1261,7 @@
 
     function loadClauseChart(yearMonth) {
         $.ajax({
-            url: "/dashboard-internal-audit/clause-chart-data/" + yearMonth,
+            url: "{{ route('dashboard.internal_audit.clause_chart_data', ':yearMonth') }}".replace(':yearMonth', yearMonth),
             type: "GET",
             dataType: "json",
             success: function(response) {

@@ -18,13 +18,13 @@
                 <h1 class="text-xl md:text-2xl font-bold text-slate-800">Internal Audit Dashboard</h1>
                 <p class="text-xs md:text-sm text-slate-500 mt-1">Monitor Internal Audit findings and performance in real-time.</p>
             </div>
-            <div class="flex-shrink-0 flex items-center gap-3">
-                <button type="button" onclick="exportToExcel()" class="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-lg shadow-sm transition-colors">
-                    <i class="fa-solid fa-download"></i>
+            <div class="flex-shrink-0 flex items-center justify-end w-full sm:w-auto self-end sm:self-auto gap-1.5 sm:gap-3">
+                <button type="button" onclick="exportToExcel()" class="inline-flex items-center gap-1.5 px-2 py-1.5 sm:px-4 sm:py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] sm:text-sm font-semibold rounded-lg shadow-sm transition-colors">
+                    <i class="fa-solid fa-download text-xs sm:text-sm"></i>
                     <span>Export to Excel</span>
                 </button>
-                <button type="button" onclick="exportToPdf()" class="inline-flex items-center gap-2 px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white text-sm font-semibold rounded-lg shadow-sm transition-colors">
-                    <i class="fa-solid fa-download"></i>
+                <button type="button" onclick="exportToPdf()" class="inline-flex items-center gap-1.5 px-2 py-1.5 sm:px-4 sm:py-2.5 bg-rose-600 hover:bg-rose-700 text-white text-[10px] sm:text-sm font-semibold rounded-lg shadow-sm transition-colors">
+                    <i class="fa-solid fa-download text-xs sm:text-sm"></i>
                     <span>Export PDF</span>
                 </button>
             </div>
@@ -1286,43 +1286,37 @@
 
         const isMobile = window.innerWidth < 1280;
 
-        // Dynamic page size based on screen width
-        const width = window.innerWidth;
-        if (width < 380) clauseChartPageSize = 3;
-        else if (width < 480) clauseChartPageSize = 4;
-        else if (width < 640) clauseChartPageSize = 5;
-        else if (width < 768) clauseChartPageSize = 6;
-        else if (width < 1024) clauseChartPageSize = 7;
-        else clauseChartPageSize = 9;
+        // Display 5 items on mobile/tablet (to prevent squished bars), and 8 items on PC/laptop
+        clauseChartPageSize = window.innerWidth < 1024 ? 5 : 8;
 
         let labels = rawClauseChartData.labels;
         let minorData = rawClauseChartData.minor;
         let majorData = rawClauseChartData.major;
         let ofiData = rawClauseChartData.ofi;
 
-        if (isMobile) {
-            let zipped = [];
-            for (let i = 0; i < labels.length; i++) {
-                zipped.push({
-                    name: labels[i],
-                    minor: minorData[i] || 0,
-                    major: majorData[i] || 0,
-                    ofi: ofiData[i] || 0
-                });
-            }
-
-            zipped.sort((a, b) => {
-                const bTotal = b.minor + b.major + b.ofi;
-                const aTotal = a.minor + a.major + a.ofi;
-                return bTotal - aTotal;
+        let zipped = [];
+        for (let i = 0; i < labels.length; i++) {
+            zipped.push({
+                name: labels[i],
+                minor: minorData[i] || 0,
+                major: majorData[i] || 0,
+                ofi: ofiData[i] || 0
             });
+        }
 
-            labels = zipped.map(item => item.name);
-            minorData = zipped.map(item => item.minor);
-            majorData = zipped.map(item => item.major);
-            ofiData = zipped.map(item => item.ofi);
+        zipped.sort((a, b) => {
+            const bTotal = b.minor + b.major + b.ofi;
+            const aTotal = a.minor + a.major + a.ofi;
+            return bTotal - aTotal;
+        });
 
-            const totalItems = labels.length;
+        labels = zipped.map(item => item.name);
+        minorData = zipped.map(item => item.minor);
+        majorData = zipped.map(item => item.major);
+        ofiData = zipped.map(item => item.ofi);
+
+        const totalItems = labels.length;
+        if (totalItems > clauseChartPageSize) {
             const totalPages = Math.ceil(totalItems / clauseChartPageSize) || 1;
             
             if (currentClauseChartPage < 1) currentClauseChartPage = 1;
@@ -1477,7 +1471,17 @@
                         ticks: {
                             maxRotation: 0,
                             minRotation: 0,
-                            autoSkip: false
+                            autoSkip: false,
+                            callback: function(value, index, values) {
+                                let label = this.getLabelForValue(value);
+                                if (window.innerWidth < 1024) {
+                                    return label ? label.split(' ')[0] : '';
+                                }
+                                if (label && label.length > 15) {
+                                    return label.substring(0, 15) + '...';
+                                }
+                                return label;
+                            }
                         }
                     },
                     y: {

@@ -18,9 +18,9 @@
                 <h1 class="text-xl md:text-2xl font-bold text-slate-800">Genba Management Dashboard</h1>
                 <p class="text-xs md:text-sm text-slate-500 mt-1">Monitor Genba Management audit findings and performance in real-time.</p>
             </div>
-            <div class="flex-shrink-0 flex items-center gap-3">
-                <button type="button" id="btnExport" onclick="exportToExcel()" class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-none shadow-sm transition-colors disabled:opacity-50">
-                    <i id="exportIcon" class="fa-solid fa-file-excel text-base"></i>
+            <div class="flex-shrink-0 flex items-center justify-end w-full sm:w-auto self-end sm:self-auto gap-2">
+                <button type="button" id="btnExport" onclick="exportToExcel()" class="inline-flex items-center gap-1.5 px-2 py-1.5 sm:px-4 sm:py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] sm:text-sm font-semibold rounded-none shadow-sm transition-colors disabled:opacity-50">
+                    <i id="exportIcon" class="fa-solid fa-file-excel text-xs sm:text-base"></i>
                     <span id="exportText">Export to Excel</span>
                 </button>
             </div>

@@ -789,54 +789,33 @@ class DashboardController extends Controller
         $year = (int)$year;
         $month = (int)$month;
 
-        // Fetch distinct clause categories from CsKlausul master table
-        $masterClauses = DB::table('CsKlausul')
-            ->whereNotNull('clause_no')
-            ->where('clause_no', '<>', '')
-            ->distinct()
-            ->pluck('clause_no')
-            ->toArray();
-
         // Fetch actual findings counts for selected month/year
         $results = DB::table('CsAuditCar as car')
             ->join('CsAuditDetail as d', 'd.id', '=', 'car.audit_detail_id')
             ->join('CsAuditHeader as h', 'h.id', '=', 'd.audit_header_id')
-            ->whereNotNull('car.requirement_no')
-            ->where('car.requirement_no', '<>', '')
+            ->whereNotNull('car.clause_title')
+            ->where('car.clause_title', '<>', '')
             ->whereYear('h.audit_date', $year)
             ->whereMonth('h.audit_date', $month)
             ->select(
-                'car.requirement_no',
+                'car.clause_title',
                 DB::raw("SUM(CASE WHEN car.finding_category = 'Minor' THEN 1 ELSE 0 END) as minor_count"),
                 DB::raw("SUM(CASE WHEN car.finding_category = 'Mayor' THEN 1 ELSE 0 END) as major_count"),
                 DB::raw("SUM(CASE WHEN car.finding_category = 'OFI' THEN 1 ELSE 0 END) as ofi_count"),
                 DB::raw("COUNT(*) as total_count")
             )
-            ->groupBy('car.requirement_no')
-            ->get()
-            ->keyBy('requirement_no');
+            ->groupBy('car.clause_title')
+            ->get();
 
-        // Combine master clauses with actual counts
         $clauseList = [];
-        foreach ($masterClauses as $clause) {
-            if (isset($results[$clause])) {
-                $row = $results[$clause];
-                $clauseList[] = [
-                    'label' => $clause,
-                    'minor' => (int)$row->minor_count,
-                    'major' => (int)$row->major_count,
-                    'ofi' => (int)$row->ofi_count,
-                    'total' => (int)$row->total_count
-                ];
-            } else {
-                $clauseList[] = [
-                    'label' => $clause,
-                    'minor' => 0,
-                    'major' => 0,
-                    'ofi' => 0,
-                    'total' => 0
-                ];
-            }
+        foreach ($results as $row) {
+            $clauseList[] = [
+                'label' => $row->clause_title,
+                'minor' => (int)$row->minor_count,
+                'major' => (int)$row->major_count,
+                'ofi' => (int)$row->ofi_count,
+                'total' => (int)$row->total_count
+            ];
         }
 
         // Sort by total findings descending

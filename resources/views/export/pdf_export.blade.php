@@ -65,8 +65,16 @@
             <div class="font-bold text-[7px] leading-tight text-slate-700">PT. SUMMIT ADYAWINSA INDONESIA</div>
         </div>
         <!-- Middle: Title -->
-        <div class="w-4/5 flex justify-center items-center font-bold text-xl text-slate-800 uppercase tracking-wide">
+        <div class="w-3/5 flex justify-center items-center font-bold text-lg text-slate-800 uppercase tracking-wide">
             Rekap CAR Internal /Eksternal Audit
+        </div>
+        <!-- Right: Document Info -->
+        <div class="w-1/5 flex flex-col border-l border-black text-left text-[7px] leading-tight text-slate-700 font-semibold">
+            <div class="flex-1 flex items-center px-1.5 border-b border-black">Nomor Dokumen : FO-08-02</div>
+            <div class="flex-1 flex items-center px-1.5 border-b border-black">Department : MANAGEMENT</div>
+            <div class="flex-1 flex items-center px-1.5 border-b border-black">Tanggal Terbit : 27 November 2014</div>
+            <div class="flex-1 flex items-center px-1.5 border-b border-black">Nomor Revisi : 01</div>
+            <div class="flex-1 flex items-center px-1.5">Halaman : 1 dari 1</div>
         </div>
     </div>
 

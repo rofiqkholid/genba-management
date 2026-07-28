@@ -2961,6 +2961,7 @@ class InternalAuditController extends Controller
             }
 
             $action = DB::table('CsAuditAction')->where('audit_car_id', $car->id)->first();
+            $approve = DB::table('CsAuditApprove')->where('audit_car_id', $car->id)->first();
 
             $templatePath = public_path('tamplate-xlsx/Tamplate_CAR Audit 2025.xlsx');
             if (!file_exists($templatePath)) {
@@ -3027,19 +3028,38 @@ class InternalAuditController extends Controller
             
             $sheet->setCellValue('A47', "DEADLINE : " . ($car->due_date ? Carbon::parse($car->due_date)->format('d F Y') : '-'));
             $sheet->setCellValue('A49', $action->notes ?? '');
-            $sheet->setCellValue('H49', $action->auditee_name ?? $car->header_auditee ?? $car->auditee ?? '-');
-            $sheet->setCellValue('I49', $action->auditee_superior_name ?? '');
 
-            // Set Verification Result (A52:C53 merged) based on QMR approval status
-            $sheet->setCellValue('A52', !empty($car->qmr_approved_at) ? 'Close' : 'Open');
-            $sheet->getStyle('A52')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
-            $sheet->getStyle('A52')->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
-            $sheet->getStyle('A52')->getFont()->setBold(true);
-
-            // Set signature names for Auditee (G52), Auditor (H52), and QMR (I52)
-            $sheet->setCellValue('G52', $action->auditee_name ?? $car->header_auditee ?? $car->auditee ?? '-');
-            $sheet->setCellValue('H52', $car->auditor ?? '-');
+            // 1. Auditee (Prepare by)
+            $auditeeName = $action->auditee_name ?? $car->header_auditee ?? $car->auditee ?? '-';
+            $isComplete = isset($action) && in_array($action->action_status, ['open_verif', 'approve_superior', 'verified']);
+            $auditeeStatus = $isComplete ? 'PREPARED' : 'PENDING';
+            $auditeeDate = ($isComplete && !empty($action->created_at)) ? Carbon::parse($action->created_at)->format('d/m/Y') : '';
             
+            $sheet->setCellValue('H49', $auditeeName);
+            $sheet->setCellValue('H50', $auditeeStatus);
+            $sheet->setCellValue('H51', $auditeeDate);
+
+            // 2. Auditee Superior (Checked by)
+            $isVerifiedBySuperior = isset($action) && (in_array($action->action_status, ['approve_superior', 'verified']) || !empty($approve->superior_approved_at ?? ''));
+            $superiorName = $action->auditee_superior_name ?? '';
+            $superiorStatus = $isVerifiedBySuperior ? 'CHECKED' : 'PENDING';
+            $superiorDate = ($isVerifiedBySuperior && !empty($approve->superior_approved_at)) ? Carbon::parse($approve->superior_approved_at)->format('d/m/Y') : '';
+            
+            $sheet->setCellValue('G53', $superiorName);
+            $sheet->setCellValue('G54', $superiorStatus);
+            $sheet->setCellValue('G55', $superiorDate);
+
+            // 3. Auditor (Confirm by)
+            $isConfirmedByAuditor = isset($action) && ($action->action_status === 'verified' || !empty($approve->auditor_approved_at ?? '') || ($car->status ?? '') === 'Closed');
+            $auditorName = $car->auditor ?? '-';
+            $auditorStatus = $isConfirmedByAuditor ? 'CONFIRMED' : 'PENDING';
+            $auditorDate = ($isConfirmedByAuditor && !empty($approve->auditor_approved_at)) ? Carbon::parse($approve->auditor_approved_at)->format('d/m/Y') : '';
+            
+            $sheet->setCellValue('H53', $auditorName);
+            $sheet->setCellValue('H54', $auditorStatus);
+            $sheet->setCellValue('H55', $auditorDate);
+
+            // 4. QMR (Known by)
             $qmrName = 'Arif Basuki';
             if (!empty($car->qmr_nik)) {
                 $qmrUser = DB::table('users')->where('username', $car->qmr_nik)->first();
@@ -3047,13 +3067,31 @@ class InternalAuditController extends Controller
                     $qmrName = $qmrUser->full_name;
                 }
             }
-            if (!empty($car->qmr_approved_at)) {
-                $sheet->setCellValue('I52', $qmrName);
-            } else {
-                $sheet->setCellValue('I52', '');
+            $isApprovedByQmr = (!empty($approve) && !empty($approve->qmr_approved_at)) || !empty($car->qmr_approved_at);
+            $qmrStatus = $isApprovedByQmr ? 'APPROVED' : 'PENDING';
+            $qmrDate = '';
+            if ($isApprovedByQmr) {
+                $qmrDate = !empty($approve->qmr_approved_at) ? Carbon::parse($approve->qmr_approved_at)->format('d/m/Y') : Carbon::parse($car->qmr_approved_at)->format('d/m/Y');
             }
+            
+            $sheet->setCellValue('I53', $qmrName);
+            $sheet->setCellValue('I54', $qmrStatus);
+            $sheet->setCellValue('I55', $qmrDate);
 
-            foreach (['G52', 'H52', 'I52'] as $sigCell) {
+            // Set Verification Result (A53:C55 merged) based on QMR approval status
+            $sheet->setCellValue('A53', !empty($car->qmr_approved_at) ? 'Close' : 'Open');
+            $sheet->getStyle('A53')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+            $sheet->getStyle('A53')->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
+            $sheet->getStyle('A53')->getFont()->setBold(true);
+
+            // Center align the signature columns
+            $alignCells = [
+                'H49', 'H50', 'H51',
+                'G53', 'G54', 'G55',
+                'H53', 'H54', 'H55',
+                'I53', 'I54', 'I55'
+            ];
+            foreach ($alignCells as $sigCell) {
                 $sheet->getStyle($sigCell)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
                 $sheet->getStyle($sigCell)->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
             }

@@ -11,50 +11,50 @@
     @include('layouts.header')
 
     <!-- Page Content -->
-    <main class="flex-1 p-4 lg:p-6">
+    <main class="flex-1 px-4 py-2 lg:px-6 lg:py-3">
         <!-- Page Title -->
-        <div class="mb-8">
+        <div class="mb-4">
             <h1 class="text-xl md:text-2xl font-bold text-slate-800">Genba Safety Dashboard</h1>
             <p class="text-xs md:text-sm text-slate-500 mt-1">Monitor Genba Safety audit findings and performance in real-time.</p>
         </div>
 
         <div class="bg-white p-5 border border-gray-200 rounded-none mb-8 lg:overflow-x-hidden">
-            <div class="grid grid-cols-1 xl:grid-cols-5 gap-8">
+            <div class="grid grid-cols-1 xl:grid-cols-5 gap-4">
                 <!-- Left Column: Chart & Table (80%) -->
-                <div class="xl:col-span-4 border-b border-gray-100 pb-8 xl:pb-0 xl:border-b-0 xl:border-r pr-0 xl:pr-8">
-                    <div class="flex items-center justify-between gap-4 mb-6">
-                        <div>
-                            <h3 class="text-base sm:text-lg font-bold text-slate-800">Department Performance</h3>
-                            <p class="text-[10px] sm:text-sm text-slate-500">Findings status per department</p>
-                        </div>
-                        <div class="flex flex-col items-end gap-2">
-                            <input type="month" id="chartFilterDate" value="{{ date('Y-m') }}"
-                                class="w-[95px] sm:w-auto px-2 py-1.5 sm:px-4 sm:py-2 border border-slate-300 rounded-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-xs sm:text-sm outline-none bg-slate-50">
-                            <!-- Chart Pagination (Visible on Mobile only) -->
-                            <div id="chartPagination" class="hidden items-center gap-1.5">
-                                <span id="chartPageIndicator" class="text-xs sm:text-sm text-slate-600 font-medium mr-1 text-nowrap">1/2</span>
-                                <button type="button" id="btnChartPrev" class="w-8 h-8 flex items-center justify-center border border-slate-300 bg-white text-slate-600 hover:bg-slate-50 rounded-none disabled:opacity-50 transition-colors">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-                                    </svg>
-                                </button>
-                                <button type="button" id="btnChartNext" class="w-8 h-8 flex items-center justify-center border border-slate-300 bg-white text-slate-600 hover:bg-slate-50 rounded-none disabled:opacity-50 transition-colors">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                                    </svg>
-                                </button>
-                            </div>
-                        </div>
+                <div class="xl:col-span-4 border-b border-gray-100 pb-8 xl:pb-0 xl:border-b-0 xl:border-r pr-0 xl:pr-4">
+                    <div class="flex items-center justify-between gap-4 mb-3">
+                         <div>
+                             <h3 class="text-base sm:text-lg font-bold text-slate-800">Department Performance</h3>
+                             <p class="text-[10px] sm:text-sm text-slate-500">Findings status per department</p>
+                         </div>
+                         <div class="flex flex-col items-end gap-2">
+                             <input type="month" id="chartFilterDate" value="{{ date('Y-m') }}"
+                                 class="w-[95px] sm:w-auto px-2 py-1.5 sm:px-4 sm:py-2 border border-slate-300 rounded-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-xs sm:text-sm outline-none bg-slate-50">
+                             <!-- Chart Pagination (Visible on Mobile only) -->
+                             <div id="chartPagination" class="hidden items-center gap-1.5">
+                                 <span id="chartPageIndicator" class="text-xs sm:text-sm text-slate-600 font-medium mr-1 text-nowrap">1/2</span>
+                                 <button type="button" id="btnChartPrev" class="w-8 h-8 flex items-center justify-center border border-slate-300 bg-white text-slate-600 hover:bg-slate-50 rounded-none disabled:opacity-50 transition-colors">
+                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                                     </svg>
+                                 </button>
+                                 <button type="button" id="btnChartNext" class="w-8 h-8 flex items-center justify-center border border-slate-300 bg-white text-slate-600 hover:bg-slate-50 rounded-none disabled:opacity-50 transition-colors">
+                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                                     </svg>
+                                 </button>
+                             </div>
+                         </div>
                     </div>
-                    <div class="relative h-[390px] w-full">
+                    <div class="relative h-[280px] w-full">
                         <canvas id="deptChart"></canvas>
                     </div>
                 </div>
 
                 <!-- Right Column: Findings Overview (20%) -->
                 <div class="xl:col-span-1 pt-8 xl:pt-0">
-                    <h3 class="text-lg font-bold text-slate-800 mb-6">Overview</h3>
-                    <div class="relative h-64 w-full flex justify-center mb-6">
+                    <h3 class="text-lg font-bold text-slate-800 mb-3">Overview</h3>
+                    <div class="relative h-52 w-full flex justify-center mb-3">
                         <canvas id="statsPieChart"></canvas>
                     </div>
                     <div class="grid grid-cols-2 gap-4 text-sm text-slate-600">

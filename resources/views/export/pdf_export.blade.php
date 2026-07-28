@@ -3,11 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rekap CAR Internal /Eksternal Audit</title>
+    <title>Rekap CAR Internal - Eksternal Audit</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
+        @page {
+            size: A4 landscape;
+            margin: 0.5cm;
+        }
         @media print {
+            html, body {
+                width: 297mm;
+                height: 210mm;
+            }
             body {
                 background-color: #fff;
                 color: #000;
@@ -15,17 +23,15 @@
             .no-print {
                 display: none !important;
             }
-            @page {
-                size: A4 landscape;
-                margin: 0.5cm;
-            }
         }
-        table, th, td {
+        table {
             border: 1px solid #000000 !important;
+            table-layout: fixed;
+            width: 100%;
         }
         td, th {
             word-break: break-word;
-            font-size: 8px;
+            font-size: 7.5px;
             line-height: 1.2;
             padding: 4px !important;
         }
@@ -68,24 +74,23 @@
     <table class="w-full text-left border-collapse border border-slate-300">
         <thead>
             <tr style="background-color: #1F4F7A; color: #FFFFFF;" class="border-b border-slate-300">
-                <th class="border border-slate-300 font-semibold text-center">No</th>
-                <th class="border border-slate-300 font-semibold">DATE OF AUDIT</th>
-                <th class="border border-slate-300 font-semibold">CAR NO</th>
-                <th class="border border-slate-300 font-semibold">CLAUSE TITLE</th>
-                <th class="border border-slate-300 font-semibold">Audit Category</th>
-                <th class="border border-slate-300 font-semibold">Part No/Part Name/Process Checked</th>
-                <th class="border border-slate-300 font-semibold">Dept</th>
-                <th class="border border-slate-300 font-semibold">Auditee</th>
-                <th class="border border-slate-300 font-semibold">Auditee Superior</th>
-                <th class="border border-slate-300 font-semibold">Auditor</th>
-                <th class="border border-slate-300 font-semibold">FINDING CATEGORY</th>
-                <th class="border border-slate-300 font-semibold">Findings</th>
-                <th class="border border-slate-300 font-semibold">DEADLINE CAR SUBMIT</th>
-                <th class="border border-slate-300 font-semibold">CAR STATUS</th>
-                <th class="border border-slate-300 font-semibold">Corrective Action</th>
-                <th class="border border-slate-300 font-semibold">Deadline Correction</th>
-                <th class="border border-slate-300 font-semibold">Preventive Action</th>
-                <th class="border border-slate-300 font-semibold text-center">Deadline Corrective Action</th>
+                <th class="border border-slate-300 font-semibold text-center" style="width: 2.5%;">No</th>
+                <th class="border border-slate-300 font-semibold text-center" style="width: 6.5%;">DATE OF AUDIT</th>
+                <th class="border border-slate-300 font-semibold text-center" style="width: 8%;">CAR NO</th>
+                <th class="border border-slate-300 font-semibold text-center" style="width: 8%;">CLAUSE TITLE</th>
+                <th class="border border-slate-300 font-semibold text-center" style="width: 5.5%;">Audit Category</th>
+                <th class="border border-slate-300 font-semibold text-center" style="width: 7.5%;">Part No/Part Name/Process Checked</th>
+                <th class="border border-slate-300 font-semibold text-center" style="width: 3.5%;">Dept</th>
+                <th class="border border-slate-300 font-semibold text-center" style="width: 5.5%;">Auditee</th>
+                <th class="border border-slate-300 font-semibold text-center" style="width: 5.5%;">Auditee Superior</th>
+                <th class="border border-slate-300 font-semibold text-center" style="width: 5.5%;">Auditor</th>
+                <th class="border border-slate-300 font-semibold text-center" style="width: 5.5%;">FINDING CATEGORY</th>
+                <th class="border border-slate-300 font-semibold text-center" style="width: 10.5%;">Findings</th>
+                <th class="border border-slate-300 font-semibold text-center" style="width: 10.5%;">Corrective Action</th>
+                <th class="border border-slate-300 font-semibold text-center" style="width: 6.5%;">Deadline Correction</th>
+                <th class="border border-slate-300 font-semibold text-center" style="width: 10.5%;">Preventive Action</th>
+                <th class="border border-slate-300 font-semibold text-center" style="width: 6.5%;">Deadline Corrective Action</th>
+                <th class="border border-slate-300 font-semibold text-center" style="width: 6.5%;">CAR STATUS</th>
             </tr>
         </thead>
         <tbody>
@@ -93,6 +98,22 @@
                 @php
                     $corrective = array_filter([$row->corrective_action_one, $row->corrective_action_two, $row->corrective_action_three]);
                     $preventive = array_filter([$row->preventive_action_one, $row->preventive_action_two, $row->preventive_action_three]);
+                    
+                    // Status calculation exactly like Excel
+                    $statusText = '-';
+                    if ($row->status === 'Draft' || ($row->action_status ?? '') === 'draft') {
+                        $statusText = 'Draft (Auditee)';
+                    } elseif ($row->status === 'Under Review' || ($row->action_status ?? '') === 'open_verif') {
+                        $statusText = 'Waiting Superior Approval';
+                    } elseif ($row->status === 'Need Verification' || ($row->action_status ?? '') === 'approve_superior') {
+                        $statusText = 'Waiting Auditor Approval';
+                    } elseif ($row->status === 'Closed' && empty($row->qmr_approved_at)) {
+                        $statusText = 'Waiting QMR Approval';
+                    } elseif ($row->status === 'Closed' && !empty($row->qmr_approved_at)) {
+                        $statusText = 'Closed';
+                    } else {
+                        $statusText = $row->status ?? '-';
+                    }
                 @endphp
                 <tr class="border-b border-slate-200 hover:bg-slate-50/50">
                     <td class="border border-slate-200 text-center">{{ $index + 1 }}</td>
@@ -107,8 +128,6 @@
                     <td class="border border-slate-200">{{ $row->auditor ?? '-' }}</td>
                     <td class="border border-slate-200">{{ $row->finding_category ?? '-' }}</td>
                     <td class="border border-slate-200">{{ $row->finding ?? '-' }}</td>
-                    <td class="border border-slate-200">{{ $row->due_date ? \Carbon\Carbon::parse($row->due_date)->format('d M Y') : '-' }}</td>
-                    <td class="border border-slate-200">{{ $row->status ?? '-' }}</td>
                     <td class="border border-slate-200">
                         @if(count($corrective) > 0)
                             @foreach($corrective as $cIdx => $act)
@@ -129,10 +148,11 @@
                         @endif
                     </td>
                     <td class="border border-slate-200 text-center">{{ $row->due_date ? \Carbon\Carbon::parse($row->due_date)->format('d M Y') : '-' }}</td>
+                    <td class="border border-slate-200 font-medium">{{ $statusText }}</td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="18" class="p-4 text-center text-slate-400">No records found</td>
+                    <td colspan="17" class="p-4 text-center text-slate-400">No records found</td>
                 </tr>
             @endforelse
         </tbody>

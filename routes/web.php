@@ -110,6 +110,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard-internal-audit/data_cards', [DashboardController::class, 'internal_audit_data_cards'])->name('dashboard.internal_audit.data_cards');
     Route::get('/dashboard-internal-audit/chart-data/{yearMonth}', [DashboardController::class, 'internal_audit_chart_all_dept'])->name('dashboard.internal_audit.chart_data');
     Route::get('/dashboard-internal-audit/closed-chart-data/{yearMonth}', [DashboardController::class, 'internal_audit_chart_closed_dept'])->name('dashboard.internal_audit.closed_chart_data');
+    Route::get('/dashboard-internal-audit/clause-chart-data/{yearMonth}', [DashboardController::class, 'internal_audit_chart_clause_data'])->name('dashboard.internal_audit.clause_chart_data');
     Route::get('/dashboard-internal-audit/export', [DashboardController::class, 'internal_audit_export'])->name('dashboard.internal_audit.export');
     Route::get('/dashboard-internal-audit/print', [DashboardController::class, 'internal_audit_print'])->name('dashboard.internal_audit.print');
 

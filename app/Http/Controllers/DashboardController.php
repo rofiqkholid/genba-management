@@ -746,11 +746,31 @@ class DashboardController extends Controller
                 ->whereMonth('h.audit_date', $month)
                 ->count();
 
+            $needVerif = DB::table('CsAuditCar as car')
+                ->join('CsAuditDetail as d', 'd.id', '=', 'car.audit_detail_id')
+                ->join('CsAuditHeader as h', 'h.id', '=', 'd.audit_header_id')
+                ->leftJoin('CsAuditAction as act', 'act.audit_car_id', '=', 'car.id')
+                ->where('car.department', $dept)
+                ->whereIn('car.finding_category', ['Minor', 'Mayor'])
+                ->where(function($q) {
+                    $q->where(function($q2) {
+                        $q2->where('car.status', 'Closed')
+                           ->whereNull('car.qmr_approved_at');
+                    })->orWhere(function($q2) {
+                        $q2->where('car.status', '<>', 'Closed')
+                           ->whereIn('act.action_status', ['open_verif', 'approve_superior']);
+                    });
+                })
+                ->whereYear('h.audit_date', $year)
+                ->whereMonth('h.audit_date', $month)
+                ->count();
+
             $data_name_dept[] = $dept;
             $data_total_minor[] = $minor;
             $data_total_major[] = $major;
             $data_total_minor_overdue[] = $minorOverdue;
             $data_total_major_overdue[] = $majorOverdue;
+            $data_total_need_verif[] = $needVerif;
         }
 
         return response()->json([
@@ -759,6 +779,81 @@ class DashboardController extends Controller
             'data_total_major' => $data_total_major,
             'data_total_minor_overdue' => $data_total_minor_overdue,
             'data_total_major_overdue' => $data_total_major_overdue,
+            'data_total_need_verif' => $data_total_need_verif,
+        ]);
+    }
+
+    public function internal_audit_chart_clause_data($yearMonth)
+    {
+        [$year, $month] = explode('-', $yearMonth);
+        $year = (int)$year;
+        $month = (int)$month;
+
+        // Fetch distinct clause categories from CsKlausul master table
+        $masterClauses = DB::table('CsKlausul')
+            ->whereNotNull('clause_no')
+            ->where('clause_no', '<>', '')
+            ->distinct()
+            ->pluck('clause_no')
+            ->toArray();
+
+        // Fetch actual findings counts for selected month/year
+        $results = DB::table('CsAuditCar as car')
+            ->join('CsAuditDetail as d', 'd.id', '=', 'car.audit_detail_id')
+            ->join('CsAuditHeader as h', 'h.id', '=', 'd.audit_header_id')
+            ->whereNotNull('car.requirement_no')
+            ->where('car.requirement_no', '<>', '')
+            ->whereYear('h.audit_date', $year)
+            ->whereMonth('h.audit_date', $month)
+            ->select(
+                'car.requirement_no',
+                DB::raw("SUM(CASE WHEN car.finding_category = 'Minor' THEN 1 ELSE 0 END) as minor_count"),
+                DB::raw("SUM(CASE WHEN car.finding_category = 'Mayor' THEN 1 ELSE 0 END) as major_count"),
+                DB::raw("SUM(CASE WHEN car.finding_category = 'OFI' THEN 1 ELSE 0 END) as ofi_count"),
+                DB::raw("COUNT(*) as total_count")
+            )
+            ->groupBy('car.requirement_no')
+            ->get()
+            ->keyBy('requirement_no');
+
+        // Combine master clauses with actual counts
+        $clauseList = [];
+        foreach ($masterClauses as $clause) {
+            if (isset($results[$clause])) {
+                $row = $results[$clause];
+                $clauseList[] = [
+                    'label' => $clause,
+                    'minor' => (int)$row->minor_count,
+                    'major' => (int)$row->major_count,
+                    'ofi' => (int)$row->ofi_count,
+                    'total' => (int)$row->total_count
+                ];
+            } else {
+                $clauseList[] = [
+                    'label' => $clause,
+                    'minor' => 0,
+                    'major' => 0,
+                    'ofi' => 0,
+                    'total' => 0
+                ];
+            }
+        }
+
+        // Sort by total findings descending
+        usort($clauseList, function($a, $b) {
+            return $b['total'] <=> $a['total'];
+        });
+
+        $labels = array_column($clauseList, 'label');
+        $minorData = array_column($clauseList, 'minor');
+        $majorData = array_column($clauseList, 'major');
+        $ofiData = array_column($clauseList, 'ofi');
+
+        return response()->json([
+            'labels' => $labels,
+            'minor' => $minorData,
+            'major' => $majorData,
+            'ofi' => $ofiData
         ]);
     }
 

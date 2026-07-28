@@ -1529,12 +1529,16 @@ class InternalAuditController extends Controller
                 ->leftJoin('CsAuditDetail as b', 'b.id', '=', 'a.audit_detail_id')
                 ->leftJoin('CsAuditHeader as c', 'c.id', '=', 'b.audit_header_id')
                 ->whereNotNull('a.department')
-                ->where('a.department', '<>', '')
-                ->whereNotNull('a.finding')
-                ->where('a.finding', '<>', '')
-                ->whereNotNull('a.requirement_no')
-                ->where('a.requirement_no', '<>', '')
-                ->select('a.*', 'b.checksheet_item_id', 'c.hash_id as schedule_hash_id', 'c.auditee as header_auditee', 'b.note', 'c.audit_date');
+                ->where('a.department', '<>', '');
+
+            if (!$request->input('is_dashboard')) {
+                $query->whereNotNull('a.finding')
+                      ->where('a.finding', '<>', '')
+                      ->whereNotNull('a.requirement_no')
+                      ->where('a.requirement_no', '<>', '');
+            }
+
+            $query->select('a.*', 'b.checksheet_item_id', 'c.hash_id as schedule_hash_id', 'c.auditee as header_auditee', 'b.note', 'c.audit_date');
 
             if ($category === 'CAR') {
                 $query->whereIn('a.finding_category', ['Minor', 'Mayor']);
@@ -1616,6 +1620,60 @@ class InternalAuditController extends Controller
                 } else {
                     $query->where('b.judgment', $cat);
                 }
+            }
+        }
+
+        // Apply status (Closed/Overdue) filter if present
+        if ($request->has('status') && !empty($request->status)) {
+            $statusVal = $request->status;
+            if ($isCarQuery) {
+                if ($statusVal === 'Closed') {
+                    $query->where('a.status', 'Closed')
+                          ->whereNotNull('a.qmr_approved_at');
+                } elseif ($statusVal === 'Overdue') {
+                    $today = Carbon::now()->toDateString();
+                    $query->where('a.status', '<>', 'Closed')
+                          ->whereDate('a.due_date', '<', $today)
+                          ->where(function($q) {
+                              $q->whereNotExists(function($sub) {
+                                  $sub->select(DB::raw(1))
+                                      ->from('CsAuditAction as act')
+                                      ->whereColumn('act.audit_car_id', 'a.id')
+                                      ->whereIn('act.action_status', ['open_verif', 'approve_superior', 'verified']);
+                              });
+                          });
+                } elseif ($statusVal === 'Need Verif') {
+                    $query->where(function($q) {
+                        $q->where(function($q2) {
+                            $q2->where('a.status', 'Closed')
+                               ->whereNull('a.qmr_approved_at');
+                        })->orWhere(function($q2) {
+                            $q2->where('a.status', '<>', 'Closed')
+                               ->whereExists(function($sub) {
+                                   $sub->select(DB::raw(1))
+                                       ->from('CsAuditAction as act')
+                                       ->whereColumn('act.audit_car_id', 'a.id')
+                                       ->whereIn('act.action_status', ['open_verif', 'approve_superior']);
+                               });
+                        });
+                    });
+                }
+            }
+        }
+
+        // Apply month_year filter if present (e.g. YYYY-MM)
+        if ($request->has('month_year') && !empty($request->month_year)) {
+            [$year, $month] = explode('-', $request->month_year);
+            $year = (int)$year;
+            $month = (int)$month;
+            $query->whereYear('c.audit_date', $year)
+                  ->whereMonth('c.audit_date', $month);
+        }
+
+        // Apply requirement_no filter if present
+        if ($request->has('requirement_no') && !empty($request->requirement_no)) {
+            if ($isCarQuery) {
+                $query->where('a.requirement_no', $request->requirement_no);
             }
         }
 

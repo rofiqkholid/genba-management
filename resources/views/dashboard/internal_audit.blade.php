@@ -11,9 +11,9 @@
     @include('layouts.header')
 
     <!-- Page Content -->
-    <main class="flex-1 p-4 lg:p-6">
+    <main class="flex-1 px-4 py-2 lg:px-6 lg:py-3">
         <!-- Page Title -->
-        <div class="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div class="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
                 <h1 class="text-xl md:text-2xl font-bold text-slate-800">Internal Audit Dashboard</h1>
                 <p class="text-xs md:text-sm text-slate-500 mt-1">Monitor Internal Audit findings and performance in real-time.</p>
@@ -30,11 +30,12 @@
             </div>
         </div>
 
+        <!-- Department Performance & Overview Grid -->
         <div class="bg-white p-5 border border-gray-200 rounded-none mb-8 lg:overflow-x-hidden">
-            <div class="grid grid-cols-1 xl:grid-cols-5 gap-8">
+            <div class="grid grid-cols-1 xl:grid-cols-5 gap-4">
                 <!-- Left Column: Chart & Table (80%) -->
-                <div class="xl:col-span-4 border-b border-gray-100 pb-8 xl:pb-0 xl:border-b-0 xl:border-r pr-0 xl:pr-8">
-                    <div class="flex items-center justify-between gap-4 mb-6">
+                <div class="xl:col-span-4 border-b border-gray-100 pb-8 xl:pb-0 xl:border-b-0 xl:border-r pr-0 xl:pr-4">
+                    <div class="flex items-center justify-between gap-4 mb-3">
                         <div>
                             <h3 class="text-base sm:text-lg font-bold text-slate-800">Department Performance</h3>
                             <p class="text-[10px] sm:text-sm text-slate-500">Findings status per department</p>
@@ -58,15 +59,15 @@
                             </div>
                         </div>
                     </div>
-                    <div class="relative h-[390px] w-full">
+                    <div class="relative h-[280px] w-full">
                         <canvas id="deptChart"></canvas>
                     </div>
                 </div>
 
                 <!-- Right Column: Findings Overview (20%) -->
                 <div class="xl:col-span-1 pt-8 xl:pt-0">
-                    <h3 class="text-lg font-bold text-slate-800 mb-6">Overview</h3>
-                    <div class="relative h-64 w-full flex justify-center mb-6">
+                    <h3 class="text-lg font-bold text-slate-800 mb-3">Overview</h3>
+                    <div class="relative h-52 w-full flex justify-center mb-3">
                         <canvas id="statsPieChart"></canvas>
                     </div>
                     <div class="grid grid-cols-2 gap-4 text-sm text-slate-600">
@@ -102,131 +103,254 @@
                 </div>
             </div>
 
-            <!-- Full Width Findings Table -->
-            <div class="mt-8 border-t border-slate-200 pt-8">
-                <div class="grid grid-cols-2 lg:flex lg:flex-row lg:flex-wrap lg:items-center gap-3 mb-5">
-                    <!-- Search -->
-                    <div class="col-span-2 lg:col-span-auto lg:flex-1 lg:min-w-[200px]">
-                        <div class="relative">
-                            <input type="text" id="searchInput" placeholder="Search findings..."
-                                class="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm outline-none">
-                            <i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+            <!-- Closed Findings Chart -->
+            <div class="mt-4 border-t border-slate-200 pt-4">
+                <div class="grid grid-cols-1 xl:grid-cols-5 gap-4">
+                    <!-- Left Column: Closed Findings Chart (80%) -->
+                    <div class="xl:col-span-4 border-b border-gray-100 pb-8 xl:pb-0 xl:border-b-0 xl:border-r pr-0 xl:pr-4">
+                        <div class="flex items-center justify-between gap-4 mb-3">
+                            <div>
+                                <h3 class="text-base sm:text-lg font-bold text-slate-800">Closed Findings Per Department</h3>
+                                <p class="text-[10px] sm:text-sm text-slate-500">Summary of verified/closed Minor and Major findings per department</p>
+                            </div>
+                            <div class="flex flex-col items-end gap-2">
+                                <!-- Chart Pagination (Visible on Mobile only) -->
+                                <div id="closedChartPagination" class="hidden items-center gap-1.5">
+                                    <span id="closedChartPageIndicator" class="text-xs sm:text-sm text-slate-600 font-medium mr-1 text-nowrap">1/2</span>
+                                    <button type="button" id="btnClosedChartPrev" class="w-8 h-8 flex items-center justify-center border border-slate-300 bg-white text-slate-600 hover:bg-slate-50 rounded-none disabled:opacity-50 transition-colors">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                                        </svg>
+                                    </button>
+                                    <button type="button" id="btnClosedChartNext" class="w-8 h-8 flex items-center justify-center border border-slate-300 bg-white text-slate-600 hover:bg-slate-50 rounded-none disabled:opacity-50 transition-colors">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="relative h-[280px] w-full">
+                            <canvas id="closedDeptChart"></canvas>
                         </div>
                     </div>
 
-                    <!-- Date From -->
-                    <div class="col-span-1 lg:col-span-auto w-full lg:w-auto">
-                        <div class="date-input-container w-full lg:w-auto">
-                            <input type="date" id="dateFrom" oninput="this.setAttribute('data-has-value', this.value ? 'true' : '')" onchange="this.setAttribute('data-has-value', this.value ? 'true' : '')" onfocus="try { this.showPicker(); } catch(e) {}" onclick="try { this.showPicker(); } catch(e) {}" onkeydown="return false;"
-                                class="w-full lg:w-[150px] pl-4 pr-10 py-2 border border-slate-300 rounded-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm outline-none bg-white">
-                            <span class="placeholder-overlay absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm pointer-events-none">dd/mm/yyyy</span>
-                            <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-slate-400">
-                                <i class="fa-regular fa-calendar text-sm"></i>
+                    <!-- Right Column: Closed Findings Overview Pie Chart (20%) -->
+                    <div class="xl:col-span-1 pt-8 xl:pt-0">
+                        <h3 class="text-lg font-bold text-slate-800 mb-3">Overview</h3>
+                        <div class="relative h-52 w-full flex justify-center mb-3">
+                            <canvas id="closedStatsPieChart"></canvas>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4 text-sm text-slate-600">
+                            <!-- Minor Close -->
+                            <div class="flex items-center justify-between p-3 rounded-none bg-green-50/50 border border-green-100">
+                                <div class="flex items-center gap-3">
+                                    <span class="w-3 h-3 rounded-none bg-[#86efac] -green-200"></span>
+                                    <span class="font-semibold text-slate-700 text-xs text-nowrap">Minor Close</span>
+                                </div>
+                                <span id="val_minor_close" class="font-bold text-slate-800 text-xs">...</span>
+                            </div>
+                            <!-- Major Close -->
+                            <div class="flex items-center justify-between p-3 rounded-none bg-emerald-50/50 border border-emerald-100">
+                                <div class="flex items-center gap-3">
+                                    <span class="w-3 h-3 rounded-none bg-[#15803d] -emerald-200"></span>
+                                    <span class="font-semibold text-slate-700 text-xs text-nowrap">Major Close</span>
+                                </div>
+                                <span id="val_major_close" class="font-bold text-slate-800 text-xs">...</span>
+                            </div>
+                            <!-- Need Verif -->
+                            <div class="flex items-center justify-between p-3 rounded-none bg-blue-50/50 border border-blue-100">
+                                <div class="flex items-center gap-3">
+                                    <span class="w-3 h-3 rounded-none bg-[#3b82f6] -blue-200"></span>
+                                    <span class="font-semibold text-slate-700 text-xs text-nowrap">Need Verif</span>
+                                </div>
+                                <span id="val_need_verif" class="font-bold text-slate-800 text-xs">...</span>
+                            </div>
+                            <!-- Minor Overdue -->
+                            <div class="flex items-center justify-between p-3 rounded-none bg-amber-50/50 border border-amber-100">
+                                <div class="flex items-center gap-3">
+                                    <span class="w-3 h-3 rounded-none bg-[#fdb56a] -amber-200"></span>
+                                    <span class="font-semibold text-slate-700 text-xs text-nowrap">Minor Overdue</span>
+                                </div>
+                                <span id="val_minor_overdue" class="font-bold text-slate-800 text-xs">...</span>
+                            </div>
+                            <!-- Major Overdue -->
+                            <div class="flex items-center justify-between p-3 rounded-none bg-red-50/50 border border-red-100 col-span-2">
+                                <div class="flex items-center gap-3">
+                                    <span class="w-3 h-3 rounded-none bg-[#ef4444] -red-200"></span>
+                                    <span class="font-semibold text-slate-700 text-xs text-nowrap">Major Overdue</span>
+                                </div>
+                                <span id="val_major_overdue" class="font-bold text-slate-800 text-xs">...</span>
                             </div>
                         </div>
                     </div>
+                </div>
+            </div>
 
-                    <!-- Date To -->
-                    <div class="col-span-1 lg:col-span-auto w-full lg:w-auto">
-                        <div class="date-input-container w-full lg:w-auto">
-                            <input type="date" id="dateTo" oninput="this.setAttribute('data-has-value', this.value ? 'true' : '')" onchange="this.setAttribute('data-has-value', this.value ? 'true' : '')" onfocus="try { this.showPicker(); } catch(e) {}" onclick="try { this.showPicker(); } catch(e) {}" onkeydown="return false;"
-                                class="w-full lg:w-[150px] pl-4 pr-10 py-2 border border-slate-300 rounded-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm outline-none bg-white">
-                            <span class="placeholder-overlay absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm pointer-events-none">dd/mm/yyyy</span>
-                            <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-slate-400">
-                                <i class="fa-regular fa-calendar text-sm"></i>
+            <!-- Findings Per Clause Chart -->
+            <div class="mt-4 border-t border-slate-200 pt-4">
+                <div class="grid grid-cols-1 xl:grid-cols-5 gap-4">
+                    <!-- Left Column: Findings Per Clause Chart (80%) -->
+                    <div class="xl:col-span-4 border-b border-gray-100 pb-8 xl:pb-0 xl:border-b-0 xl:border-r pr-0 xl:pr-4">
+                        <div class="flex items-center justify-between gap-4 mb-3">
+                            <div>
+                                <h3 class="text-base sm:text-lg font-bold text-slate-800">Findings Per Clause</h3>
+                                <p class="text-[10px] sm:text-sm text-slate-500">Summary of audit findings grouped by clause/requirement</p>
                             </div>
+                            <div class="flex flex-col items-end gap-2">
+                                <!-- Chart Pagination (Visible on Mobile only) -->
+                                <div id="clauseChartPagination" class="hidden items-center gap-1.5">
+                                    <span id="clauseChartPageIndicator" class="text-xs sm:text-sm text-slate-600 font-medium mr-1 text-nowrap">1/2</span>
+                                    <button type="button" id="btnClauseChartPrev" class="w-8 h-8 flex items-center justify-center border border-slate-300 bg-white text-slate-600 hover:bg-slate-50 rounded-none disabled:opacity-50 transition-colors">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                                        </svg>
+                                    </button>
+                                    <button type="button" id="btnClauseChartNext" class="w-8 h-8 flex items-center justify-center border border-slate-300 bg-white text-slate-600 hover:bg-slate-50 rounded-none disabled:opacity-50 transition-colors">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="relative h-[280px] w-full">
+                            <canvas id="clauseChart"></canvas>
                         </div>
                     </div>
 
-                    <!-- Department Filter -->
-                    <div class="col-span-1 lg:col-span-auto w-full lg:w-auto min-w-0 lg:min-w-[200px]">
-                        <x-searchable-select
-                            name="dept"
-                            id="deptFilter"
-                            label="Department"
-                            :initialOptions="collect($departments)->map(fn($d) => ['id' => $d, 'name' => $d])->values()->toArray()"
-                            valueField="name"
-                            updateEvent="updateDeptFilter"
-                            hideLabel="true" />
+                    <!-- Right Column: Clause Overview Pie Chart (20%) -->
+                    <div class="xl:col-span-1 pt-8 xl:pt-0">
+                        <h3 class="text-lg font-bold text-slate-800 mb-3">Overview</h3>
+                        <div class="relative h-52 w-full flex justify-center mb-3">
+                            <canvas id="clauseStatsPieChart"></canvas>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4 text-sm text-slate-600">
+                            <!-- Minor -->
+                            <div class="flex items-center justify-between p-3 rounded-none bg-amber-50/50 border border-amber-100">
+                                <div class="flex items-center gap-3">
+                                    <span class="w-3 h-3 rounded-none bg-[#FEB019] -amber-200"></span>
+                                    <span class="font-semibold text-slate-700 text-xs text-nowrap">Minor</span>
+                                </div>
+                                <span id="val_clause_minor" class="font-bold text-slate-800 text-xs">...</span>
+                            </div>
+                            <!-- Major -->
+                            <div class="flex items-center justify-between p-3 rounded-none bg-red-50/50 border border-red-100">
+                                <div class="flex items-center gap-3">
+                                    <span class="w-3 h-3 rounded-none bg-[#FF4560] -red-200"></span>
+                                    <span class="font-semibold text-slate-700 text-xs text-nowrap">Major</span>
+                                </div>
+                                <span id="val_clause_major" class="font-bold text-slate-800 text-xs">...</span>
+                            </div>
+                            <!-- OFI -->
+                            <div class="flex items-center justify-between p-3 rounded-none bg-blue-50/50 border border-blue-100 col-span-2">
+                                <div class="flex items-center gap-3">
+                                    <span class="w-3 h-3 rounded-none bg-[#008FFB] -blue-200"></span>
+                                    <span class="font-semibold text-slate-700 text-xs text-nowrap">OFI</span>
+                                </div>
+                                <span id="val_clause_ofi" class="font-bold text-slate-800 text-xs">...</span>
+                            </div>
+                        </div>
                     </div>
- 
-                    <!-- Finding Category Filter -->
-                    <div class="col-span-1 lg:col-span-auto w-full lg:w-auto min-w-0 lg:min-w-[200px]">
-                        @php
-                        $categoryOptions = [
-                            ['id' => 'OFI', 'name' => 'OFI'],
-                            ['id' => 'Minor', 'name' => 'Minor'],
-                            ['id' => 'Mayor', 'name' => 'Mayor'],
-                            ['id' => 'Observation', 'name' => 'Observation']
-                        ];
-                        @endphp
-                        <x-searchable-select
-                            name="finding_category"
-                            id="categoryFilter"
-                            label="Finding Category"
-                            :initialOptions="$categoryOptions"
-                            updateEvent="updateCategoryFilter"
-                            hideLabel="true" />
-                    </div>
+                </div>
+            </div>
+        </div>
 
-                    <!-- Reset Button -->
-                    <button type="button" id="btnReset"
-                        class="col-span-1 lg:col-span-auto w-full lg:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 bg-slate-200 text-slate-700 rounded-none hover:bg-slate-300 text-sm font-base transition-colors">
-                        <i class="fa-solid fa-rotate-right text-sm"></i>
-                        Reset
-                    </button>
+        <!-- Full Width Findings Table -->
+        <div class="mt-8 bg-white p-5 border border-gray-200 rounded-none mb-8 lg:overflow-x-hidden">
+            <div class="grid grid-cols-2 lg:flex lg:flex-row lg:flex-wrap lg:items-center gap-3 mb-5">
+                <!-- Search -->
+                <div class="col-span-2 lg:col-span-auto lg:flex-1 lg:min-w-[200px]">
+                    <div class="relative">
+                        <input type="text" id="searchInput" placeholder="Search findings..."
+                            class="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm outline-none">
+                        <i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                    </div>
                 </div>
-                <div>
-                    <table id="findingsTable" class="qms-table w-full min-w-[1000px]">
-                    <thead>
-                        <tr>
-                            <th class="w-[5%] text-center">No</th>
-                            <th class="w-[15%]">Req Number</th>
-                            <th class="w-[10%]">Audit Date</th>
-                            <th class="w-[10%]">Department</th>
-                            <th class="w-[10%]">Finding Category</th>
-                            <th class="w-[15%]">Auditor</th>
-                            <th class="w-[25%]">Auditee</th>
-                            <th class="w-[10%]">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody class="bg-white">
-                    </tbody>
-                    </table>
+
+                <!-- Date From -->
+                <div class="col-span-1 lg:col-span-auto w-full lg:w-auto">
+                    <div class="date-input-container w-full lg:w-auto">
+                        <input type="date" id="dateFrom" oninput="this.setAttribute('data-has-value', this.value ? 'true' : '')" onchange="this.setAttribute('data-has-value', this.value ? 'true' : '')" onfocus="try { this.showPicker(); } catch(e) {}" onclick="try { this.showPicker(); } catch(e) {}" onkeydown="return false;"
+                            class="w-full lg:w-[150px] pl-4 pr-10 py-2 border border-slate-300 rounded-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm outline-none bg-white">
+                        <span class="placeholder-overlay absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm pointer-events-none">dd/mm/yyyy</span>
+                        <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-slate-400">
+                            <i class="fa-regular fa-calendar text-sm"></i>
+                        </div>
+                    </div>
                 </div>
+
+                <!-- Date To -->
+                <div class="col-span-1 lg:col-span-auto w-full lg:w-auto">
+                    <div class="date-input-container w-full lg:w-auto">
+                        <input type="date" id="dateTo" oninput="this.setAttribute('data-has-value', this.value ? 'true' : '')" onchange="this.setAttribute('data-has-value', this.value ? 'true' : '')" onfocus="try { this.showPicker(); } catch(e) {}" onclick="try { this.showPicker(); } catch(e) {}" onkeydown="return false;"
+                            class="w-full lg:w-[150px] pl-4 pr-10 py-2 border border-slate-300 rounded-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm outline-none bg-white">
+                        <span class="placeholder-overlay absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm pointer-events-none">dd/mm/yyyy</span>
+                        <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-slate-400">
+                            <i class="fa-regular fa-calendar text-sm"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Department Filter -->
+                <div class="col-span-1 lg:col-span-auto w-full lg:w-auto min-w-0 lg:min-w-[200px]">
+                    <x-searchable-select
+                        name="dept"
+                        id="deptFilter"
+                        label="Department"
+                        :initialOptions="collect($departments)->map(fn($d) => ['id' => $d, 'name' => $d])->values()->toArray()"
+                        valueField="name"
+                        updateEvent="updateDeptFilter"
+                        hideLabel="true" />
+                </div>
+             
+                <!-- Finding Category Filter -->
+                <div class="col-span-1 lg:col-span-auto w-full lg:w-auto min-w-0 lg:min-w-[200px]">
+                    @php
+                    $categoryOptions = [
+                        ['id' => 'OFI', 'name' => 'OFI'],
+                        ['id' => 'Minor', 'name' => 'Minor'],
+                        ['id' => 'Mayor', 'name' => 'Mayor'],
+                        ['id' => 'Observation', 'name' => 'Observation']
+                    ];
+                    @endphp
+                    <x-searchable-select
+                        name="finding_category"
+                        id="categoryFilter"
+                        label="Finding Category"
+                        :initialOptions="$categoryOptions"
+                        updateEvent="updateCategoryFilter"
+                        hideLabel="true" />
+                </div>
+
+                <!-- Reset Button -->
+                <button type="button" id="btnReset"
+                    class="col-span-1 lg:col-span-auto w-full lg:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 bg-slate-200 text-slate-700 rounded-none hover:bg-slate-300 text-sm font-base transition-colors">
+                    <i class="fa-solid fa-rotate-right text-sm"></i>
+                    Reset
+                </button>
+            </div>
+            <div>
+                <table id="findingsTable" class="qms-table w-full min-w-[1000px]">
+                <thead>
+                    <tr>
+                        <th class="w-[5%] text-center">No</th>
+                        <th class="w-[15%]">Req Number</th>
+                        <th class="w-[10%]">Audit Date</th>
+                        <th class="w-[10%]">Department</th>
+                        <th class="w-[10%]">Finding Category</th>
+                        <th class="w-[15%]">Auditor</th>
+                        <th class="w-[25%]">Auditee</th>
+                        <th class="w-[10%]">Action</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white">
+                </tbody>
+                </table>
             </div>
             <!-- Data Count Component -->
             <x-data-table tableId="findingsTable" />
         </div>
-
-        <!-- Closed Findings Chart -->
-        <div class="mt-8 bg-white p-5 border border-gray-200 rounded-none mb-8 lg:overflow-x-hidden">
-                <div class="flex items-center justify-between gap-4 mb-6">
-                    <div>
-                        <h3 class="text-base sm:text-lg font-bold text-slate-800">Closed Findings Per Department</h3>
-                        <p class="text-[10px] sm:text-sm text-slate-500">Summary of verified/closed Minor and Major findings per department</p>
-                    </div>
-                    <div class="flex flex-col items-end gap-2">
-                        <!-- Chart Pagination (Visible on Mobile only) -->
-                        <div id="closedChartPagination" class="hidden items-center gap-1.5">
-                            <span id="closedChartPageIndicator" class="text-xs sm:text-sm text-slate-600 font-medium mr-1 text-nowrap">1/2</span>
-                            <button type="button" id="btnClosedChartPrev" class="w-8 h-8 flex items-center justify-center border border-slate-300 bg-white text-slate-600 hover:bg-slate-50 rounded-none disabled:opacity-50 transition-colors">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-                                </svg>
-                            </button>
-                            <button type="button" id="btnClosedChartNext" class="w-8 h-8 flex items-center justify-center border border-slate-300 bg-white text-slate-600 hover:bg-slate-50 rounded-none disabled:opacity-50 transition-colors">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                                </svg>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                <div class="relative h-[390px] w-full">
-                    <canvas id="closedDeptChart"></canvas>
-                </div>
-            </div>
 
 
 
@@ -369,6 +493,7 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script>
     let statsPieChart = null;
+    let closedStatsPieChart = null;
 
     function loadDataCards(yearMonth) {
         $.ajax({
@@ -459,7 +584,9 @@
     // --- Department Chart Logic ---
     let deptChart = null;
     let table = null; // Global table variable
-    let currentStatusFilter = ''; // Initial status filter
+    let selectedStatus = ''; // '', 'Closed', 'Overdue'
+    let selectedMonthYear = ''; // 'YYYY-MM'
+    let selectedClause = '';
 
     // Pagination state
     let rawChartData = null;
@@ -660,6 +787,9 @@
                         const label = deptChart.data.labels[firstPoint.index];
                         const datasetLabel = deptChart.data.datasets[firstPoint.datasetIndex].label;
 
+                        selectedStatus = ''; // Reset status
+                        selectedMonthYear = $('#chartFilterDate').val(); // Filter by the chart's current month
+
                         // 1. Update Department Filter
                         window.dispatchEvent(new CustomEvent('updateDeptFilter', {
                             detail: {
@@ -790,6 +920,7 @@
         let majorData = rawClosedChartData.data_total_major;
         let minorOverdueData = rawClosedChartData.data_total_minor_overdue || [];
         let majorOverdueData = rawClosedChartData.data_total_major_overdue || [];
+        let needVerifData = rawClosedChartData.data_total_need_verif || [];
  
         if (isMobile) {
             let zipped = [];
@@ -799,17 +930,18 @@
                     minor: minorData[i] || 0,
                     major: majorData[i] || 0,
                     minorOverdue: minorOverdueData[i] || 0,
-                    majorOverdue: majorOverdueData[i] || 0
+                    majorOverdue: majorOverdueData[i] || 0,
+                    needVerif: needVerifData[i] || 0
                 });
             }
  
             zipped.sort((a, b) => {
-                const bTotal = b.major + b.majorOverdue;
-                const aTotal = a.major + a.majorOverdue;
+                const bTotal = b.major + b.majorOverdue + b.needVerif;
+                const aTotal = a.major + a.majorOverdue + a.needVerif;
                 if (bTotal !== aTotal) {
                     return bTotal - aTotal;
                 }
-                return (b.minor + b.minorOverdue) - (a.minor + a.minorOverdue);
+                return (b.minor + b.minorOverdue + b.needVerif) - (a.minor + a.minorOverdue + a.needVerif);
             });
  
             labels = zipped.map(item => item.name);
@@ -817,6 +949,7 @@
             majorData = zipped.map(item => item.major);
             minorOverdueData = zipped.map(item => item.minorOverdue);
             majorOverdueData = zipped.map(item => item.majorOverdue);
+            needVerifData = zipped.map(item => item.needVerif);
  
             const totalItems = labels.length;
             const totalPages = Math.ceil(totalItems / closedChartPageSize) || 1;
@@ -832,6 +965,7 @@
             majorData = majorData.slice(startIndex, endIndex);
             minorOverdueData = minorOverdueData.slice(startIndex, endIndex);
             majorOverdueData = majorOverdueData.slice(startIndex, endIndex);
+            needVerifData = needVerifData.slice(startIndex, endIndex);
  
             $('#closedChartPageIndicator').text(currentClosedChartPage + '/' + totalPages);
             $('#btnClosedChartPrev').prop('disabled', currentClosedChartPage === 1);
@@ -845,7 +979,8 @@
             ...minorData,
             ...majorData,
             ...minorOverdueData,
-            ...majorOverdueData
+            ...majorOverdueData,
+            ...needVerifData
         ];
         const maxValue = Math.max(...allValues, 0);
         const suggestedMax = maxValue + 1;
@@ -866,6 +1001,11 @@
                         label: 'Major Close',
                         data: majorData,
                         backgroundColor: '#15803d', // Dark Green
+                    },
+                    {
+                        label: 'Need Verif',
+                        data: needVerifData,
+                        backgroundColor: '#3b82f6', // Blue (Tailwind blue-500)
                     },
                     {
                         label: 'Minor Overdue',
@@ -936,6 +1076,28 @@
                         const label = closedDeptChart.data.labels[firstPoint.index];
                         const datasetLabel = closedDeptChart.data.datasets[firstPoint.datasetIndex].label;
  
+                        // Determine status and category
+                        let mappedCategory = '';
+                        if (datasetLabel === 'Minor Close' || datasetLabel === 'Minor Overdue') {
+                            mappedCategory = 'Minor';
+                        } else if (datasetLabel === 'Major Close' || datasetLabel === 'Major Overdue') {
+                            mappedCategory = 'Mayor';
+                        } else if (datasetLabel === 'Need Verif') {
+                            mappedCategory = ''; // Show both minor and major under Need Verif click
+                        }
+ 
+                        if (datasetLabel.includes('Close')) {
+                            selectedStatus = 'Closed';
+                        } else if (datasetLabel.includes('Overdue')) {
+                            selectedStatus = 'Overdue';
+                        } else if (datasetLabel === 'Need Verif') {
+                            selectedStatus = 'Need Verif';
+                        } else {
+                            selectedStatus = '';
+                        }
+ 
+                        selectedMonthYear = $('#chartFilterDate').val(); // Filter by the chart's current month
+ 
                         window.dispatchEvent(new CustomEvent('updateDeptFilter', {
                             detail: {
                                 id: label,
@@ -943,13 +1105,6 @@
                             }
                         }));
  
-                        let mappedCategory = datasetLabel;
-                        if (datasetLabel === 'Minor Close' || datasetLabel === 'Minor Overdue') {
-                            mappedCategory = 'Minor';
-                        } else if (datasetLabel === 'Major Close' || datasetLabel === 'Major Overdue') {
-                            mappedCategory = 'Mayor';
-                        }
-
                         window.dispatchEvent(new CustomEvent('updateCategoryFilter', {
                             detail: {
                                 id: mappedCategory,
@@ -1020,6 +1175,411 @@
         setTimeout(() => {
             delayed = true;
         }, 1500);
+
+        // Compute Overview Totals for Pie Chart
+        const sumMinorClose = rawClosedChartData.data_total_minor.reduce((a, b) => a + b, 0);
+        const sumMajorClose = rawClosedChartData.data_total_major.reduce((a, b) => a + b, 0);
+        const sumNeedVerif = rawClosedChartData.data_total_need_verif.reduce((a, b) => a + b, 0);
+        const sumMinorOverdue = (rawClosedChartData.data_total_minor_overdue || []).reduce((a, b) => a + b, 0);
+        const sumMajorOverdue = (rawClosedChartData.data_total_major_overdue || []).reduce((a, b) => a + b, 0);
+
+        $('#val_minor_close').text(new Intl.NumberFormat().format(sumMinorClose));
+        $('#val_major_close').text(new Intl.NumberFormat().format(sumMajorClose));
+        $('#val_need_verif').text(new Intl.NumberFormat().format(sumNeedVerif));
+        $('#val_minor_overdue').text(new Intl.NumberFormat().format(sumMinorOverdue));
+        $('#val_major_overdue').text(new Intl.NumberFormat().format(sumMajorOverdue));
+
+        const closedPieData = [
+            sumMinorClose,
+            sumMajorClose,
+            sumNeedVerif,
+            sumMinorOverdue,
+            sumMajorOverdue
+        ];
+
+        if (closedStatsPieChart) {
+            closedStatsPieChart.data.datasets[0].data = closedPieData;
+            closedStatsPieChart.update();
+        } else {
+            const pieCtx = document.getElementById('closedStatsPieChart').getContext('2d');
+            closedStatsPieChart = new Chart(pieCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Minor Close', 'Major Close', 'Need Verif', 'Minor Overdue', 'Major Overdue'],
+                    datasets: [{
+                        data: closedPieData,
+                        backgroundColor: [
+                            '#86efac',
+                            '#15803d',
+                            '#3b82f6',
+                            '#fdb56a',
+                            '#ef4444'
+                        ],
+                        borderWidth: 0,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '70%',
+                    animations: {
+                        animateScale: {
+                            type: 'number',
+                            easing: 'easeOutQuart',
+                            duration: 2000,
+                            delay: 500,
+                            from: 0,
+                            to: 1,
+                            loop: false
+                        },
+                        animateRotate: {
+                            type: 'number',
+                            easing: 'easeOutQuart',
+                            duration: 2000,
+                            delay: 500,
+                            from: 0,
+                            to: 360,
+                            loop: false
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        }
+    }
+
+    let clauseChart = null;
+    let clauseStatsPieChart = null;
+    let rawClauseChartData = null;
+    let currentClauseChartPage = 1;
+    let clauseChartPageSize = 9;
+
+    function loadClauseChart(yearMonth) {
+        $.ajax({
+            url: "/dashboard-internal-audit/clause-chart-data/" + yearMonth,
+            type: "GET",
+            dataType: "json",
+            success: function(response) {
+                rawClauseChartData = response;
+                currentClauseChartPage = 1;
+                renderClauseChart();
+            },
+            error: function(xhr, status, error) {
+                console.error(error);
+            }
+        });
+    }
+
+    function renderClauseChart() {
+        if (!rawClauseChartData) return;
+
+        const ctx = document.getElementById('clauseChart').getContext('2d');
+
+        if (clauseChart) {
+            clauseChart.destroy();
+        }
+
+        const isMobile = window.innerWidth < 1280;
+
+        // Dynamic page size based on screen width
+        const width = window.innerWidth;
+        if (width < 380) clauseChartPageSize = 3;
+        else if (width < 480) clauseChartPageSize = 4;
+        else if (width < 640) clauseChartPageSize = 5;
+        else if (width < 768) clauseChartPageSize = 6;
+        else if (width < 1024) clauseChartPageSize = 7;
+        else clauseChartPageSize = 9;
+
+        let labels = rawClauseChartData.labels;
+        let minorData = rawClauseChartData.minor;
+        let majorData = rawClauseChartData.major;
+        let ofiData = rawClauseChartData.ofi;
+
+        if (isMobile) {
+            let zipped = [];
+            for (let i = 0; i < labels.length; i++) {
+                zipped.push({
+                    name: labels[i],
+                    minor: minorData[i] || 0,
+                    major: majorData[i] || 0,
+                    ofi: ofiData[i] || 0
+                });
+            }
+
+            zipped.sort((a, b) => {
+                const bTotal = b.minor + b.major + b.ofi;
+                const aTotal = a.minor + a.major + a.ofi;
+                return bTotal - aTotal;
+            });
+
+            labels = zipped.map(item => item.name);
+            minorData = zipped.map(item => item.minor);
+            majorData = zipped.map(item => item.major);
+            ofiData = zipped.map(item => item.ofi);
+
+            const totalItems = labels.length;
+            const totalPages = Math.ceil(totalItems / clauseChartPageSize) || 1;
+            
+            if (currentClauseChartPage < 1) currentClauseChartPage = 1;
+            if (currentClauseChartPage > totalPages) currentClauseChartPage = totalPages;
+
+            const startIndex = (currentClauseChartPage - 1) * clauseChartPageSize;
+            const endIndex = startIndex + clauseChartPageSize;
+
+            labels = labels.slice(startIndex, endIndex);
+            minorData = minorData.slice(startIndex, endIndex);
+            majorData = majorData.slice(startIndex, endIndex);
+            ofiData = ofiData.slice(startIndex, endIndex);
+
+            $('#clauseChartPageIndicator').text(currentClauseChartPage + '/' + totalPages);
+            $('#btnClauseChartPrev').prop('disabled', currentClauseChartPage === 1);
+            $('#btnClauseChartNext').prop('disabled', currentClauseChartPage === totalPages);
+            $('#clauseChartPagination').removeClass('hidden').addClass('flex');
+        } else {
+            $('#clauseChartPagination').removeClass('flex').addClass('hidden');
+        }
+
+        const allValues = [
+            ...minorData,
+            ...majorData,
+            ...ofiData
+        ];
+        const maxValue = Math.max(...allValues, 0);
+        const suggestedMax = maxValue + 1;
+
+        let delayed;
+
+        clauseChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Minor',
+                        data: minorData,
+                        backgroundColor: '#FEB019',
+                    },
+                    {
+                        label: 'Major',
+                        data: majorData,
+                        backgroundColor: '#FF4560',
+                    },
+                    {
+                        label: 'OFI',
+                        data: ofiData,
+                        backgroundColor: '#008FFB',
+                    }
+                ]
+            },
+            plugins: [{
+                id: 'customLabelsClause',
+                afterDatasetsDraw: (chart) => {
+                    const { ctx } = chart;
+                    chart.data.datasets.forEach((dataset, i) => {
+                        const meta = chart.getDatasetMeta(i);
+                        if (!meta.hidden) {
+                            meta.data.forEach((element, index) => {
+                                const data = dataset.data[index];
+                                if (data > 0) {
+                                    ctx.fillStyle = '#334155';
+                                    ctx.font = 'bold 11px sans-serif';
+                                    ctx.textAlign = 'center';
+                                    ctx.textBaseline = 'bottom';
+                                    const xPos = element.x;
+                                    const yPos = element.y - 3;
+                                    ctx.fillText(data, xPos, yPos);
+                                }
+                            });
+                        }
+                    });
+                }
+            }],
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animations: {
+                    y: {
+                        duration: 1000,
+                        easing: 'easeOutQuart',
+                        delay: context => {
+                            let delay = 0;
+                            if (context.type === 'data' && context.mode === 'default' && !delayed) {
+                                delay = context.dataIndex * 0 + 100;
+                            }
+                            return delay;
+                        },
+                        from: (context) => {
+                            if (context.type === 'data' && context.mode === 'default' && !delayed) {
+                                const scale = context.chart.scales.y;
+                                if (scale) return scale.getPixelForValue(0);
+                            }
+                            return undefined;
+                        },
+                        loop: false
+                    }
+                },
+                onClick: (e) => {
+                    const points = clauseChart.getElementsAtEventForMode(e, 'nearest', {
+                        intersect: true
+                    }, true);
+
+                    if (points.length) {
+                        const firstPoint = points[0];
+                        const label = clauseChart.data.labels[firstPoint.index];
+                        const datasetLabel = clauseChart.data.datasets[firstPoint.datasetIndex].label;
+
+                        selectedStatus = ''; 
+                        
+                        let mappedCategory = datasetLabel;
+                        if (datasetLabel === 'Major') {
+                            mappedCategory = 'Mayor';
+                        }
+
+                        selectedMonthYear = $('#chartFilterDate').val();
+                        selectedClause = label;
+
+                        window.dispatchEvent(new CustomEvent('updateCategoryFilter', {
+                            detail: {
+                                id: mappedCategory,
+                                name: mappedCategory
+                            }
+                        }));
+
+                        window.dispatchEvent(new CustomEvent('updateDeptFilter', {
+                            detail: {
+                                id: '',
+                                name: ''
+                            }
+                        }));
+
+                        if (table) {
+                            table.ajax.reload();
+                        }
+                    }
+                },
+                interaction: {
+                    intersect: false,
+                    mode: 'index',
+                },
+                scales: {
+                    x: {
+                        grid: {
+                            display: true,
+                            drawOnChartArea: true,
+                            drawTicks: false,
+                            color: 'rgba(203, 213, 225, 0.4)',
+                        },
+                        ticks: {
+                            maxRotation: 0,
+                            minRotation: 0,
+                            autoSkip: false
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        max: suggestedMax,
+                        grid: {
+                            borderDash: [2, 2]
+                        },
+                        ticks: {
+                            maxTicksLimit: 6
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            usePointStyle: true,
+                            padding: 20
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.parsed.y !== null) {
+                                    label += context.parsed.y;
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        setTimeout(() => {
+            delayed = true;
+        }, 1500);
+
+        // Compute Overview Totals for Clause Pie Chart
+        const sumMinor = rawClauseChartData.minor.reduce((a, b) => a + b, 0);
+        const sumMajor = rawClauseChartData.major.reduce((a, b) => a + b, 0);
+        const sumOfi = rawClauseChartData.ofi.reduce((a, b) => a + b, 0);
+
+        $('#val_clause_minor').text(new Intl.NumberFormat().format(sumMinor));
+        $('#val_clause_major').text(new Intl.NumberFormat().format(sumMajor));
+        $('#val_clause_ofi').text(new Intl.NumberFormat().format(sumOfi));
+
+        const clausePieData = [sumMinor, sumMajor, sumOfi];
+
+        if (clauseStatsPieChart) {
+            clauseStatsPieChart.data.datasets[0].data = clausePieData;
+            clauseStatsPieChart.update();
+        } else {
+            const pieCtx = document.getElementById('clauseStatsPieChart').getContext('2d');
+            clauseStatsPieChart = new Chart(pieCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Minor', 'Major', 'OFI'],
+                    datasets: [{
+                        data: clausePieData,
+                        backgroundColor: ['#FEB019', '#FF4560', '#008FFB'],
+                        borderWidth: 0,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '70%',
+                    animations: {
+                        animateScale: {
+                            type: 'number',
+                            easing: 'easeOutQuart',
+                            duration: 2000,
+                            delay: 500,
+                            from: 0,
+                            to: 1,
+                            loop: false
+                        },
+                        animateRotate: {
+                            type: 'number',
+                            easing: 'easeOutQuart',
+                            duration: 2000,
+                            delay: 500,
+                            from: 0,
+                            to: 360,
+                            loop: false
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        }
     }
  
     // Initialize Chart
@@ -1027,12 +1587,15 @@
         const initialDate = $('#chartFilterDate').val();
         loadDeptChart(initialDate);
         loadClosedDeptChart(initialDate);
+        loadClauseChart(initialDate);
         loadDataCards(initialDate);
  
         $('#chartFilterDate').change(function() {
-            loadDeptChart($(this).val());
-            loadClosedDeptChart($(this).val());
-            loadDataCards($(this).val());
+            const val = $(this).val();
+            loadDeptChart(val);
+            loadClosedDeptChart(val);
+            loadClauseChart(val);
+            loadDataCards(val);
         });
  
         // Pagination buttons
@@ -1072,6 +1635,25 @@
                 }
             }
         });
+
+        // Clause Chart Pagination buttons
+        $('#btnClauseChartPrev').click(function() {
+            if (currentClauseChartPage > 1) {
+                currentClauseChartPage--;
+                renderClauseChart();
+            }
+        });
+ 
+        $('#btnClauseChartNext').click(function() {
+            if (rawClauseChartData) {
+                const totalItems = rawClauseChartData.labels.length;
+                const totalPages = Math.ceil(totalItems / clauseChartPageSize) || 1;
+                if (currentClauseChartPage < totalPages) {
+                    currentClauseChartPage++;
+                    renderClauseChart();
+                }
+            }
+        });
  
         // Handle resize
         $(window).resize(function() {
@@ -1081,6 +1663,8 @@
                 renderDeptChart();
                 currentClosedChartPage = 1;
                 renderClosedDeptChart();
+                currentClauseChartPage = 1;
+                renderClauseChart();
             }
         });
     });
@@ -1100,6 +1684,9 @@
                     d.date_to = $('#dateTo').val();
                     d.dept = $('#deptFilter').val();
                     d.finding_category = $('#categoryFilter').val();
+                    d.status = selectedStatus;
+                    d.month_year = selectedMonthYear;
+                    d.requirement_no = selectedClause;
                     d.is_dashboard = true;
                 },
                 error: function(xhr, error, code) {
@@ -1172,6 +1759,9 @@
 
         // Auto-filter on change
         $('#dateFrom, #dateTo, #deptFilter, #categoryFilter').on('change', function() {
+            selectedStatus = '';
+            selectedMonthYear = '';
+            selectedClause = '';
             table.ajax.reload();
         });
 
@@ -1180,6 +1770,10 @@
             $('#searchInput').val('');
             $('#dateFrom').val('').removeAttr('data-has-value');
             $('#dateTo').val('').removeAttr('data-has-value');
+            
+            selectedStatus = '';
+            selectedMonthYear = '';
+            selectedClause = '';
             
             // Reset searchable-select components
             window.dispatchEvent(new CustomEvent('updateDeptFilter', { detail: '' }));

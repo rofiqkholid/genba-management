@@ -93,6 +93,19 @@
                             placeholder="Select Status..." />
                     </div>
 
+                    <!-- Checksheet Filter -->
+                    <div class="col-span-1 lg:col-span-auto w-full lg:w-auto min-w-0 lg:min-w-[220px]">
+                        <x-searchable-select
+                            name="category_id"
+                            id="categoryFilter"
+                            label="Checksheet"
+                            :initialOptions="$categories"
+                            valueField="id"
+                            updateEvent="updateCategoryFilter"
+                            hideLabel="true"
+                            placeholder="Select Checksheet..." />
+                    </div>
+
                     <!-- Reset Button -->
                     <div class="col-span-2 lg:col-span-auto">
                         <button type="button" id="btnReset"
@@ -262,6 +275,7 @@
                     d.dept = $('#deptFilter').val();
                     d.detail_area = $('#detailAreaFilter').val();
                     d.status_filter = $('#statusFilter').val();
+                    d.category_id = $('#categoryFilter').val();
                 }
             },
             columns: [{
@@ -385,7 +399,7 @@
         });
 
         // Auto-filter on change
-        $('#dateFrom, #dateTo, #deptFilter, #detailAreaFilter, #statusFilter').on('change', function() {
+        $('#dateFrom, #dateTo, #deptFilter, #detailAreaFilter, #statusFilter, #categoryFilter').on('change', function() {
             table.ajax.reload();
         });
 
@@ -399,6 +413,7 @@
             $('#deptFilter').val('');
             $('#detailAreaFilter').val('');
             $('#statusFilter').val('');
+            $('#categoryFilter').val('');
             window.dispatchEvent(new CustomEvent('updateDetailAreaFilter', {
                 detail: {
                     id: '',
@@ -406,6 +421,12 @@
                 }
             }));
             window.dispatchEvent(new CustomEvent('updateStatusFilter', {
+                detail: {
+                    id: '',
+                    name: ''
+                }
+            }));
+            window.dispatchEvent(new CustomEvent('updateCategoryFilter', {
                 detail: {
                     id: '',
                     name: ''

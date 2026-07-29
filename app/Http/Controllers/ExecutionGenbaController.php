@@ -20,6 +20,7 @@ class ExecutionGenbaController extends Controller
         $dept = $request->dept;
         $detail_area = $request->detail_area;
         $status_filter = $request->status_filter;
+        $category_id = $request->category_id;
 
         $columns = array(
             0 => 'a.created_at',
@@ -34,6 +35,9 @@ class ExecutionGenbaController extends Controller
             9 => 'a.SysID'
         );
         $query = GenbaManagement::get_genba_approval_list($search, $date_from, $date_to, null, $dept, $detail_area);
+        if (!empty($category_id)) {
+            $query->where('b.Category_id', $category_id);
+        }
         $query->where('a.corrective_action', 1)->where('a.evidence', 1);
 
         if ($status_filter === 'approved') {
@@ -56,6 +60,9 @@ class ExecutionGenbaController extends Controller
         $dir = ($request->input('order.0.column') == 0 ? 'desc' : $request->input('order.0.dir'));
 
         $postsQuery = GenbaManagement::get_genba_approval_list($search, $date_from, $date_to, null, $dept, $detail_area);
+        if (!empty($category_id)) {
+            $postsQuery->where('b.Category_id', $category_id);
+        }
         $postsQuery->where('a.corrective_action', 1)->where('a.evidence', 1);
 
         if ($status_filter === 'approved') {

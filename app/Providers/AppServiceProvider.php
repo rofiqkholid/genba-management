@@ -31,6 +31,12 @@ class AppServiceProvider extends ServiceProvider
             });
             $view->with('departments', $depts);
             $view->with('detail_areas', GenbaManagement::get_all_detail_areas());
+            $view->with('categories', GenbaManagement::get_genba_category()->get()->map(function($c) {
+                return [
+                    'id' => $c->SysID,
+                    'name' => $c->Category . ' - ' . $c->Description
+                ];
+            })->toArray());
         });
     }
 }

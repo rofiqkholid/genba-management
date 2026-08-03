@@ -40,9 +40,41 @@
                             <h3 class="text-base sm:text-lg font-bold text-slate-800">Department Performance</h3>
                             <p class="text-[10px] sm:text-sm text-slate-500">Findings status per department</p>
                         </div>
-                        <div class="flex flex-col items-end gap-2">
-                            <input type="month" id="chartFilterDate" value="{{ date('Y-m') }}"
-                                class="w-[95px] sm:w-auto px-2 py-1.5 sm:px-4 sm:py-2 border border-slate-300 rounded-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-xs sm:text-sm outline-none bg-slate-50">
+                        <div class="flex items-center gap-2">
+                            @php
+                                $currentYear = (int)date('Y');
+                                $yearsOptions = [];
+                                for ($y = $currentYear; $y >= $currentYear - 7; $y--) {
+                                    $yearsOptions[] = ['id' => (string)$y, 'name' => (string)$y];
+                                }
+                                $auditTypesOptions = [
+                                    ['id' => '', 'name' => 'All Audit Types'],
+                                    ['id' => 'Product', 'name' => 'Audit Quality - Product'],
+                                    ['id' => 'Process', 'name' => 'Audit Quality - Process'],
+                                    ['id' => 'System', 'name' => 'Audit Quality - System'],
+                                    ['id' => 'Environment', 'name' => 'Audit Lingkungan - Environment']
+                                ];
+                            @endphp
+                            <div class="w-[200px] sm:w-[250px] text-left">
+                                <x-searchable-select
+                                    name="auditTypeFilter"
+                                    id="auditTypeFilter"
+                                    label="Internal Audit"
+                                    hideLabel="true"
+                                    updateEvent="update-audit-type-filter"
+                                    changeEvent="audit-type-filter-changed"
+                                    :initialOptions="$auditTypesOptions" />
+                            </div>
+                            <div class="w-[110px] sm:w-[130px] text-left">
+                                <x-searchable-select
+                                    name="chartFilterDate"
+                                    id="chartFilterDate"
+                                    label="Year"
+                                    hideLabel="true"
+                                    updateEvent="update-year-filter"
+                                    changeEvent="year-filter-changed"
+                                    :initialOptions="$yearsOptions" />
+                            </div>
                             <!-- Chart Pagination (Visible on Mobile only) -->
                             <div id="chartPagination" class="hidden items-center gap-1.5">
                                 <span id="chartPageIndicator" class="text-xs sm:text-sm text-slate-600 font-medium mr-1 text-nowrap">1/2</span>
@@ -499,7 +531,8 @@
         $.ajax({
             url: "{{ route('dashboard.internal_audit.data_cards') }}",
             data: {
-                yearMonth: yearMonth
+                yearMonth: yearMonth,
+                audit_type: selectedAuditType
             },
             type: "GET",
             dataType: "json",
@@ -587,6 +620,7 @@
     let selectedStatus = ''; // '', 'Closed', 'Overdue'
     let selectedMonthYear = ''; // 'YYYY-MM'
     let selectedClause = '';
+    let selectedAuditType = '';
 
     // Pagination state
     let rawChartData = null;
@@ -598,6 +632,9 @@
         $.ajax({
             url: "{{ route('dashboard.internal_audit.chart_data', ':yearMonth') }}".replace(':yearMonth', yearMonth),
             type: "GET",
+            data: {
+                audit_type: selectedAuditType
+            },
             dataType: "json",
             success: function(response) {
                 rawChartData = response;
@@ -883,6 +920,9 @@
         $.ajax({
             url: "{{ route('dashboard.internal_audit.closed_chart_data', ':yearMonth') }}".replace(':yearMonth', yearMonth),
             type: "GET",
+            data: {
+                audit_type: selectedAuditType
+            },
             dataType: "json",
             success: function(response) {
                 rawClosedChartData = response;
@@ -1263,6 +1303,9 @@
         $.ajax({
             url: "{{ route('dashboard.internal_audit.clause_chart_data', ':yearMonth') }}".replace(':yearMonth', yearMonth),
             type: "GET",
+            data: {
+                audit_type: selectedAuditType
+            },
             dataType: "json",
             success: function(response) {
                 rawClauseChartData = response;
@@ -1588,18 +1631,50 @@
  
     // Initialize Chart
     $(document).ready(function() {
-        const initialDate = $('#chartFilterDate').val();
+        const initialDate = '{{ date("Y") }}';
         loadDeptChart(initialDate);
         loadClosedDeptChart(initialDate);
         loadClauseChart(initialDate);
         loadDataCards(initialDate);
  
-        $('#chartFilterDate').change(function() {
-            const val = $(this).val();
+        setTimeout(function() {
+            window.dispatchEvent(new CustomEvent('update-year-filter', {
+                detail: {
+                    id: initialDate,
+                    name: initialDate
+                }
+            }));
+            window.dispatchEvent(new CustomEvent('update-audit-type-filter', {
+                detail: {
+                    id: '',
+                    name: 'All Audit Types'
+                }
+            }));
+        }, 100);
+
+        window.addEventListener('year-filter-changed', function(e) {
+            const val = e.detail.value;
+            selectedMonthYear = val;
             loadDeptChart(val);
             loadClosedDeptChart(val);
             loadClauseChart(val);
             loadDataCards(val);
+            if (table) {
+                table.ajax.reload();
+            }
+        });
+
+        window.addEventListener('audit-type-filter-changed', function(e) {
+            const val = e.detail.value;
+            selectedAuditType = val;
+            const currentYear = selectedMonthYear || '{{ date("Y") }}';
+            loadDeptChart(currentYear);
+            loadClosedDeptChart(currentYear);
+            loadClauseChart(currentYear);
+            loadDataCards(currentYear);
+            if (table) {
+                table.ajax.reload();
+            }
         });
  
         // Pagination buttons
@@ -1691,6 +1766,7 @@
                     d.status = selectedStatus;
                     d.month_year = selectedMonthYear;
                     d.requirement_no = selectedClause;
+                    d.audit_type = selectedAuditType;
                     d.is_dashboard = true;
                 },
                 error: function(xhr, error, code) {

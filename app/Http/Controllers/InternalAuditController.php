@@ -1658,13 +1658,23 @@ class InternalAuditController extends Controller
             }
         }
 
-        // Apply month_year filter if present (e.g. YYYY-MM)
+        // Apply month_year filter if present (e.g. YYYY-MM or YYYY)
         if ($request->has('month_year') && !empty($request->month_year)) {
-            [$year, $month] = explode('-', $request->month_year);
-            $year = (int)$year;
-            $month = (int)$month;
-            $query->whereYear('c.audit_date', $year)
-                  ->whereMonth('c.audit_date', $month);
+            if (strpos($request->month_year, '-') !== false) {
+                [$year, $month] = explode('-', $request->month_year);
+                $year = (int)$year;
+                $month = (int)$month;
+                $query->whereYear('c.audit_date', $year)
+                      ->whereMonth('c.audit_date', $month);
+            } else {
+                $year = (int)$request->month_year;
+                $query->whereYear('c.audit_date', $year);
+            }
+        }
+
+        // Apply audit_type filter if present
+        if ($request->has('audit_type') && !empty($request->audit_type)) {
+            $query->where('c.audit_type', $request->audit_type);
         }
 
         // Apply requirement_no filter if present

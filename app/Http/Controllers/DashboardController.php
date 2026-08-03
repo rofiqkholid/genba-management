@@ -565,15 +565,27 @@ class DashboardController extends Controller
 
     public function internal_audit_data_cards(Request $request)
     {
-        $yearMonth = $request->input('yearMonth', date('Y-m'));
-        [$year, $month] = explode('-', $yearMonth);
-        $year = (int) $year;
-        $month = (int) $month;
+        $yearMonth = $request->input('yearMonth', date('Y'));
+        if (strpos($yearMonth, '-') !== false) {
+            [$year, $month] = explode('-', $yearMonth);
+            $year = (int) $year;
+            $month = (int) $month;
+        } else {
+            $year = (int) $yearMonth;
+            $month = null;
+        }
 
         $query = DB::table('CsAuditDetail as d')
             ->join('CsAuditHeader as h', 'h.id', '=', 'd.audit_header_id')
-            ->whereYear('h.audit_date', $year)
-            ->whereMonth('h.audit_date', $month);
+            ->whereYear('h.audit_date', $year);
+
+        if ($month !== null) {
+            $query->whereMonth('h.audit_date', $month);
+        }
+
+        if ($request->filled('audit_type')) {
+            $query->where('h.audit_type', $request->audit_type);
+        }
 
         $okCount = (clone $query)->where('d.judgment', 'OK')->count();
         $minorCount = (clone $query)->where('d.judgment', 'Minor')
@@ -610,9 +622,14 @@ class DashboardController extends Controller
 
     public function internal_audit_chart_all_dept($yearMonth)
     {
-        [$year, $month] = explode('-', $yearMonth);
-        $year = (int) $year;
-        $month = (int) $month;
+        if (strpos($yearMonth, '-') !== false) {
+            [$year, $month] = explode('-', $yearMonth);
+            $year = (int) $year;
+            $month = (int) $month;
+        } else {
+            $year = (int) $yearMonth;
+            $month = null;
+        }
 
         $departments = DB::table('GenbaDept')
             ->orderBy('Key1')
@@ -625,12 +642,21 @@ class DashboardController extends Controller
         $data_total_major = [];
         $data_total_ofi = [];
 
+        $auditType = request()->input('audit_type');
+
         foreach ($departments as $dept) {
             $query = DB::table('CsAuditDetail as d')
                 ->join('CsAuditHeader as h', 'h.id', '=', 'd.audit_header_id')
                 ->where('h.auditee_dept', $dept)
-                ->whereYear('h.audit_date', $year)
-                ->whereMonth('h.audit_date', $month);
+                ->whereYear('h.audit_date', $year);
+
+            if ($month !== null) {
+                $query->whereMonth('h.audit_date', $month);
+            }
+
+            if (!empty($auditType)) {
+                $query->where('h.audit_type', $auditType);
+            }
 
             $ok = (clone $query)->where('d.judgment', 'OK')->count();
             $minor = (clone $query)->where('d.judgment', 'Minor')
@@ -675,9 +701,14 @@ class DashboardController extends Controller
 
     public function internal_audit_chart_closed_dept($yearMonth)
     {
-        [$year, $month] = explode('-', $yearMonth);
-        $year = (int) $year;
-        $month = (int) $month;
+        if (strpos($yearMonth, '-') !== false) {
+            [$year, $month] = explode('-', $yearMonth);
+            $year = (int) $year;
+            $month = (int) $month;
+        } else {
+            $year = (int) $yearMonth;
+            $month = null;
+        }
         $today = Carbon::now()->toDateString();
 
         $departments = DB::table('GenbaDept')
@@ -690,43 +721,40 @@ class DashboardController extends Controller
         $data_total_major = [];
         $data_total_minor_overdue = [];
         $data_total_major_overdue = [];
+        $data_total_need_verif = [];
+
+        $auditType = request()->input('audit_type');
 
         foreach ($departments as $dept) {
-            $minor = DB::table('CsAuditCar as car')
+            $baseQuery = DB::table('CsAuditCar as car')
                 ->join('CsAuditDetail as d', 'd.id', '=', 'car.audit_detail_id')
                 ->join('CsAuditHeader as h', 'h.id', '=', 'd.audit_header_id')
                 ->where('car.department', $dept)
-                ->where('car.finding_category', 'Minor')
-                ->where('car.status', 'Closed')
-                ->whereNotNull('car.qmr_approved_at')
                 ->whereNotNull('car.clause_title')
                 ->where('car.clause_title', '<>', '')
                 ->whereNotNull('car.finding')
                 ->where('car.finding', '<>', '')
-                ->whereYear('h.audit_date', $year)
-                ->whereMonth('h.audit_date', $month)
-                ->count();
+                ->whereYear('h.audit_date', $year);
 
-            $major = DB::table('CsAuditCar as car')
-                ->join('CsAuditDetail as d', 'd.id', '=', 'car.audit_detail_id')
-                ->join('CsAuditHeader as h', 'h.id', '=', 'd.audit_header_id')
-                ->where('car.department', $dept)
-                ->where('car.finding_category', 'Mayor')
+            if ($month !== null) {
+                $baseQuery->whereMonth('h.audit_date', $month);
+            }
+
+            if (!empty($auditType)) {
+                $baseQuery->where('h.audit_type', $auditType);
+            }
+
+            $minor = (clone $baseQuery)->where('car.finding_category', 'Minor')
                 ->where('car.status', 'Closed')
                 ->whereNotNull('car.qmr_approved_at')
-                ->whereNotNull('car.clause_title')
-                ->where('car.clause_title', '<>', '')
-                ->whereNotNull('car.finding')
-                ->where('car.finding', '<>', '')
-                ->whereYear('h.audit_date', $year)
-                ->whereMonth('h.audit_date', $month)
                 ->count();
 
-            $minorOverdue = DB::table('CsAuditCar as car')
-                ->join('CsAuditDetail as d', 'd.id', '=', 'car.audit_detail_id')
-                ->join('CsAuditHeader as h', 'h.id', '=', 'd.audit_header_id')
-                ->leftJoin('CsAuditAction as act', 'act.audit_car_id', '=', 'car.id')
-                ->where('car.department', $dept)
+            $major = (clone $baseQuery)->where('car.finding_category', 'Mayor')
+                ->where('car.status', 'Closed')
+                ->whereNotNull('car.qmr_approved_at')
+                ->count();
+
+            $minorOverdue = (clone $baseQuery)->leftJoin('CsAuditAction as act', 'act.audit_car_id', '=', 'car.id')
                 ->where('car.finding_category', 'Minor')
                 ->where('car.status', '<>', 'Closed')
                 ->whereDate('car.due_date', '<', $today)
@@ -734,19 +762,9 @@ class DashboardController extends Controller
                     $q->whereNull('act.action_status')
                       ->orWhereNotIn('act.action_status', ['open_verif', 'approve_superior', 'verified']);
                 })
-                ->whereNotNull('car.clause_title')
-                ->where('car.clause_title', '<>', '')
-                ->whereNotNull('car.finding')
-                ->where('car.finding', '<>', '')
-                ->whereYear('h.audit_date', $year)
-                ->whereMonth('h.audit_date', $month)
                 ->count();
 
-            $majorOverdue = DB::table('CsAuditCar as car')
-                ->join('CsAuditDetail as d', 'd.id', '=', 'car.audit_detail_id')
-                ->join('CsAuditHeader as h', 'h.id', '=', 'd.audit_header_id')
-                ->leftJoin('CsAuditAction as act', 'act.audit_car_id', '=', 'car.id')
-                ->where('car.department', $dept)
+            $majorOverdue = (clone $baseQuery)->leftJoin('CsAuditAction as act', 'act.audit_car_id', '=', 'car.id')
                 ->where('car.finding_category', 'Mayor')
                 ->where('car.status', '<>', 'Closed')
                 ->whereDate('car.due_date', '<', $today)
@@ -754,19 +772,9 @@ class DashboardController extends Controller
                     $q->whereNull('act.action_status')
                       ->orWhereNotIn('act.action_status', ['open_verif', 'approve_superior', 'verified']);
                 })
-                ->whereNotNull('car.clause_title')
-                ->where('car.clause_title', '<>', '')
-                ->whereNotNull('car.finding')
-                ->where('car.finding', '<>', '')
-                ->whereYear('h.audit_date', $year)
-                ->whereMonth('h.audit_date', $month)
                 ->count();
 
-            $needVerif = DB::table('CsAuditCar as car')
-                ->join('CsAuditDetail as d', 'd.id', '=', 'car.audit_detail_id')
-                ->join('CsAuditHeader as h', 'h.id', '=', 'd.audit_header_id')
-                ->leftJoin('CsAuditAction as act', 'act.audit_car_id', '=', 'car.id')
-                ->where('car.department', $dept)
+            $needVerif = (clone $baseQuery)->leftJoin('CsAuditAction as act', 'act.audit_car_id', '=', 'car.id')
                 ->whereIn('car.finding_category', ['Minor', 'Mayor'])
                 ->where(function($q) {
                     $q->where(function($q2) {
@@ -777,12 +785,6 @@ class DashboardController extends Controller
                            ->whereIn('act.action_status', ['open_verif', 'approve_superior']);
                     });
                 })
-                ->whereNotNull('car.clause_title')
-                ->where('car.clause_title', '<>', '')
-                ->whereNotNull('car.finding')
-                ->where('car.finding', '<>', '')
-                ->whereYear('h.audit_date', $year)
-                ->whereMonth('h.audit_date', $month)
                 ->count();
 
             $data_name_dept[] = $dept;
@@ -805,20 +807,36 @@ class DashboardController extends Controller
 
     public function internal_audit_chart_clause_data($yearMonth)
     {
-        [$year, $month] = explode('-', $yearMonth);
-        $year = (int)$year;
-        $month = (int)$month;
+        if (strpos($yearMonth, '-') !== false) {
+            [$year, $month] = explode('-', $yearMonth);
+            $year = (int)$year;
+            $month = (int)$month;
+        } else {
+            $year = (int)$yearMonth;
+            $month = null;
+        }
+
+        $auditType = request()->input('audit_type');
 
         // Fetch actual findings counts for selected month/year
-        $results = DB::table('CsAuditCar as car')
+        $query = DB::table('CsAuditCar as car')
             ->join('CsAuditDetail as d', 'd.id', '=', 'car.audit_detail_id')
             ->join('CsAuditHeader as h', 'h.id', '=', 'd.audit_header_id')
             ->whereNotNull('car.clause_title')
             ->where('car.clause_title', '<>', '')
             ->whereNotNull('car.finding')
             ->where('car.finding', '<>', '')
-            ->whereYear('h.audit_date', $year)
-            ->whereMonth('h.audit_date', $month)
+            ->whereYear('h.audit_date', $year);
+
+        if ($month !== null) {
+            $query->whereMonth('h.audit_date', $month);
+        }
+
+        if (!empty($auditType)) {
+            $query->where('h.audit_type', $auditType);
+        }
+
+        $results = $query
             ->select(
                 'car.clause_title',
                 DB::raw("SUM(CASE WHEN car.finding_category = 'Minor' THEN 1 ELSE 0 END) as minor_count"),

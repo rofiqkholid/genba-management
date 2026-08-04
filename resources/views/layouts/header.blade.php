@@ -37,6 +37,13 @@
 
             <!-- Right: Actions -->
             <div class="flex items-center gap-3">
+                <!-- Room Chat Agent -->
+                <a href="{{ route('agent.chat') }}" class="p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors flex items-center justify-center" title="Agent Chat Room">
+                    <i class="fa-solid fa-comments text-base sm:text-lg"></i>
+                </a>
+
+                <div class="hidden sm:block w-px h-6 bg-slate-200"></div>
+
                 <!-- Realtime Clock -->
                 <div class="flex items-center gap-2 md:gap-3 mr-2 md:mr-4">
                     <span id="realtime-date" class="text-xs sm:text-sm lg:text-base xl:text-xl text-slate-700 font-medium whitespace-nowrap">-</span>

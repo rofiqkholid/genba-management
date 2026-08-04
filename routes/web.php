@@ -8,6 +8,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\SummaryGenbaController;
 use App\Http\Controllers\MasterController;
 use App\Http\Controllers\InternalAuditController;
+use App\Http\Controllers\AgentChatController;
 use Illuminate\Support\Facades\DB;
 
 /*
@@ -85,6 +86,8 @@ Route::middleware(['auth'])->group(function () {
     })->name('verifikasi_genba');
 
     Route::get('/spv_verification', [SummaryGenbaController::class, 'index'])->name('summary_verif');
+    Route::get('/room-chat-agent', [AgentChatController::class, 'index'])->name('agent.chat');
+    Route::post('/room-chat-agent/send', [AgentChatController::class, 'send'])->name('agent.chat.send');
 
     // Dashboard Routes
     Route::get('/dashboard-mng/data_cards', [DashboardController::class, 'data_cards'])->name('dashboard.data_cards');

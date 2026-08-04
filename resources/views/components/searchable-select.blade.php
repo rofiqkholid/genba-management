@@ -31,10 +31,8 @@
         dependencyValue: '',
 
         init() {
-            // Listen for external value updates
             @if($updateEvent)
             window.addEventListener('{{ $updateEvent }}', (e) => {
-                // Handle different event detail structures
                 if (typeof e.detail === 'object' && e.detail !== null) {
                     if ('id' in e.detail && 'name' in e.detail) {
                         this.selectedId = e.detail.id;
@@ -43,11 +41,9 @@
                         this.selectedId = e.detail.value;
                         this.selectedName = e.detail.value;
                     } else {
-                        // Fallback if keys are missing (should not happen with our events)
                         console.warn('Unexpected event detail structure', e.detail);
                     }
                 } else {
-                     // Fallback/Direct primitive value
                     this.selectedId = e.detail;
                     this.selectedName = e.detail;
                 }
@@ -57,16 +53,13 @@
             });
             @endif
 
-            // Listen for options updates (e.g. for Process which receives array of strings)
             @if($optionsEvent)
             window.addEventListener('{{ $optionsEvent }}', (e) => {
                 const opts = e.detail.options || [];
-                // Normalize to objects {id, name}
                 this.items = opts.map(opt => (typeof opt === 'object' ? opt : { id: opt, name: opt }));
             });
             @endif
 
-            // Listen for dependency changes
             @if($dependencyEvent)
             window.addEventListener('{{ $dependencyEvent }}', (e) => {
                 this.dependencyValue = (e.detail.{{ $dependencyParam }} !== undefined) ? e.detail.{{ $dependencyParam }} : (e.detail.value || e.detail.id);
@@ -83,12 +76,10 @@
 
         async fetchItems(append = false) {
             if (this.loading) return;
-            // Only fetch if apiUrl is set
             @if(!$apiUrl) return; @endif
 
             this.loading = true;
             try {
-                // If search matches selectedName, treat as empty search to show all options
                 const searchTerm = (this.search === this.selectedName) ? '' : this.search;
 
                 const body = {
@@ -110,7 +101,6 @@
                 });
                 const data = await res.json();
                 
-                // Ensure items are in {id, name} format
                 const newItems = data.items.map(item => ({
                     id: item.id || item,
                     name: item.name || item.text || item
@@ -134,18 +124,10 @@
             if (this.dependencyValue === '') return;
             @endif
             this.page = 1;
-            // If no API, filter local items? Not implemented for now as requirement implies API or static-only.
-            // But for Process (static), search might be needed locally? 
-            // The current Process dropdown didn't implement search in the previous code, only Line Checked and Category did.
-            // But wait, the user wants 'searchable-select'. 
-            // If it's static items (Process), we should filter this.items locally if no API.
             
             @if($apiUrl)
                 this.fetchItems();
             @else
-                // Local search logic could be added here if needed, 
-                // but for now relying on API for search or assuming Process doesn't need search or handled elsewhere.
-                // However, the component UI has a search input.
             @endif
             
             this.open = true;
@@ -164,7 +146,6 @@
             this.search = item.name;
             this.open = false;
             
-            // Determine value to set based on valueField prop
             let val = item.id;
             @if(isset($valueField) && $valueField === 'name')
                 val = item.name;
@@ -182,7 +163,6 @@
             }));
             @endif
 
-            // Trigger standard change event on hidden input
             document.getElementById('{{ $id }}').dispatchEvent(new Event('change'));
         },
 
@@ -198,8 +178,6 @@
                 
                 @if($apiUrl)
                     this.page = 1;
-                    // Always try to fetch if API is present.
-                    // If dependency is missing/empty, fetchItems checks or backend handles it.
                     this.fetchItems();
                 @endif
             }
@@ -212,10 +190,8 @@
                     this.selectedName = '';
                     this.search = '';
                     $('#{{ $id }}').val('');
-                    // Trigger change only if it was not empty before
                     document.getElementById('{{ $id }}').dispatchEvent(new Event('change'));
                 } else {
-                    // Just clear the display search if it had some partial text but no ID
                     this.search = '';
                 }
             } else if (this.search !== this.selectedName) {

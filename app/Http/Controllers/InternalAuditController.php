@@ -1677,10 +1677,14 @@ class InternalAuditController extends Controller
             $query->where('c.audit_type', $request->audit_type);
         }
 
-        // Apply requirement_no filter if present
+        // Apply requirement_no filter if present (can match requirement_no or clause_title)
         if ($request->has('requirement_no') && !empty($request->requirement_no)) {
             if ($isCarQuery) {
-                $query->where('a.requirement_no', $request->requirement_no);
+                $reqVal = $request->requirement_no;
+                $query->where(function($q) use ($reqVal) {
+                    $q->where('a.requirement_no', $reqVal)
+                      ->orWhere('a.clause_title', $reqVal);
+                });
             }
         }
 
@@ -1763,7 +1767,7 @@ class InternalAuditController extends Controller
                 }
             } else {
                 if ($request->input('is_dashboard')) {
-                    $action = '-';
+                    $action = '';
                 } else {
                     $detailId = $post->detail_id;
                     $noteText = $post->note ?? '';
@@ -1782,7 +1786,7 @@ class InternalAuditController extends Controller
                 }
             }
 
-            $auditorHtml = '-';
+            $auditorHtml = '';
             if (!empty($post->auditor)) {
                 $auditors = array_filter(preg_split('/\s*[,&]\s*/', html_entity_decode($post->auditor, ENT_QUOTES, 'UTF-8')));
                 $auditorHtml = '<div class="flex flex-wrap gap-1">';
@@ -1794,13 +1798,13 @@ class InternalAuditController extends Controller
 
             $data[] = [
                 'no' => $no++,
-                'req_number' => $post->req_number ?? '-',
-                'note' => $post->note ?? '-',
-                'department' => $post->department ?? '-',
+                'req_number' => $post->req_number ?? '',
+                'note' => $post->note ?? '',
+                'department' => $post->department ?? '',
                 'finding_category' => $statusBadge,
                 'auditor' => $auditorHtml,
-                'auditee' => $post->header_auditee ?? $post->auditee ?? '-',
-                'audit_date' => isset($post->audit_date) ? \Carbon\Carbon::parse($post->audit_date)->format('d-m-Y') : '-',
+                'auditee' => $post->header_auditee ?? $post->auditee ?? '',
+                'audit_date' => isset($post->audit_date) ? \Carbon\Carbon::parse($post->audit_date)->format('d-m-Y') : '',
                 'action' => $action,
                 'schedule_hash_id' => $post->schedule_hash_id ?? null,
                 'checksheet_item_id' => $post->checksheet_item_id ?? null

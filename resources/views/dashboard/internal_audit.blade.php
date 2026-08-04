@@ -814,17 +814,18 @@
                         loop: false
                     }
                 },
-                onClick: (e) => {
-                    const points = deptChart.getElementsAtEventForMode(e, 'nearest', {
+                onClick: (e, elements, chart) => {
+                    const points = chart.getElementsAtEventForMode(e, 'nearest', {
                         intersect: true
                     }, true);
 
                     if (points.length) {
                         const firstPoint = points[0];
-                        const label = deptChart.data.labels[firstPoint.index];
-                        const datasetLabel = deptChart.data.datasets[firstPoint.datasetIndex].label;
+                        const label = chart.data.labels[firstPoint.index];
+                        const datasetLabel = chart.data.datasets[firstPoint.datasetIndex].label;
 
                         selectedStatus = ''; // Reset status
+                        selectedClause = ''; // Reset clause
                         selectedMonthYear = $('#chartFilterDate').val(); // Filter by the chart's current month
 
                         // 1. Update Department Filter
@@ -1106,15 +1107,15 @@
                         loop: false
                     }
                 },
-                onClick: (e) => {
-                    const points = closedDeptChart.getElementsAtEventForMode(e, 'nearest', {
+                onClick: (e, elements, chart) => {
+                    const points = chart.getElementsAtEventForMode(e, 'nearest', {
                         intersect: true
                     }, true);
  
                     if (points.length) {
                         const firstPoint = points[0];
-                        const label = closedDeptChart.data.labels[firstPoint.index];
-                        const datasetLabel = closedDeptChart.data.datasets[firstPoint.datasetIndex].label;
+                        const label = chart.data.labels[firstPoint.index];
+                        const datasetLabel = chart.data.datasets[firstPoint.datasetIndex].label;
  
                         // Determine status and category
                         let mappedCategory = '';
@@ -1137,6 +1138,7 @@
                         }
  
                         selectedMonthYear = $('#chartFilterDate').val(); // Filter by the chart's current month
+                        selectedClause = ''; // Reset clause
  
                         window.dispatchEvent(new CustomEvent('updateDeptFilter', {
                             detail: {
@@ -1152,6 +1154,9 @@
                             }
                         }));
  
+                        console.log("closedDeptChart Clicked - label:", label, "datasetLabel:", datasetLabel);
+                        console.log("closedDeptChart Mapped values - selectedStatus:", selectedStatus, "mappedCategory:", mappedCategory);
+
                         if (table) {
                             table.ajax.reload();
                         }
@@ -1460,15 +1465,15 @@
                         loop: false
                     }
                 },
-                onClick: (e) => {
-                    const points = clauseChart.getElementsAtEventForMode(e, 'nearest', {
+                onClick: (e, elements, chart) => {
+                    const points = chart.getElementsAtEventForMode(e, 'nearest', {
                         intersect: true
                     }, true);
 
                     if (points.length) {
                         const firstPoint = points[0];
-                        const label = clauseChart.data.labels[firstPoint.index];
-                        const datasetLabel = clauseChart.data.datasets[firstPoint.datasetIndex].label;
+                        const label = chart.data.labels[firstPoint.index];
+                        const datasetLabel = chart.data.datasets[firstPoint.datasetIndex].label;
 
                         selectedStatus = ''; 
                         

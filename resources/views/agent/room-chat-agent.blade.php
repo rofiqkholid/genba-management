@@ -25,13 +25,22 @@
                     </div>
                 </div>
 
-                <div class="flex items-center gap-1.5">
-                    <button class="p-2 hover:bg-slate-100 rounded-xl text-slate-500 transition-colors" title="Clear History" onclick="clearChatHistory()">
-                        <i class="fa-solid fa-trash-can text-base text-red-500 hover:text-red-600"></i>
+                <div class="flex items-center gap-1.5 relative">
+                    <button id="menuDropdownBtn" class="p-2 hover:bg-slate-100 rounded-xl text-slate-500 transition-colors" title="Menu" onclick="toggleMenuDropdown(event)">
+                        <i class="fa-solid fa-ellipsis-vertical text-lg"></i>
                     </button>
-                    <button class="p-2 hover:bg-slate-100 rounded-xl text-slate-500 transition-colors" title="Agent Info" onclick="toggleRightPanel()">
-                        <i class="fa-solid fa-circle-info text-lg"></i>
-                    </button>
+                    
+                    <!-- Dropdown Menu -->
+                    <div id="menuDropdown" class="hidden absolute right-0 top-11 w-48 bg-white border border-slate-200 rounded-xl shadow-lg z-50 py-1.5 transform origin-top-right transition-all">
+                        <button onclick="triggerClearChat(event)" class="w-full text-left px-4 py-2 text-[14px] text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors">
+                            <i class="fa-solid fa-trash-can text-[14px]"></i>
+                            <span>Hapus Percakapan</span>
+                        </button>
+                        <button onclick="triggerTogglePanel(event)" class="w-full text-left px-4 py-2 text-[14px] text-slate-700 hover:bg-slate-50 flex items-center gap-2 transition-colors">
+                            <i class="fa-solid fa-circle-info text-[14px] text-slate-500"></i>
+                            <span>Info Asisten</span>
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -58,8 +67,7 @@
         <div class="hidden xl:flex w-80 flex-col bg-white border-l border-slate-200 flex-shrink-0" id="infoDetailPanel">
             <!-- Right Panel Header (Aligned with Center Panel Header) -->
             <div class="h-16 px-6 border-b border-slate-200 flex items-center flex-shrink-0">
-                <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
-                    <i class="fa-solid fa-sliders text-slate-500"></i>
+                <h3 class="text-md font-semibold text-slate-700 flex items-center gap-2">
                     <span>Helper Options</span>
                 </h3>
             </div>
@@ -73,14 +81,11 @@
                     </div>
                     <h4 class="font-bold text-slate-800">Asisten GRACE</h4>
                     <p class="text-xs text-slate-500">Local Database Engine</p>
-                    <div class="mt-2.5 flex justify-center items-center gap-1.5">
-                        <span class="text-[10px] font-bold text-slate-500">Ready to assist</span>
-                    </div>
                 </div>
 
                 <!-- Quick Template Prompts -->
                 <div>
-                    <h5 class="text-[10px] font-bold text-slate-400 mb-3">Quick Prompts</h5>
+                    <h5 class="text-xs font-semibold text-slate-400 mb-3">Quick Prompts</h5>
                     <div class="flex flex-col gap-2">
                         <button onclick="usePrompt('Ada berapa temuan yang overdue?')" class="text-left text-xs bg-slate-50 hover:bg-blue-50 hover:text-blue-700 text-slate-600 p-3 rounded-xl border border-slate-200/60 transition-colors">
                             "Ada berapa temuan yang overdue?"
@@ -96,6 +101,40 @@
             </div>
         </div>
     </main>
+</div>
+
+<!-- Custom Professional Delete Confirmation Modal -->
+<div id="deleteConfirmModal" class="fixed inset-0 z-50 hidden">
+    <!-- Backdrop -->
+    <div class="fixed inset-0 bg-slate-900/60 transition-opacity" onclick="closeDeleteModal()"></div>
+
+    <!-- Modal Content -->
+    <div class="fixed inset-0 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl w-full max-w-md transform transition-all shadow-xl">
+            <!-- Header -->
+            <div class="p-6 text-center">
+                <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-red-100 mb-4">
+                    <svg class="h-8 w-8 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                </div>
+                <h3 class="text-xl font-bold text-slate-800 mb-2">Hapus Riwayat Chat</h3>
+                <p class="text-slate-500 text-sm">Apakah Anda yakin ingin menghapus seluruh riwayat percakapan? Tindakan ini tidak dapat dibatalkan.</p>
+            </div>
+
+            <!-- Footer Buttons -->
+            <div class="flex gap-3 p-6 pt-0">
+                <button type="button" onclick="closeDeleteModal()"
+                    class="flex-1 px-4 py-3 bg-slate-100 text-slate-700 rounded-xl font-semibold hover:bg-slate-200 transition-colors text-sm">
+                    Batal
+                </button>
+                <button type="button" onclick="executeDelete()"
+                    class="flex-1 px-4 py-3 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition-colors text-sm">
+                    Ya, Hapus
+                </button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- Custom Page Style for Smooth Flex Layout -->
@@ -118,6 +157,34 @@
         panel.classList.toggle('xl:flex');
     }
 
+    // Toggle Menu Dropdown
+    function toggleMenuDropdown(e) {
+        e.stopPropagation();
+        const menu = document.getElementById('menuDropdown');
+        menu.classList.toggle('hidden');
+    }
+
+    function triggerClearChat(e) {
+        e.stopPropagation();
+        document.getElementById('menuDropdown').classList.add('hidden');
+        clearChatHistory();
+    }
+
+    function triggerTogglePanel(e) {
+        e.stopPropagation();
+        document.getElementById('menuDropdown').classList.add('hidden');
+        toggleRightPanel();
+    }
+
+    // Close dropdown on click outside
+    document.addEventListener('click', (e) => {
+        const menu = document.getElementById('menuDropdown');
+        const btn = document.getElementById('menuDropdownBtn');
+        if (menu && !menu.classList.contains('hidden') && !menu.contains(e.target) && e.target !== btn && !btn.contains(e.target)) {
+            menu.classList.add('hidden');
+        }
+    });
+
     // Quick prompt template helper
     function usePrompt(text) {
         const input = document.getElementById('messageInput');
@@ -132,11 +199,20 @@
 
     // Clear chat history
     function clearChatHistory() {
-        if (confirm('Apakah Anda yakin ingin menghapus seluruh riwayat percakapan?')) {
-            localStorage.removeItem('grace_chat_messages');
-            chatMessages = [];
-            loadChatHistory();
-        }
+        document.getElementById('deleteConfirmModal').classList.remove('hidden');
+    }
+
+    // Close Delete Modal
+    function closeDeleteModal() {
+        document.getElementById('deleteConfirmModal').classList.add('hidden');
+    }
+
+    // Execute deletion of chat history
+    function executeDelete() {
+        localStorage.removeItem('grace_chat_messages');
+        chatMessages = [];
+        loadChatHistory();
+        closeDeleteModal();
     }
 
     // Load and render history from localStorage
@@ -147,7 +223,7 @@
         const welcomeBannerHtml = `
             <div class="bg-blue-50/50 border border-blue-100 rounded-2xl p-5 text-center max-w-xl mx-auto my-4">
                 <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center mx-auto mb-3">
-                    <i class="fa-solid fa-database text-lg"></i>
+                    <i class="fa-solid fa-robot text-lg"></i>
                 </div>
                 <h3 class="text-sm font-bold text-slate-800 mb-1">Welcome to Asisten GRACE</h3>
                 <p class="text-xs text-slate-600 leading-relaxed">
@@ -155,8 +231,6 @@
                 </p>
             </div>
         `;
-
-        container.innerHTML = welcomeBannerHtml;
 
         // Fetch stored messages or initialize with default message
         const stored = localStorage.getItem('grace_chat_messages');
@@ -169,6 +243,13 @@
                 text: 'Halo! Ada yang bisa saya bantu terkait pencarian data audit internal hari ini? Coba tanyakan hal-hal seperti jumlah temuan overdue atau persetujuan dokumen CAR.'
             }];
             saveToLocalStorage();
+        }
+
+        // Only show welcome banner if there are no real user conversations yet (only default welcome greeting exists)
+        if (chatMessages.length <= 1) {
+            container.innerHTML = welcomeBannerHtml;
+        } else {
+            container.innerHTML = '';
         }
 
         // Render each message
@@ -223,6 +304,13 @@
         const input = document.getElementById('messageInput');
         const text = input.value.trim();
         if (!text) return;
+
+        // Clear welcome banner and initial welcome message when user sends their first message
+        if (chatMessages.length === 1 && chatMessages[0].sender === 'left') {
+            const container = document.getElementById('messagesContainer');
+            container.innerHTML = '';
+            chatMessages = [];
+        }
 
         // Push User Message to local state and save
         chatMessages.push({

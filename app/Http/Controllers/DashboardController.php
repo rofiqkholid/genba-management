@@ -1186,7 +1186,7 @@ class DashboardController extends Controller
             $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($templatePath);
             $sheet = $spreadsheet->getActiveSheet();
             
-            // Set dynamic header: K4 has export date
+            // Set dynamic header: export date
             $sheet->setCellValue('K4', date('d-m-Y'));
             
             // We want to write data starting from row 11.
@@ -1202,9 +1202,11 @@ class DashboardController extends Controller
             
             $startRow = 11;
             
-            // Clear row 11 first
-            for ($col = 2; $col <= 11; $col++) { // Columns B to K
+            // Clear row 11 first (B to L = columns 2 to 12)
+            for ($col = 2; $col <= 12; $col++) { // Columns B to L
                 $colLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($col);
+                // Unmerge before clearing
+                try { $sheet->unmergeCells($colLetter . $startRow . ':' . $colLetter . $startRow); } catch (\Exception $e) {}
                 $sheet->setCellValue($colLetter . $startRow, null);
             }
             
@@ -1221,16 +1223,17 @@ class DashboardController extends Controller
                 $sheet->duplicateStyle($styleE11, 'E' . $currentRow);
                 $sheet->duplicateStyle($styleF11, 'F' . $currentRow);
                 $sheet->duplicateStyle($styleG11, 'G' . $currentRow);
-                $sheet->duplicateStyle($styleH11, 'H' . $currentRow);
-                $sheet->duplicateStyle($styleI11, 'I' . $currentRow);
-                $sheet->duplicateStyle($styleI11, 'J' . $currentRow);
+                $sheet->duplicateStyle($styleH11, 'H' . $currentRow); // Related
+                $sheet->duplicateStyle($styleI11, 'I' . $currentRow); // Status
+                $sheet->duplicateStyle($styleI11, 'J' . $currentRow); // Findings (merged)
                 $sheet->duplicateStyle($styleI11, 'K' . $currentRow);
+                $sheet->duplicateStyle($styleI11, 'L' . $currentRow);
                 
-                // Merge columns I to K for finding
-                $sheet->mergeCells("I{$currentRow}:K{$currentRow}");
+                // Merge columns J to L for finding
+                $sheet->mergeCells("J{$currentRow}:L{$currentRow}");
                 
                 // Set alignment wrap and vertical center
-                foreach (range('B', 'K') as $colLetter) {
+                foreach (range('B', 'L') as $colLetter) {
                     $sheet->getStyle($colLetter . $currentRow)->getAlignment()->setWrapText(true);
                     $sheet->getStyle($colLetter . $currentRow)->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
                     $sheet->getStyle($colLetter . $currentRow)->getBorders()->getAllBorders()->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN);
@@ -1258,8 +1261,9 @@ class DashboardController extends Controller
                 $sheet->setCellValue('E' . $currentRow, $row->Area_Checked ?? '-');
                 $sheet->setCellValue('F' . $currentRow, $row->asign_to_dept ?? '-');
                 $sheet->setCellValue('G' . $currentRow, $row->Auditor ?? '-');
-                $sheet->setCellValue('H' . $currentRow, $statusText);
-                $sheet->setCellValue('I' . $currentRow, $row->findings ?? '-');
+                $sheet->setCellValue('H' . $currentRow, $row->type ?? '-');  // Related
+                $sheet->setCellValue('I' . $currentRow, $statusText);         // Status
+                $sheet->setCellValue('J' . $currentRow, $row->findings ?? '-'); // Findings (J:L merged)
                 
                 $currentRow++;
             }

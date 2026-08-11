@@ -238,13 +238,13 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/company/delete', [KPICompanyController::class, 'delete'])->name('kpi.company.delete');
         Route::post('/company/departments', [KPICompanyController::class, 'departments'])->name('kpi.company.departments');
         Route::get('/department', function () {
-            return view('kpi.department');
+            return view('errors.coming-soon');
         })->name('kpi.department');
         Route::get('/monthly-summary', function () {
-            return view('kpi.monthly_summary');
+            return view('errors.coming-soon');
         })->name('kpi.monthly_summary');
         Route::get('/print-report', function () {
-            return view('kpi.print_report');
+            return view('errors.coming-soon');
         })->name('kpi.print_report');
     });
 

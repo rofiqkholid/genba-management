@@ -49,7 +49,7 @@ class Menu extends Model
     public static function getMenuStructureConfig()
     {
         return [
-            'label' => 5,
+            'label' => null,
             'mainMenus' => [
                 [
                     'menu' => 100,
@@ -77,6 +77,15 @@ class Menu extends Model
                     ]
                 ],
                 [
+                    'menu' => 116,
+                    'children' => [
+                        ['menu' => 117, 'children' => []],
+                        ['menu' => 118, 'children' => []],
+                        ['menu' => 119, 'children' => []],
+                        ['menu' => 120, 'children' => []],
+                    ]
+                ],
+                [
                     'menu' => 95,
                     'children' => [
                         ['menu' => 96, 'children' => []],
@@ -87,6 +96,8 @@ class Menu extends Model
                         ['menu' => 111, 'children' => []],
                         ['menu' => 114, 'children' => []],
                         ['menu' => 115, 'children' => []],
+                        ['menu' => 121, 'children' => []],
+                        ['menu' => 122, 'children' => []],
                     ]
                 ],
                 [

@@ -264,6 +264,66 @@ class MenuSeeder extends Seeder
                 'menu' => 'internal-audit',
                 'menu_name' => 'Internal Audit Form',
                 'icon' => '<span></span>'
+            ],
+            [
+                'id' => 116,
+                'sequence_id' => 5,
+                'level_menu_id' => 2,
+                'group_id' => 10,
+                'sub_group_id' => 116,
+                'menu' => 'key-performance-indicator',
+                'menu_name' => 'Key Performance Indicator',
+                'icon' => '<span></span>'
+            ],
+            [
+                'id' => 117,
+                'sequence_id' => 1,
+                'level_menu_id' => 3,
+                'group_id' => 10,
+                'sub_group_id' => 116,
+                'menu' => 'key-performance-indicator/company',
+                'menu_name' => 'Company KPI',
+                'icon' => '<span></span>'
+            ],
+            [
+                'id' => 118,
+                'sequence_id' => 2,
+                'level_menu_id' => 3,
+                'group_id' => 10,
+                'sub_group_id' => 116,
+                'menu' => 'key-performance-indicator/department',
+                'menu_name' => 'Departement KPI',
+                'icon' => '<span></span>'
+            ],
+            [
+                'id' => 119,
+                'sequence_id' => 3,
+                'level_menu_id' => 3,
+                'group_id' => 10,
+                'sub_group_id' => 116,
+                'menu' => 'key-performance-indicator/monthly-summary',
+                'menu_name' => 'Monthly Summary',
+                'icon' => '<span></span>'
+            ],
+            [
+                'id' => 120,
+                'sequence_id' => 4,
+                'level_menu_id' => 3,
+                'group_id' => 10,
+                'sub_group_id' => 116,
+                'menu' => 'key-performance-indicator/print-report',
+                'menu_name' => 'Print Report',
+                'icon' => '<span></span>'
+            ],
+            [
+                'id' => 121,
+                'sequence_id' => 9,
+                'level_menu_id' => 3,
+                'group_id' => 6,
+                'sub_group_id' => 95,
+                'menu' => 'data-master/kpi-list',
+                'menu_name' => 'KPI List',
+                'icon' => '<span></span>'
             ]
         ];
 

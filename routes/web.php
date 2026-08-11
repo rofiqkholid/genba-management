@@ -9,6 +9,7 @@ use App\Http\Controllers\SummaryGenbaController;
 use App\Http\Controllers\MasterController;
 use App\Http\Controllers\InternalAuditController;
 use App\Http\Controllers\AgentChatController;
+use App\Http\Controllers\KPICompanyController;
 use Illuminate\Support\Facades\DB;
 
 /*
@@ -195,6 +196,20 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/user-auditor', [MasterController::class, 'user_auditor'])->name('master.user_auditor');
         Route::post('/user-auditor/table', [MasterController::class, 'user_auditor_table'])->name('master.user_auditor.table');
         Route::post('/user-auditor/toggle', [MasterController::class, 'toggle_user_auditor'])->name('master.user_auditor.toggle');
+
+        Route::get('/kpi-list', [MasterController::class, 'kpi_list'])->name('master.kpi_list');
+        Route::post('/kpi-list/table', [MasterController::class, 'kpi_list_table'])->name('master.kpi_list.table');
+        Route::post('/kpi-list/store', [MasterController::class, 'store_kpi_list'])->name('master.kpi_list.store');
+        Route::post('/kpi-list/update', [MasterController::class, 'update_kpi_list'])->name('master.kpi_list.update');
+        Route::post('/kpi-list/delete', [MasterController::class, 'delete_kpi_list'])->name('master.kpi_list.delete');
+        Route::post('/kpi-list/options', [MasterController::class, 'kpi_list_options'])->name('master.kpi_list.options');
+
+        Route::get('/kpi-unit', [MasterController::class, 'kpi_unit'])->name('master.kpi_unit');
+        Route::post('/kpi-unit/table', [MasterController::class, 'kpi_unit_table'])->name('master.kpi_unit.table');
+        Route::post('/kpi-unit/store', [MasterController::class, 'store_kpi_unit'])->name('master.kpi_unit.store');
+        Route::post('/kpi-unit/update', [MasterController::class, 'update_kpi_unit'])->name('master.kpi_unit.update');
+        Route::post('/kpi-unit/delete', [MasterController::class, 'delete_kpi_unit'])->name('master.kpi_unit.delete');
+        Route::post('/kpi-unit/options', [MasterController::class, 'kpi_unit_options'])->name('master.kpi_unit.options');
     });
 
     Route::get('/user-management', [MasterController::class, 'user_management'])->name('master.user_management');
@@ -209,6 +224,29 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/menu-management', [MasterController::class, 'menu_management'])->name('master.menu_management');
     Route::post('/menu-management/table', [MasterController::class, 'menu_management_table'])->name('master.menu_management.table');
+
+    // Key Performance Indicator Routes
+    Route::prefix('kpi')->group(function () {
+        Route::get('/company', [KPICompanyController::class, 'index'])->name('kpi.company');
+        Route::get('/company/detail/{id}', [KPICompanyController::class, 'detail'])->name('kpi.company.detail');
+        Route::get('/company/activity/edit/{id}', [KPICompanyController::class, 'editActivity'])->name('kpi.company.activity.edit');
+        Route::post('/company/activity/update/{id}', [KPICompanyController::class, 'updateActivity'])->name('kpi.company.activity.update');
+        Route::get('/company/activity/cancel/{id}', [KPICompanyController::class, 'cancelActivity'])->name('kpi.company.activity.cancel');
+        Route::post('/company/table', [KPICompanyController::class, 'table'])->name('kpi.company.table');
+        Route::post('/company/store', [KPICompanyController::class, 'store'])->name('kpi.company.store');
+        Route::post('/company/update', [KPICompanyController::class, 'update'])->name('kpi.company.update');
+        Route::post('/company/delete', [KPICompanyController::class, 'delete'])->name('kpi.company.delete');
+        Route::post('/company/departments', [KPICompanyController::class, 'departments'])->name('kpi.company.departments');
+        Route::get('/department', function () {
+            return view('kpi.department');
+        })->name('kpi.department');
+        Route::get('/monthly-summary', function () {
+            return view('kpi.monthly_summary');
+        })->name('kpi.monthly_summary');
+        Route::get('/print-report', function () {
+            return view('kpi.print_report');
+        })->name('kpi.print_report');
+    });
 
     // Fallback for 404 inside auth middleware
     Route::fallback(function () {

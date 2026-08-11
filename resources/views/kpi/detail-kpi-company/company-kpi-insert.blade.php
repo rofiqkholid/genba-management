@@ -1,0 +1,556 @@
+@extends('layouts.app')
+
+@section('title', 'KPI Company Activity Input')
+
+@section('content')
+@include('layouts.sidebar')
+
+<!-- Main Content -->
+<div class="lg:ml-20 min-h-screen flex flex-col bg-slate-50">
+    @include('layouts.header')
+
+    <!-- Page Content -->
+    <main class="flex-1 p-6">
+        @php
+            $isViewMode = request('mode') === 'view';
+        @endphp
+        <style>
+            #closed_status ~ div[x-show="open"],
+            #pic_dept ~ div[x-show="open"],
+            #follow_up_by ~ div[x-show="open"] {
+                bottom: 100% !important;
+                top: auto !important;
+                margin-bottom: 4px !important;
+                margin-top: 0 !important;
+            }
+        </style>
+        <!-- Back Button & Page Title -->
+        <div class="mb-6 flex items-center gap-4">
+            <a href="javascript:history.back()" class="w-10 h-10 flex items-center justify-center bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors">
+                <i class="fa-solid fa-arrow-left text-slate-600"></i>
+            </a>
+            <div>
+                <h1 class="text-2xl font-bold text-slate-800">{{ $isViewMode ? 'KPI Company Activity Details' : 'KPI Company Activity Input' }}</h1>
+                <p class="text-slate-500 mt-1">{{ $isViewMode ? 'View actual performance, status, and corrective action for this month.' : 'Insert actual performance, status, and corrective action for this month.' }}</p>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-2xl border border-slate-200 p-6 space-y-6">
+            <form action="{{ route('kpi.company.activity.update', $activity->hash_id) }}" method="POST" enctype="multipart/form-data" class="space-y-4">
+                @csrf
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Department -->
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1.5">Department</label>
+                        <input type="text" value="{{ $activity->department_code }}" disabled class="w-full px-4 py-2.5 border border-slate-200 rounded-lg bg-slate-50 text-slate-500 text-sm outline-none cursor-not-allowed">
+                    </div>
+                    <!-- KPI Objective -->
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1.5">KPI Objective</label>
+                        <input type="text" value="{{ $activity->objective }}" disabled class="w-full px-4 py-2.5 border border-slate-200 rounded-lg bg-slate-50 text-slate-500 text-sm outline-none cursor-not-allowed">
+                    </div>
+
+                    <!-- Operator -->
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1.5">Operator</label>
+                        <input type="text" value="{{ $activity->operator }}" disabled class="w-full px-4 py-2.5 border border-slate-200 rounded-lg bg-slate-50 text-slate-500 text-sm outline-none cursor-not-allowed">
+                    </div>
+                    <!-- Unit -->
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1.5">Unit</label>
+                        <input type="text" value="{{ $activity->unit ?? '' }}" disabled class="w-full px-4 py-2.5 border border-slate-200 rounded-lg bg-slate-50 text-slate-500 text-sm outline-none cursor-not-allowed">
+                    </div>
+
+                    <!-- Tahun -->
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1.5">Tahun</label>
+                        <input type="text" value="{{ $activity->tahun }}" disabled class="w-full px-4 py-2.5 border border-slate-200 rounded-lg bg-slate-50 text-slate-500 text-sm outline-none cursor-not-allowed">
+                    </div>
+                    <!-- Bulan -->
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1.5">Bulan</label>
+                        <input type="text" value="{{ $activity->bulan }}" disabled class="w-full px-4 py-2.5 border border-slate-200 rounded-lg bg-slate-50 text-slate-500 text-sm outline-none cursor-not-allowed">
+                    </div>
+
+                    <!-- Target -->
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-slate-700 mb-1.5">Target</label>
+                        <input type="text" value="{{ ($activity->operator ?? '') }} {{ ($activity->master_target ?? '') }} {{ ($activity->unit ?? '') }}" disabled class="w-full px-4 py-2.5 border border-slate-200 rounded-lg bg-slate-50 text-slate-500 text-sm outline-none cursor-not-allowed">
+                    </div>
+
+                    <!-- Actual -->
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-slate-700 mb-1.5">Actual <span class="text-red-500">*</span></label>
+                        <input type="text" name="actual" value="{{ old('actual', $activity->actual) }}" required placeholder="Enter actual value" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm outline-none transition-all hover:border-blue-300" {{ $isViewMode ? 'disabled' : '' }}>
+                    </div>
+                </div>
+
+                @php
+                    $showProblemSolving = (float)filter_var($activity->actual, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION) > 0;
+                @endphp
+                <!-- Prevention and Problem Solving Process Section -->
+                <div id="problem-solving-section" style="display: {{ $showProblemSolving ? 'block' : 'none' }};" class="mt-6 pt-6 border-t border-slate-100 space-y-6">
+                    <h2 class="text-lg font-bold text-slate-800">
+                        Prevention and Problem Solving Process
+                    </h2>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- 1. Problem Description -->
+                        <div class="min-w-0">
+                            <label class="block text-sm font-medium text-slate-700 mb-1.5">1. Problem Description <span class="text-red-500">*</span></label>
+                            <div class="flex flex-col md:flex-row md:items-stretch gap-2 w-full md:max-w-[90%]">
+                                <div class="flex-1 min-w-0 flex">
+                                    <textarea name="problem_description" placeholder="Describe the problem..." rows="4" class="ps-required w-full block px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm outline-none transition-all resize-none" {{ $isViewMode ? 'disabled' : '' }}>{{ old('problem_description', $problem?->problem_description ?? '') }}</textarea>
+                                </div>
+                                @if(!$isViewMode)
+                                    <div class="shrink-0 flex items-stretch">
+                                        <input type="file" id="problem_image" name="problem_image" accept="image/*" class="hidden" onchange="handleFileSelect(this, 'problem_image_preview')">
+                                        <button type="button" onclick="document.getElementById('problem_image').click()" class="w-full md:w-auto md:h-full md:aspect-square py-2.5 md:py-0 border border-dashed border-blue-300 bg-blue-50/50 hover:bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center gap-2 md:gap-0 transition-all relative" title="Upload Problem Image">
+                                            <i class="fas fa-camera text-sm"></i>
+                                            <span class="md:hidden text-xs font-medium">Upload Image</span>
+                                        </button>
+                                    </div>
+                                @endif
+                            </div>
+                            <div id="problem_image_preview" class="mt-2">
+                                @if($problem && $problem?->problem_image)
+                                    <div class="relative inline-block group">
+                                        <div class="cursor-pointer" onclick="showViewer(this)">
+                                            <img src="{{ asset($problem?->problem_image) }}" class="w-16 h-16 object-cover rounded-lg border border-slate-200 hover:border-blue-400 transition-all" alt="Problem Image">
+                                        </div>
+                                        @if(!$isViewMode)
+                                            <button type="button" onclick="clearFileSelect(event, 'problem_image', 'problem_image_preview', 'delete_problem_image')" class="absolute -top-1.5 -right-1.5 bg-red-500 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center shadow-md transition-all z-10" title="Delete Image">
+                                                <i class="fas fa-times text-[10px]"></i>
+                                            </button>
+                                        @endif
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+
+                        <!-- 2. Root Cause -->
+                        <div class="min-w-0">
+                            <label class="block text-sm font-medium text-slate-700 mb-1.5">2. Root Cause <span class="text-red-500">*</span></label>
+                            <div class="flex flex-col md:flex-row md:items-stretch gap-2 w-full md:max-w-[90%]">
+                                <div class="flex-1 min-w-0 flex">
+                                    <textarea name="root_cause" placeholder="Identify the root cause..." rows="4" class="ps-required w-full block px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm outline-none transition-all resize-none" {{ $isViewMode ? 'disabled' : '' }}>{{ old('root_cause', $problem?->root_cause ?? '') }}</textarea>
+                                </div>
+                                @if(!$isViewMode)
+                                    <div class="shrink-0 flex items-stretch">
+                                        <input type="file" id="root_cause_image" name="root_cause_image" accept="image/*" class="hidden" onchange="handleFileSelect(this, 'root_cause_image_preview')">
+                                        <button type="button" onclick="document.getElementById('root_cause_image').click()" class="w-full md:w-auto md:h-full md:aspect-square py-2.5 md:py-0 border border-dashed border-blue-300 bg-blue-50/50 hover:bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center gap-2 md:gap-0 transition-all relative" title="Upload Root Cause Image">
+                                            <i class="fas fa-camera text-sm"></i>
+                                            <span class="md:hidden text-xs font-medium">Upload Image</span>
+                                        </button>
+                                    </div>
+                                @endif
+                            </div>
+                            <div id="root_cause_image_preview" class="mt-2">
+                                @if($problem && $problem?->root_cause_image)
+                                    <div class="relative inline-block group">
+                                        <div class="cursor-pointer" onclick="showViewer(this)">
+                                            <img src="{{ asset($problem?->root_cause_image) }}" class="w-16 h-16 object-cover rounded-lg border border-slate-200 hover:border-blue-400 transition-all" alt="Root Cause Image">
+                                        </div>
+                                        @if(!$isViewMode)
+                                            <button type="button" onclick="clearFileSelect(event, 'root_cause_image', 'root_cause_image_preview', 'delete_root_cause_image')" class="absolute -top-1.5 -right-1.5 bg-red-500 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center shadow-md transition-all z-10" title="Delete Image">
+                                                <i class="fas fa-times text-[10px]"></i>
+                                            </button>
+                                        @endif
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+
+                        <!-- Left Card: Problem Cause 5M + E -->
+                        <div class="p-5 border border-slate-200 bg-slate-50/50 rounded-xl space-y-4">
+                            <h3 class="text-sm font-semibold text-slate-800 flex items-center gap-1.5">
+                                <i class="fa-solid fa-diagram-project"></i> Problem Cause 5M + E
+                            </h3>
+                            
+                            <div class="relative z-40">
+                                <label class="block text-xs font-medium text-slate-500 mb-1">Unit</label>
+                                @php
+                                    $unitOptions = [
+                                        ['id' => 'Case', 'name' => 'Case'],
+                                        ['id' => 'Percent', 'name' => 'Percent']
+                                    ];
+                                @endphp
+                                <x-searchable-select
+                                    name="unit"
+                                    id="unit"
+                                    label="Unit"
+                                    :initialOptions="$unitOptions"
+                                    updateEvent="update-unit"
+                                    hideLabel="true"
+                                    :disabled="$isViewMode"
+                                />
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs font-medium text-slate-500 mb-1">Machine</label>
+                                    <input type="text" name="machine" value="{{ old('machine', $problem?->machine ?? '') }}" placeholder="Machine cause" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm outline-none focus:border-blue-500" {{ $isViewMode ? 'disabled' : '' }}>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-slate-500 mb-1">Material</label>
+                                    <input type="text" name="material" value="{{ old('material', $problem?->material ?? '') }}" placeholder="Material cause" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm outline-none focus:border-blue-500" {{ $isViewMode ? 'disabled' : '' }}>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-slate-500 mb-1">Man</label>
+                                    <input type="text" name="man" value="{{ old('man', $problem?->man ?? '') }}" placeholder="Man cause" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm outline-none focus:border-blue-500" {{ $isViewMode ? 'disabled' : '' }}>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-slate-500 mb-1">Method</label>
+                                    <input type="text" name="method" value="{{ old('method', $problem?->method ?? '') }}" placeholder="Method cause" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm outline-none focus:border-blue-500" {{ $isViewMode ? 'disabled' : '' }}>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-slate-500 mb-1">Money</label>
+                                    <input type="text" name="money" value="{{ old('money', $problem?->money ?? '') }}" placeholder="Money cause" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm outline-none focus:border-blue-500" {{ $isViewMode ? 'disabled' : '' }}>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-slate-500 mb-1">Environment</label>
+                                    <input type="text" name="environment" value="{{ old('environment', $problem?->environment ?? '') }}" placeholder="Environment cause" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm outline-none focus:border-blue-500" {{ $isViewMode ? 'disabled' : '' }}>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right Side Action steps -->
+                        <div class="space-y-4">
+                            <!-- 3. Temporary Action -->
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1.5">3. Temporary Action <span class="text-red-500">*</span></label>
+                                <div class="flex flex-col md:flex-row md:items-stretch gap-2 w-full md:max-w-[90%]">
+                                    <div class="flex-1 min-w-0 flex">
+                                        <textarea name="temporary_action" placeholder="Temporary fix..." rows="4" class="ps-required w-full block px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm outline-none transition-all resize-none" {{ $isViewMode ? 'disabled' : '' }}>{{ old('temporary_action', $problem?->temporary_action ?? '') }}</textarea>
+                                    </div>
+                                    @if(!$isViewMode)
+                                        <div class="shrink-0 flex items-stretch">
+                                            <input type="file" id="temporary_action_image" name="temporary_action_image" accept="image/*" class="hidden" onchange="handleFileSelect(this, 'temporary_action_image_preview')">
+                                            <button type="button" onclick="document.getElementById('temporary_action_image').click()" class="w-full md:w-auto md:h-full md:aspect-square py-2.5 md:py-0 border border-dashed border-blue-300 bg-blue-50/50 hover:bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center gap-2 md:gap-0 transition-all relative" title="Upload Temporary Action Image">
+                                                <i class="fas fa-camera text-sm"></i>
+                                                <span class="md:hidden text-xs font-medium">Upload Image</span>
+                                            </button>
+                                        </div>
+                                    @endif
+                                </div>
+                                <div id="temporary_action_image_preview" class="mt-2">
+                                    @if($problem && $problem?->temporary_action_image)
+                                        <div class="relative inline-block group">
+                                            <div class="cursor-pointer" onclick="showViewer(this)">
+                                                <img src="{{ asset($problem?->temporary_action_image) }}" class="w-16 h-16 object-cover rounded-lg border border-slate-200 hover:border-blue-400 transition-all" alt="Temporary Action Image">
+                                            </div>
+                                            @if(!$isViewMode)
+                                                <button type="button" onclick="clearFileSelect(event, 'temporary_action_image', 'temporary_action_image_preview', 'delete_temporary_action_image')" class="absolute -top-1.5 -right-1.5 bg-red-500 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center shadow-md transition-all z-10" title="Delete Image">
+                                                    <i class="fas fa-times text-[10px]"></i>
+                                                </button>
+                                            @endif
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+
+                            <!-- 4. Permanent Action -->
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1.5">4. Permanent Action <span class="text-red-500">*</span></label>
+                                <div class="flex flex-col md:flex-row md:items-stretch gap-2 w-full md:max-w-[90%]">
+                                    <div class="flex-1 min-w-0 flex">
+                                        <textarea name="permanent_action" placeholder="Permanent solution..." rows="4" class="ps-required w-full block px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm outline-none transition-all resize-none" {{ $isViewMode ? 'disabled' : '' }}>{{ old('permanent_action', $problem?->permanent_action ?? '') }}</textarea>
+                                    </div>
+                                    @if(!$isViewMode)
+                                        <div class="shrink-0 flex items-stretch">
+                                            <input type="file" id="permanent_action_image" name="permanent_action_image" accept="image/*" class="hidden" onchange="handleFileSelect(this, 'permanent_action_image_preview')">
+                                            <button type="button" onclick="document.getElementById('permanent_action_image').click()" class="w-full md:w-auto md:h-full md:aspect-square py-2.5 md:py-0 border border-dashed border-blue-300 bg-blue-50/50 hover:bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center gap-2 md:gap-0 transition-all relative" title="Upload Permanent Action Image">
+                                                <i class="fas fa-camera text-sm"></i>
+                                                <span class="md:hidden text-xs font-medium">Upload Image</span>
+                                            </button>
+                                        </div>
+                                    @endif
+                                </div>
+                                <div id="permanent_action_image_preview" class="mt-2">
+                                    @if($problem && $problem?->permanent_action_image)
+                                        <div class="relative inline-block group">
+                                            <div class="cursor-pointer" onclick="showViewer(this)">
+                                                <img src="{{ asset($problem?->permanent_action_image) }}" class="w-16 h-16 object-cover rounded-lg border border-slate-200 hover:border-blue-400 transition-all" alt="Permanent Action Image">
+                                            </div>
+                                            @if(!$isViewMode)
+                                                <button type="button" onclick="clearFileSelect(event, 'permanent_action_image', 'permanent_action_image_preview', 'delete_permanent_action_image')" class="absolute -top-1.5 -right-1.5 bg-red-500 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center shadow-md transition-all z-10" title="Delete Image">
+                                                    <i class="fas fa-times text-[10px]"></i>
+                                                </button>
+                                            @endif
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Date & Dropdowns Section (1 Column width span-2) -->
+                        <div class="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-6 pt-4 border-t border-slate-100">
+                            <!-- Start Date -->
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1.5">Start Date <span class="text-red-500">*</span></label>
+                                <input type="date" name="start_date" value="{{ old('start_date', $problem?->start_date ?? '') }}" class="ps-required w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm outline-none transition-all" {{ $isViewMode ? 'disabled' : '' }}>
+                            </div>
+                            <!-- Finish Date -->
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1.5">Finish Date <span class="text-red-500">*</span></label>
+                                <input type="date" name="finish_date" value="{{ old('finish_date', $problem?->finish_date ?? '') }}" class="ps-required w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm outline-none transition-all" {{ $isViewMode ? 'disabled' : '' }}>
+                            </div>
+                            <!-- Closed Status -->
+                            <div class="relative z-30">
+                                <label class="block text-sm font-medium text-slate-700 mb-1.5">Closed Status <span class="text-red-500">*</span></label>
+                                @php
+                                    $statusOptions = [
+                                        ['id' => 'Open', 'name' => 'Open'],
+                                        ['id' => 'Closed', 'name' => 'Closed']
+                                    ];
+                                @endphp
+                                <x-searchable-select
+                                    name="closed_status"
+                                    id="closed_status"
+                                    label="Closed Status"
+                                    :initialOptions="$statusOptions"
+                                    updateEvent="update-closed-status"
+                                    hideLabel="true"
+                                    :disabled="$isViewMode"
+                                />
+                            </div>
+
+                            <!-- PIC Dept -->
+                            <div class="relative z-20">
+                                <label class="block text-sm font-medium text-slate-700 mb-1.5">PIC Dept <span class="text-red-500">*</span></label>
+                                @php
+                                    $deptOptions = $departments->map(fn($d) => ['id' => $d->Key1, 'name' => $d->Key1 . ' - ' . $d->Desc])->toArray();
+                                @endphp
+                                <x-searchable-select
+                                    name="pic_dept"
+                                    id="pic_dept"
+                                    label="PIC Dept"
+                                    apiUrl="{{ route('kpi.company.departments') }}"
+                                    :initialOptions="$deptOptions"
+                                    updateEvent="update-pic-dept"
+                                    hideLabel="true"
+                                    :disabled="$isViewMode"
+                                />
+                            </div>
+                            <!-- Follow Up By -->
+                            <div class="relative z-10">
+                                <label class="block text-sm font-medium text-slate-700 mb-1.5">Follow Up By <span class="text-red-500">*</span></label>
+                                <x-searchable-select
+                                    name="follow_up_by"
+                                    id="follow_up_by"
+                                    label="Follow Up By"
+                                    apiUrl="{{ route('kpi.company.departments') }}"
+                                    :initialOptions="$deptOptions"
+                                    updateEvent="update-follow-up-by"
+                                    hideLabel="true"
+                                    :disabled="$isViewMode"
+                                />
+                            </div>
+                            <!-- Evidence -->
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1.5">Evidence</label>
+                                <input type="file" id="evidence" name="evidence" onchange="handleFileSelect(this, 'evidence_preview')" class="w-full px-4 py-2 border border-slate-200 rounded-lg text-sm file:mr-4 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200" {{ $isViewMode ? 'disabled' : '' }}>
+                                <div id="evidence_preview" class="mt-2">
+                                    @if($problem && $problem?->evidence)
+                                        @php
+                                            $ext = strtolower(pathinfo($problem->evidence, PATHINFO_EXTENSION));
+                                            $isImage = in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg']);
+                                        @endphp
+                                        @if($isImage)
+                                            <div class="relative inline-block group">
+                                                <div class="cursor-pointer" onclick="showViewer(this)">
+                                                    <img src="{{ asset($problem->evidence) }}" class="w-16 h-16 object-cover rounded-lg border border-slate-200 hover:border-blue-400 transition-all" alt="Evidence Image">
+                                                </div>
+                                                @if(!$isViewMode)
+                                                    <button type="button" onclick="clearFileSelect(event, 'evidence', 'evidence_preview', 'delete_evidence')" class="absolute -top-1.5 -right-1.5 bg-red-500 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center shadow-md transition-all z-10" title="Delete Image">
+                                                        <i class="fas fa-times text-[10px]"></i>
+                                                    </button>
+                                                @endif
+                                            </div>
+                                        @else
+                                            <div class="relative inline-flex items-center gap-1.5 text-xs text-slate-500 mt-1">
+                                                <i class="fa-solid fa-circle-check text-green-500"></i> Current Evidence: <a href="{{ asset($problem->evidence) }}" target="_blank" class="text-blue-500 hover:underline">View Uploaded File</a>
+                                                @if(!$isViewMode)
+                                                    <button type="button" onclick="clearFileSelect(event, 'evidence', 'evidence_preview', 'delete_evidence')" class="text-red-500 hover:text-red-700 ml-1" title="Delete File">
+                                                        <i class="fas fa-trash-alt"></i>
+                                                    </button>
+                                                @endif
+                                            </div>
+                                        @endif
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-3 pt-4 border-t border-slate-100">
+                    @if($isViewMode)
+                        <a href="{{ route('kpi.company.detail', \App\Http\Controllers\KPICompanyController::encodeId($activity->kpi_company_id)) }}" class="px-5 py-2.5 bg-white text-slate-700 border border-slate-300 rounded-lg hover:bg-slate-50 font-medium text-sm transition-colors">
+                            Back
+                        </a>
+                    @else
+                        <a href="{{ route('kpi.company.activity.cancel', $activity->hash_id) }}" class="px-5 py-2.5 bg-white text-slate-700 border border-slate-300 rounded-lg hover:bg-slate-50 font-medium text-sm transition-colors">
+                            Cancel
+                        </a>
+                        <button type="submit" class="px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium text-sm transition-colors shadow-sm shadow-blue-200">
+                            Save Changes
+                        </button>
+                    @endif
+                </div>
+            </form>
+        </div>
+    </main>
+
+    @include('layouts.footer')
+</div>
+@endsection
+
+@push('scripts')
+<script>
+    function handleFileSelect(input, previewId) {
+        const previewDiv = document.getElementById(previewId);
+        if (previewDiv) {
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+                const fileUrl = URL.createObjectURL(file);
+                const deleteInputName = 'delete_' + input.id;
+                
+                // Clear delete flag if user re-selects a file
+                const existingDeleteInput = document.querySelector(`input[name="${deleteInputName}"]`);
+                if (existingDeleteInput) {
+                    existingDeleteInput.remove();
+                }
+                
+                const isImage = file.type.startsWith('image/');
+                if (isImage) {
+                    previewDiv.innerHTML = `
+                        <div class="relative inline-block group">
+                            <div class="cursor-pointer" onclick="showViewer(this)">
+                                <img src="${fileUrl}" class="w-16 h-16 object-cover rounded-lg border border-slate-200 hover:border-blue-400 transition-all" alt="Preview Image">
+                            </div>
+                            <button type="button" onclick="clearFileSelect(event, '${input.id}', '${previewId}', '${deleteInputName}')" class="absolute -top-1.5 -right-1.5 bg-red-500 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center shadow-md transition-all z-10" title="Cancel Selection">
+                                <i class="fas fa-times text-[10px]"></i>
+                            </button>
+                        </div>
+                    `;
+                } else {
+                    previewDiv.innerHTML = `
+                        <div class="relative inline-flex items-center gap-1.5 text-xs text-slate-500 mt-1">
+                            <i class="fa-solid fa-circle-check text-green-500"></i> Selected: <span class="font-medium text-slate-700">${file.name}</span>
+                            <button type="button" onclick="clearFileSelect(event, '${input.id}', '${previewId}', '${deleteInputName}')" class="text-red-500 hover:text-red-700 ml-1" title="Cancel Selection">
+                                <i class="fas fa-trash-alt text-[10px]"></i>
+                            </button>
+                        </div>
+                    `;
+                }
+            } else {
+                previewDiv.innerHTML = '';
+            }
+        }
+    }
+
+    function clearFileSelect(event, inputId, previewId, deleteInputName = '') {
+        if (event) event.stopPropagation();
+        
+        const input = document.getElementById(inputId);
+        if (input) {
+            input.value = '';
+        }
+        
+        const previewDiv = document.getElementById(previewId);
+        if (previewDiv) {
+            previewDiv.innerHTML = '';
+        }
+        
+        if (deleteInputName) {
+            const form = document.querySelector('form');
+            if (form) {
+                const existingDeleteInput = form.querySelector(`input[name="${deleteInputName}"]`);
+                if (existingDeleteInput) {
+                    existingDeleteInput.remove();
+                }
+                const deleteInput = document.createElement('input');
+                deleteInput.type = 'hidden';
+                deleteInput.name = deleteInputName;
+                deleteInput.value = '1';
+                form.appendChild(deleteInput);
+            }
+        }
+    }
+
+    function showViewer(el) {
+        const img = el.querySelector('img');
+        if (img && typeof Viewer !== 'undefined') {
+            if (img.viewer) {
+                img.viewer.show();
+            } else {
+                img.viewer = new Viewer(img, {
+                    navbar: false,
+                    title: false,
+                    toolbar: {
+                        zoomIn: 4,
+                        zoomOut: 4,
+                        oneToOne: 4,
+                        reset: 4,
+                        prev: false,
+                        play: false,
+                        next: false,
+                        rotateLeft: 4,
+                        rotateRight: 4,
+                        flipHorizontal: 4,
+                        flipVertical: 4,
+                    },
+                });
+                img.viewer.show();
+            }
+        }
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        const problemSolvingSection = document.getElementById('problem-solving-section');
+        if (problemSolvingSection && problemSolvingSection.style.display === 'block') {
+            problemSolvingSection.querySelectorAll('.ps-required').forEach(el => {
+                el.setAttribute('required', 'required');
+            });
+            // Also set input type text in searchable selects to required so browser can focus them
+            problemSolvingSection.querySelectorAll('input[type="text"]').forEach(el => {
+                if (el.placeholder && el.placeholder.includes('Select')) {
+                    el.setAttribute('required', 'required');
+                }
+            });
+        }
+
+        // Initialize searchable-select components values
+        @if(old('unit') || ($problem && isset($problem->unit)))
+            window.dispatchEvent(new CustomEvent('update-unit', { detail: { id: '{{ old('unit', $problem->unit ?? '') }}', name: '{{ old('unit', $problem->unit ?? '') }}' } }));
+        @else
+            window.dispatchEvent(new CustomEvent('update-unit', { detail: { id: 'Case', name: 'Case' } }));
+        @endif
+
+        @if(old('closed_status') || ($problem && isset($problem->closed_status)))
+            window.dispatchEvent(new CustomEvent('update-closed-status', { detail: { id: '{{ old('closed_status', $problem->closed_status ?? '') }}', name: '{{ old('closed_status', $problem->closed_status ?? '') }}' } }));
+        @else
+            window.dispatchEvent(new CustomEvent('update-closed-status', { detail: { id: 'Open', name: 'Open' } }));
+        @endif
+
+        @if(old('pic_dept') || ($problem && isset($problem->pic_dept)))
+            @php
+                $picId = old('pic_dept', $problem->pic_dept ?? '');
+                $picObj = $departments->firstWhere('Key1', $picId);
+                $picName = $picObj ? ($picObj->Key1 . ' - ' . $picObj->Desc) : $picId;
+            @endphp
+            window.dispatchEvent(new CustomEvent('update-pic-dept', { detail: { id: '{{ $picId }}', name: '{{ $picName }}' } }));
+        @endif
+
+        @if(old('follow_up_by') || ($problem && isset($problem->follow_up_by)))
+            @php
+                $fupId = old('follow_up_by', $problem->follow_up_by ?? '');
+                $fupObj = $departments->firstWhere('Key1', $fupId);
+                $fupName = $fupObj ? ($fupObj->Key1 . ' - ' . $fupObj->Desc) : $fupId;
+            @endphp
+            window.dispatchEvent(new CustomEvent('update-follow-up-by', { detail: { id: '{{ $fupId }}', name: '{{ $fupName }}' } }));
+        @endif
+    });
+</script>
+@endpush

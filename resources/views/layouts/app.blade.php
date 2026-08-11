@@ -10,15 +10,8 @@
 
     <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('image/sai_logo_circle.png') }}">
 
-    <!-- Alpine.js -->
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-
     <!-- DataTables CSS (loaded before Vite so custom styles can override) -->
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
-
-    <!-- Viewer.js -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/viewerjs/1.11.6/viewer.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/viewerjs/1.11.6/viewer.min.js"></script>
+    <link rel="stylesheet" href="{{ asset('css/jquery.dataTables-1.13.7.min.css') }}">
 
     <!-- Vite Assets (loads last to override CDN styles) -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -45,8 +38,8 @@
     @endif
 
     <!-- jQuery and DataTables must load before @stack('scripts') -->
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+    <script src="{{ asset('js/jquery-3.7.1.min.js') }}"></script>
+    <script src="{{ asset('js/jquery.dataTables-1.13.7.min.js') }}"></script>
 
     @stack('scripts')
 

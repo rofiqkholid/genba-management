@@ -493,6 +493,7 @@ class KPICompanyController extends Controller
         }
 
         $activity->hash_id = self::encodeId($activity->id);
+        $activity->kpi_company_hash_id = self::encodeId($activity->kpi_company_id);
 
         $departments = DB::table('GenbaDept')->orderBy('Key1', 'asc')->get();
         $problem = DB::table('KPICompanyActivityProblem')->where('kpi_company_activity_id', $dbId)->first();

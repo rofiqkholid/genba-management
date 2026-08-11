@@ -87,9 +87,35 @@
 
                 @php
                     $showProblemSolving = (float)filter_var($activity->actual, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION) > 0;
+                    
+                    $unitData = (old('unit') || ($problem && isset($problem->unit))) 
+                        ? ['id' => old('unit', $problem->unit ?? ''), 'name' => old('unit', $problem->unit ?? '')]
+                        : ['id' => 'Case', 'name' => 'Case'];
+
+                    $closedStatusData = (old('closed_status') || ($problem && isset($problem->closed_status)))
+                        ? ['id' => old('closed_status', $problem->closed_status ?? ''), 'name' => old('closed_status', $problem->closed_status ?? '')]
+                        : ['id' => 'Open', 'name' => 'Open'];
+
+                    $picId = old('pic_dept', $problem->pic_dept ?? '');
+                    $picObj = $picId ? $departments->firstWhere('Key1', $picId) : null;
+                    $picName = $picObj ? ($picObj->Key1 . ' - ' . $picObj->Desc) : $picId;
+                    $picData = $picId ? ['id' => $picId, 'name' => $picName] : null;
+
+                    $fupId = old('follow_up_by', $problem->follow_up_by ?? '');
+                    $fupObj = $fupId ? $departments->firstWhere('Key1', $fupId) : null;
+                    $fupName = $fupObj ? ($fupObj->Key1 . ' - ' . $fupObj->Desc) : $fupId;
+                    $fupData = $fupId ? ['id' => $fupId, 'name' => $fupName] : null;
+
+                    $initialSelects = [
+                        'unit' => $unitData,
+                        'closed_status' => $closedStatusData,
+                        'pic_dept' => $picData,
+                        'follow_up_by' => $fupData,
+                    ];
                 @endphp
+                <div id="initial-selects-data" class="hidden" data-selects='{!! json_encode($initialSelects) !!}'></div>
                 <!-- Prevention and Problem Solving Process Section -->
-                <div id="problem-solving-section" style="display: {{ $showProblemSolving ? 'block' : 'none' }};" class="mt-6 pt-6 border-t border-slate-100 space-y-6">
+                <div id="problem-solving-section" class="{{ $showProblemSolving ? '' : 'hidden' }} mt-6 pt-6 border-t border-slate-100 space-y-6">
                     <h2 class="text-lg font-bold text-slate-800">
                         Prevention and Problem Solving Process
                     </h2>
@@ -386,7 +412,7 @@
 
                 <div class="flex justify-end gap-3 pt-4 border-t border-slate-100">
                     @if($isViewMode)
-                        <a href="{{ route('kpi.company.detail', \App\Http\Controllers\KPICompanyController::encodeId($activity->kpi_company_id)) }}" class="px-5 py-2.5 bg-white text-slate-700 border border-slate-300 rounded-lg hover:bg-slate-50 font-medium text-sm transition-colors">
+                        <a href="{{ route('kpi.company.detail', $activity->kpi_company_hash_id) }}" class="px-5 py-2.5 bg-white text-slate-700 border border-slate-300 rounded-lg hover:bg-slate-50 font-medium text-sm transition-colors">
                             Back
                         </a>
                     @else
@@ -509,7 +535,7 @@
 
     document.addEventListener("DOMContentLoaded", function() {
         const problemSolvingSection = document.getElementById('problem-solving-section');
-        if (problemSolvingSection && problemSolvingSection.style.display === 'block') {
+        if (problemSolvingSection && !problemSolvingSection.classList.contains('hidden')) {
             problemSolvingSection.querySelectorAll('.ps-required').forEach(el => {
                 el.setAttribute('required', 'required');
             });
@@ -522,35 +548,23 @@
         }
 
         // Initialize searchable-select components values
-        @if(old('unit') || ($problem && isset($problem->unit)))
-            window.dispatchEvent(new CustomEvent('update-unit', { detail: { id: '{{ old('unit', $problem->unit ?? '') }}', name: '{{ old('unit', $problem->unit ?? '') }}' } }));
-        @else
-            window.dispatchEvent(new CustomEvent('update-unit', { detail: { id: 'Case', name: 'Case' } }));
-        @endif
-
-        @if(old('closed_status') || ($problem && isset($problem->closed_status)))
-            window.dispatchEvent(new CustomEvent('update-closed-status', { detail: { id: '{{ old('closed_status', $problem->closed_status ?? '') }}', name: '{{ old('closed_status', $problem->closed_status ?? '') }}' } }));
-        @else
-            window.dispatchEvent(new CustomEvent('update-closed-status', { detail: { id: 'Open', name: 'Open' } }));
-        @endif
-
-        @if(old('pic_dept') || ($problem && isset($problem->pic_dept)))
-            @php
-                $picId = old('pic_dept', $problem->pic_dept ?? '');
-                $picObj = $departments->firstWhere('Key1', $picId);
-                $picName = $picObj ? ($picObj->Key1 . ' - ' . $picObj->Desc) : $picId;
-            @endphp
-            window.dispatchEvent(new CustomEvent('update-pic-dept', { detail: { id: '{{ $picId }}', name: '{{ $picName }}' } }));
-        @endif
-
-        @if(old('follow_up_by') || ($problem && isset($problem->follow_up_by)))
-            @php
-                $fupId = old('follow_up_by', $problem->follow_up_by ?? '');
-                $fupObj = $departments->firstWhere('Key1', $fupId);
-                $fupName = $fupObj ? ($fupObj->Key1 . ' - ' . $fupObj->Desc) : $fupId;
-            @endphp
-            window.dispatchEvent(new CustomEvent('update-follow-up-by', { detail: { id: '{{ $fupId }}', name: '{{ $fupName }}' } }));
-        @endif
+        const selectsContainer = document.getElementById('initial-selects-data');
+        if (selectsContainer) {
+            const data = JSON.parse(selectsContainer.dataset.selects || '{}');
+            
+            if (data.unit) {
+                window.dispatchEvent(new CustomEvent('update-unit', { detail: data.unit }));
+            }
+            if (data.closed_status) {
+                window.dispatchEvent(new CustomEvent('update-closed-status', { detail: data.closed_status }));
+            }
+            if (data.pic_dept) {
+                window.dispatchEvent(new CustomEvent('update-pic-dept', { detail: data.pic_dept }));
+            }
+            if (data.follow_up_by) {
+                window.dispatchEvent(new CustomEvent('update-follow-up-by', { detail: data.follow_up_by }));
+            }
+        }
     });
 </script>
 @endpush

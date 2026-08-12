@@ -140,11 +140,17 @@ class KPICompanyController extends Controller
 
         $canDelete = UserMenuPermission::canDelete(117);
 
+        $currentYear = Carbon::now()->year;
+        $years = [];
+        for ($i = 5; $i >= 1; $i--) {
+            $years[] = $currentYear - $i;
+        }
+
         $response = [
             "draw" => intval($request->draw),
             "recordsTotal" => $totalRecords,
             "recordsFiltered" => $filteredRecords,
-            "data" => $data->map(function ($item, $key) use ($request, $canDelete) {
+            "data" => $data->map(function ($item, $key) use ($request, $canDelete, $years) {
                 $start = $request->start ?? 0;
                 
                 $deleteBtn = '';
@@ -163,7 +169,13 @@ class KPICompanyController extends Controller
                                 </button>';
                 }
 
-                return [
+                $histories = DB::table('KPIAchievementHistory')
+                    ->where('kpi_list_id', $item->kpi_list_id)
+                    ->whereIn('year', $years)
+                    ->get()
+                    ->keyBy('year');
+
+                $row = [
                     "no" => $start + $key + 1,
                     "id" => $item->id,
                     "department_code" => $item->department_code,
@@ -174,7 +186,13 @@ class KPICompanyController extends Controller
                     "unit" => $item->unit ?? '-',
                     "periode" => $item->periode ?? '-',
                     "calculation_method" => Str::limit($item->calculation_method ?? '-', 50, '...'),
-                    "action" => '<div class="flex items-center justify-start gap-2">
+                ];
+
+                foreach ($years as $yr) {
+                    $row["year_" . $yr] = isset($histories[$yr]) && $histories[$yr]->achievement !== null ? $histories[$yr]->achievement : 'New KPI/ Activity Plan';
+                }
+
+                $row["action"] = '<div class="flex items-center justify-start gap-2">
                                 <button type="button" title="Detail" class="w-10 h-10 flex items-center justify-center rounded-xl bg-green-50 text-green-500 hover:bg-green-100 hover:text-green-600 transition-all duration-200"
                                     onclick="handleDetail(\'' . self::encodeId($item->id) . '\')">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -198,8 +216,9 @@ class KPICompanyController extends Controller
                                 </svg>
                                 </button>
                                 ' . $deleteBtn . '
-                           </div>'
-                ];
+                           </div>';
+
+                return $row;
             })
         ];
 

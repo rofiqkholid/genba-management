@@ -112,17 +112,28 @@
                     </div>
                 </div>
 
+@php
+    $currentYear = date('Y');
+    $years = [];
+    for ($i = 5; $i >= 1; $i--) {
+        $years[] = $currentYear - $i;
+    }
+@endphp
+
                 <!-- Table Section -->
                 <div class="p-6">
                     <table id="companyKpiTable" class="qms-table w-full min-w-[1000px]">
                         <thead>
                             <tr>
-                                <th class="w-[5%] text-center">No</th>
-                                <th class="w-[15%]">Department</th>
+                                <th class="w-[5%]">No</th>
+                                <th class="w-[10%]">Department</th>
                                 <th class="w-[10%]">Pilar</th>
-                                <th class="w-[20%]">Objective</th>
-                                <th class="w-[15%]">Target</th>
-                                <th class="w-[25%]">Calculation Method</th>
+                                <th class="w-[15%]">Objective</th>
+                                <th class="w-[10%]">Target</th>
+                                @foreach($years as $yr)
+                                    <th class="w-[6%]" style="font-size: 0.7rem !important; font-weight: 600 !important; color: #475569 !important; text-transform: uppercase !important; letter-spacing: 0.05em !important;">{{ $yr }}</th>
+                                @endforeach
+                                <th class="w-[15%]">Calculation Method</th>
                                 <th class="w-[10%] text-center">Actions</th>
                             </tr>
                         </thead>
@@ -476,11 +487,14 @@
                 }
             },
             columns: [
-                { data: 'no', name: 'no', orderable: false, searchable: false, className: 'text-center font-base text-slate-700 py-4' },
+                { data: 'no', name: 'no', orderable: false, searchable: false, className: 'font-base text-slate-700 py-4' },
                 { data: 'department_code', name: 'department_code', className: 'text-slate-700 py-4' },
                 { data: 'pillar', name: 'pillar', className: 'text-slate-700 py-4' },
                 { data: 'objective', name: 'objective', className: 'text-slate-700 py-4' },
                 { data: 'target', name: 'target', className: 'text-slate-700 py-4' },
+                @foreach($years as $yr)
+                { data: 'year_{{ $yr }}', name: 'year_{{ $yr }}', orderable: false, searchable: false, className: 'text-slate-700 py-4' },
+                @endforeach
                 { data: 'calculation_method', name: 'calculation_method', className: 'text-slate-700 py-4' },
                 { data: 'action', name: 'action', orderable: false, searchable: false, className: 'text-left py-4' }
             ],

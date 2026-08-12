@@ -73,7 +73,7 @@
 <div id="createModal" class="fixed inset-0 z-50 hidden">
     <div class="fixed inset-0 bg-slate-900/50 transition-opacity" onclick="closeCreateModal()"></div>
     <div class="fixed inset-0 flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl w-full max-w-2xl transform transition-all">
+        <div class="bg-white rounded-xl w-full max-w-5xl transform transition-all">
             <div class="p-6 border-b border-slate-100 flex justify-between items-center">
                 <h3 class="text-lg font-bold text-slate-800">Add KPI</h3>
                 <button onclick="closeCreateModal()" class="text-slate-400 hover:text-slate-600">
@@ -123,6 +123,10 @@
                         <label class="block text-sm font-medium text-slate-700 mb-1">Target</label>
                         <input type="text" name="target" required class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all" placeholder="Enter target">
                     </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-2">Achievement History (Last 5 Years)</label>
+                        <div id="create_history_container" class="grid grid-cols-5 gap-3"></div>
+                    </div>
                 </div>
                 <div class="p-6 border-t border-slate-100 bg-slate-50/50 flex justify-end gap-3 rounded-b-xl">
                     <button type="button" onclick="closeCreateModal()" class="px-4 py-2 text-slate-700 font-medium hover:bg-slate-200 rounded-lg transition-colors">Cancel</button>
@@ -137,7 +141,7 @@
 <div id="editModal" class="fixed inset-0 z-50 hidden">
     <div class="fixed inset-0 bg-slate-900/50 transition-opacity" onclick="closeEditModal()"></div>
     <div class="fixed inset-0 flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl w-full max-w-2xl transform transition-all">
+        <div class="bg-white rounded-xl w-full max-w-5xl transform transition-all">
             <div class="p-6 border-b border-slate-100 flex justify-between items-center">
                 <h3 class="text-lg font-bold text-slate-800">Edit KPI</h3>
                 <button onclick="closeEditModal()" class="text-slate-400 hover:text-slate-600">
@@ -187,6 +191,10 @@
                     <div>
                         <label class="block text-sm font-medium text-slate-700 mb-1">Target</label>
                         <input type="text" name="target" id="edit_target" required class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-2">Achievement History (Last 5 Years)</label>
+                        <div id="edit_history_container" class="grid grid-cols-5 gap-3"></div>
                     </div>
                 </div>
                 <div class="p-6 border-t border-slate-100 bg-slate-50/50 flex justify-end gap-3 rounded-b-xl">
@@ -384,6 +392,21 @@
         window.dispatchEvent(new CustomEvent('set-create-parent-objective', {
             detail: { id: "", name: "" }
         }));
+        
+        // Generate history inputs for last 5 years based on current year
+        const currentYear = new Date().getFullYear();
+        let createHtml = '';
+        for (let i = 5; i >= 1; i--) {
+            const yr = currentYear - i;
+            createHtml += `
+                <div class="border border-slate-200 rounded-lg p-2 bg-slate-50/50">
+                    <div class="text-xs font-bold text-slate-600 text-center mb-1.5">${yr}</div>
+                    <input type="text" name="history[${yr}][achievement]" class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-sm" placeholder="Achievement">
+                </div>
+            `;
+        }
+        $('#create_history_container').html(createHtml);
+
         $('#createModal').removeClass('hidden');
         setTimeout(() => {
             if (window.autoResizeTextarea) {
@@ -421,6 +444,43 @@
         $('#edit_pillar').val(pillar);
         $('#edit_category').val(category);
         $('#edit_target').val(target);
+
+        // Fetch history data and render input fields
+        const currentYear = new Date().getFullYear();
+        $('#edit_history_container').html('<div class="col-span-5 text-center py-2 text-slate-400"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Loading history...</div>');
+        
+        $.ajax({
+            url: `{{ route('master.kpi_list.history', '') }}/${id}`,
+            type: 'GET',
+            success: function(response) {
+                const historyMap = response.history || {};
+                let editHtml = '';
+                for (let i = 5; i >= 1; i--) {
+                    const yr = currentYear - i;
+                    const record = historyMap[yr] || { achievement: '' };
+                    editHtml += `
+                        <div class="border border-slate-200 rounded-lg p-2 bg-slate-50/50">
+                            <div class="text-xs font-bold text-slate-600 text-center mb-1.5">${yr}</div>
+                            <input type="text" name="history[${yr}][achievement]" value="${record.achievement || ''}" class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-sm" placeholder="Achievement">
+                        </div>
+                    `;
+                }
+                $('#edit_history_container').html(editHtml);
+            },
+            error: function() {
+                let editHtml = '';
+                for (let i = 5; i >= 1; i--) {
+                    const yr = currentYear - i;
+                    editHtml += `
+                        <div class="border border-slate-200 rounded-lg p-2 bg-slate-50/50">
+                            <div class="text-xs font-bold text-slate-600 text-center mb-1.5">${yr}</div>
+                            <input type="text" name="history[${yr}][achievement]" class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-sm" placeholder="Achievement">
+                        </div>
+                    `;
+                }
+                $('#edit_history_container').html(editHtml);
+            }
+        });
 
         // Auto-resize Definition textarea on load
         setTimeout(() => {

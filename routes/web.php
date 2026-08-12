@@ -204,6 +204,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/kpi-list/update', [MasterController::class, 'update_kpi_list'])->name('master.kpi_list.update');
         Route::post('/kpi-list/delete', [MasterController::class, 'delete_kpi_list'])->name('master.kpi_list.delete');
         Route::post('/kpi-list/options', [MasterController::class, 'kpi_list_options'])->name('master.kpi_list.options');
+        Route::get('/kpi-list/history/{id}', [MasterController::class, 'get_kpi_history'])->name('master.kpi_list.history');
 
         Route::get('/kpi-unit', [MasterController::class, 'kpi_unit'])->name('master.kpi_unit');
         Route::post('/kpi-unit/table', [MasterController::class, 'kpi_unit_table'])->name('master.kpi_unit.table');

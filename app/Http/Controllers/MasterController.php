@@ -1811,7 +1811,7 @@ class MasterController extends Controller
         ]);
 
         try {
-            DB::table('KPIList')->insert([
+            $insertedId = DB::table('KPIList')->insertGetId([
                 'parent_objective_id' => $request->parent_objective_id,
                 'no_kpi' => $request->no_kpi,
                 'objective' => $request->objective,
@@ -1822,6 +1822,19 @@ class MasterController extends Controller
                 'created_at' => \Carbon\Carbon::now(),
                 'updated_at' => \Carbon\Carbon::now()
             ]);
+
+            if ($request->has('history') && is_array($request->history)) {
+                foreach ($request->history as $year => $data) {
+                    DB::table('KPIAchievementHistory')->insert([
+                        'kpi_list_id' => $insertedId,
+                        'year' => $year,
+                        'target' => $data['target'] ?? null,
+                        'achievement' => $data['achievement'] ?? null,
+                        'created_at' => \Carbon\Carbon::now(),
+                        'updated_at' => \Carbon\Carbon::now()
+                    ]);
+                }
+            }
 
             return response()->json([
                 'success' => true,
@@ -1859,6 +1872,20 @@ class MasterController extends Controller
                 'updated_at' => \Carbon\Carbon::now()
             ]);
 
+            if ($request->has('history') && is_array($request->history)) {
+                foreach ($request->history as $year => $data) {
+                    DB::table('KPIAchievementHistory')->updateOrInsert(
+                        ['kpi_list_id' => $request->id, 'year' => $year],
+                        [
+                            'target' => $data['target'] ?? null,
+                            'achievement' => $data['achievement'] ?? null,
+                            'created_at' => \Carbon\Carbon::now(),
+                            'updated_at' => \Carbon\Carbon::now()
+                        ]
+                    );
+                }
+            }
+
             return response()->json([
                 'success' => true,
                 'message' => 'Data updated successfully.'
@@ -1869,6 +1896,19 @@ class MasterController extends Controller
                 'message' => $e->getMessage()
             ], 500);
         }
+    }
+
+    public function get_kpi_history($id)
+    {
+        $history = DB::table('KPIAchievementHistory')
+            ->where('kpi_list_id', $id)
+            ->get()
+            ->keyBy('year');
+
+        return response()->json([
+            'success' => true,
+            'history' => $history
+        ]);
     }
 
     public function delete_kpi_list(Request $request)

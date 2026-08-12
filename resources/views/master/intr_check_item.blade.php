@@ -10,6 +10,11 @@
 @include('layouts.sidebar')
 @include('components.toast')
 
+<!-- JSON Config Data for JS -->
+<div id="checksheet-config" class="hidden"
+     data-departments="{{ json_encode($departments->keyBy('Key1')->map(fn($d) => $d->Desc)->toArray()) }}">
+</div>
+
 <div class="lg:ml-20 min-h-screen flex flex-col bg-slate-50">
     @include('layouts.header')
 
@@ -442,7 +447,8 @@
         $('#edit_check_item_idn').val(checkItemIdn);
         $('#edit_check_item_en').val(checkItemEn);
         
-        const depts = {!! json_encode($departments->keyBy('Key1')->map(fn($d) => $d->Desc)->toArray()) !!};
+        const configEl = document.getElementById('checksheet-config');
+        const depts = JSON.parse(configEl?.getAttribute('data-departments') || '{}');
         let deptNameArr = [];
         if (department) {
             const deptKeys = department.split(',').map(s => s.trim()).filter(Boolean);

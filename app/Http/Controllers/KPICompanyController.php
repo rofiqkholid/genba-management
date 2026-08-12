@@ -15,7 +15,7 @@ class KPICompanyController extends Controller
      * Reversible base-26 hashing for database IDs.
      * Generates a 9-character format like xxx-xxx-xxx.
      */
-    public static function encodeId($id)
+    public static function encodeId(int $id)
     {
         $alphabet = 'abcdefghijklmnopqrstuvwxyz';
         $idVal = $id;
@@ -36,7 +36,7 @@ class KPICompanyController extends Controller
         return substr($hash, 0, 3) . '-' . substr($hash, 3, 3) . '-' . substr($hash, 6, 3);
     }
 
-    public static function decodeId($hash)
+    public static function decodeId(string $hash)
     {
         $code = str_replace('-', '', $hash);
         if (strlen($code) !== 9) {
@@ -397,7 +397,7 @@ class KPICompanyController extends Controller
     /**
      * Display the detail page for a specific Company KPI record.
      */
-    public function detail($id)
+    public function detail(string $id)
     {
         $dbId = self::decodeId($id);
         if (!$dbId) {
@@ -458,7 +458,7 @@ class KPICompanyController extends Controller
         return view('kpi.detail-kpi-company.company-kpi-detail', compact('kpi', 'departments', 'activities', 'hasDeletePermission'));
     }
 
-    public function editActivity($id)
+    public function editActivity(string $id)
     {
         $dbId = self::decodeId($id);
         if (!$dbId) {
@@ -501,7 +501,7 @@ class KPICompanyController extends Controller
         return view('kpi.detail-kpi-company.company-kpi-insert', compact('activity', 'departments', 'problem'));
     }
 
-    public function updateActivity(Request $request, $id)
+    public function updateActivity(Request $request, string $id)
     {
         $request->validate([
             'actual' => 'required',
@@ -695,7 +695,7 @@ class KPICompanyController extends Controller
         }
     }
 
-    public function cancelActivity($id)
+    public function cancelActivity(string $id)
     {
         $dbId = self::decodeId($id);
         if (!$dbId) {

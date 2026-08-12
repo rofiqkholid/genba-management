@@ -6,6 +6,12 @@
 @include('layouts.sidebar')
 @include('components.toast')
 
+<!-- JSON Config Data for JS -->
+<div id="user-hierarchy-config" class="hidden"
+     data-children="{{ json_encode($hierarchy['children'] ?? []) }}"
+     data-parents="{{ json_encode($hierarchy['parents'] ?? []) }}">
+</div>
+
 <div class="lg:ml-20 h-screen flex flex-col bg-slate-50 overflow-hidden">
     @include('layouts.header')
 
@@ -346,11 +352,10 @@
         }
     }
 
-    // Lookup map for children
-    const menuChildren = @json($hierarchy['children'] ?? []);
-
-    // Lookup map for parents
-    const menuParents = @json($hierarchy['parents'] ?? []);
+    // Lookup map for children and parents
+    const hierarchyConfigEl = document.getElementById('user-hierarchy-config');
+    const menuChildren = JSON.parse(hierarchyConfigEl?.getAttribute('data-children') || '{}');
+    const menuParents = JSON.parse(hierarchyConfigEl?.getAttribute('data-parents') || '{}');
 
     function togglePermissionHierarchy(menuId, type, checkbox) {
         const isChecked = checkbox.checked;

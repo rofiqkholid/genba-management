@@ -225,7 +225,7 @@
 @push('scripts')
 <script>
     let currentPage = 1;
-    let selectedUserId = {{ session('selected_user_id') ?? Auth::user()->id }};
+    let selectedUserId = parseInt("{{ session('selected_user_id') ?? Auth::user()->id }}");
     let searchTimer = null;
 
     $(document).ready(function() {

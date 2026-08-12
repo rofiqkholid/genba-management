@@ -11,6 +11,17 @@ $approve = $approve ?? null;
 @include('layouts.sidebar')
 @include('components.toast')
 
+<!-- JSON Config Data for JS -->
+<div id="action-files-config" class="hidden"
+     data-corr-one="{{ json_encode(array_filter(explode(',', $action->corrective_path_one ?? ''))) }}"
+     data-corr-two="{{ json_encode(array_filter(explode(',', $action->corrective_path_two ?? ''))) }}"
+     data-corr-three="{{ json_encode(array_filter(explode(',', $action->corrective_path_three ?? ''))) }}"
+     data-prev-one="{{ json_encode(array_filter(explode(',', $action->preventive_path_one ?? ''))) }}"
+     data-prev-two="{{ json_encode(array_filter(explode(',', $action->preventive_path_two ?? ''))) }}"
+     data-prev-three="{{ json_encode(array_filter(explode(',', $action->preventive_path_three ?? ''))) }}"
+     data-root-cause="{{ json_encode(array_filter(explode(',', $action->root_cause_path ?? ''))) }}">
+</div>
+
 <div class="lg:ml-20 min-h-screen flex flex-col bg-slate-50">
     @include('layouts.header')
 
@@ -1393,34 +1404,35 @@ $approve = $approve ?? null;
                 if (approveBtn) approveBtn.className = "w-9 h-9 rounded-lg flex items-center justify-center border transition-all bg-green-50 border-green-200 text-green-600 hover:bg-green-100";
             }
         };
+        const filesConfigEl = document.getElementById('action-files-config');
         const actionFilesState = {
             corr_one: {
                 files: [],
-                existing: JSON.parse('{!! json_encode(array_filter(explode(",", $action->corrective_path_one ?? ""))) !!}')
+                existing: JSON.parse(filesConfigEl?.getAttribute('data-corr-one') || '[]')
             },
             corr_two: {
                 files: [],
-                existing: JSON.parse('{!! json_encode(array_filter(explode(",", $action->corrective_path_two ?? ""))) !!}')
+                existing: JSON.parse(filesConfigEl?.getAttribute('data-corr-two') || '[]')
             },
             corr_three: {
                 files: [],
-                existing: JSON.parse('{!! json_encode(array_filter(explode(",", $action->corrective_path_three ?? ""))) !!}')
+                existing: JSON.parse(filesConfigEl?.getAttribute('data-corr-three') || '[]')
             },
             prev_one: {
                 files: [],
-                existing: JSON.parse('{!! json_encode(array_filter(explode(",", $action->preventive_path_one ?? ""))) !!}')
+                existing: JSON.parse(filesConfigEl?.getAttribute('data-prev-one') || '[]')
             },
             prev_two: {
                 files: [],
-                existing: JSON.parse('{!! json_encode(array_filter(explode(",", $action->preventive_path_two ?? ""))) !!}')
+                existing: JSON.parse(filesConfigEl?.getAttribute('data-prev-two') || '[]')
             },
             prev_three: {
                 files: [],
-                existing: JSON.parse('{!! json_encode(array_filter(explode(",", $action->preventive_path_three ?? ""))) !!}')
+                existing: JSON.parse(filesConfigEl?.getAttribute('data-prev-three') || '[]')
             },
             root_cause: {
                 files: [],
-                existing: JSON.parse('{!! json_encode(array_filter(explode(",", $action->root_cause_path ?? ""))) !!}')
+                existing: JSON.parse(filesConfigEl?.getAttribute('data-root-cause') || '[]')
             }
         };
 

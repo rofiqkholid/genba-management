@@ -271,7 +271,7 @@ class MenuSeeder extends Seeder
                 'level_menu_id' => 2,
                 'group_id' => 10,
                 'sub_group_id' => 116,
-                'menu' => 'key-performance-indicator',
+                'menu' => 'kpi',
                 'menu_name' => 'Key Performance Indicator',
                 'icon' => '<span></span>'
             ],
@@ -281,7 +281,7 @@ class MenuSeeder extends Seeder
                 'level_menu_id' => 3,
                 'group_id' => 10,
                 'sub_group_id' => 116,
-                'menu' => 'key-performance-indicator/company',
+                'menu' => 'kpi/company',
                 'menu_name' => 'Company KPI',
                 'icon' => '<span></span>'
             ],
@@ -291,7 +291,7 @@ class MenuSeeder extends Seeder
                 'level_menu_id' => 3,
                 'group_id' => 10,
                 'sub_group_id' => 116,
-                'menu' => 'key-performance-indicator/department',
+                'menu' => 'kpi/department',
                 'menu_name' => 'Departement KPI',
                 'icon' => '<span></span>'
             ],
@@ -301,7 +301,7 @@ class MenuSeeder extends Seeder
                 'level_menu_id' => 3,
                 'group_id' => 10,
                 'sub_group_id' => 116,
-                'menu' => 'key-performance-indicator/monthly-summary',
+                'menu' => 'kpi/monthly-summary',
                 'menu_name' => 'Monthly Summary',
                 'icon' => '<span></span>'
             ],
@@ -311,7 +311,7 @@ class MenuSeeder extends Seeder
                 'level_menu_id' => 3,
                 'group_id' => 10,
                 'sub_group_id' => 116,
-                'menu' => 'key-performance-indicator/print-report',
+                'menu' => 'kpi/print-report',
                 'menu_name' => 'Print Report',
                 'icon' => '<span></span>'
             ],

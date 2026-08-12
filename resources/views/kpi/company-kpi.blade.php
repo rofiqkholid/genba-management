@@ -162,7 +162,7 @@
                          <div class="grid grid-cols-2 gap-x-8 gap-y-6">
                             <!-- Department -->
                             <div class="col-span-2 lg:col-span-1">
-                                <label class="block text-sm font-medium text-slate-700 mb-1.5">Department <span class="text-red-500">*</span></label>
+                                <label class="block text-sm font-medium text-slate-700 mb-1.5 tracking-wider">Department <span class="text-red-500">*</span></label>
                                 <x-searchable-select
                                     name="department_code"
                                     id="create_department_code"
@@ -175,7 +175,7 @@
 
                             <!-- Objective -->
                             <div class="col-span-2 lg:col-span-1">
-                                <label class="block text-sm font-medium text-slate-700 mb-1.5">KPI Objective <span class="text-red-500">*</span></label>
+                                <label class="block text-sm font-medium text-slate-700 mb-1.5 tracking-wider">KPI Objective <span class="text-red-500">*</span></label>
                                 <x-searchable-select
                                     name="kpi_list_id"
                                     id="create_kpi_list_id"
@@ -207,12 +207,12 @@
                             </div>
                             <!-- Target -->
                             <div class="col-span-2 lg:col-span-1">
-                                <label class="block text-sm font-medium text-slate-700 mb-1.5">Target <span class="text-red-500">*</span></label>
+                                <label class="block text-sm font-medium text-slate-700 mb-1.5 tracking-wider">Target <span class="text-red-500">*</span></label>
                                 <input type="text" name="target" id="create_target" disabled placeholder="Target from KPI List"
                                     class="w-full px-4 py-2.5 border border-slate-200 rounded-lg bg-slate-50 text-slate-500 text-sm outline-none cursor-not-allowed">
                             </div>                            <!-- Unit -->
                             <div class="col-span-2 lg:col-span-1">
-                                <label class="block text-sm font-medium text-slate-700 mb-1.5">Unit <span class="text-red-500">*</span></label>
+                                <label class="block text-sm font-medium text-slate-700 mb-1.5 tracking-wider">Unit <span class="text-red-500">*</span></label>
                                 <x-searchable-select
                                     name="unit"
                                     id="create_unit"
@@ -225,7 +225,7 @@
 
                             <!-- Periode -->
                             <div class="col-span-2 lg:col-span-1">
-                                <label class="block text-sm font-medium text-slate-700 mb-1.5">Periode <span class="text-red-500">*</span></label>
+                                <label class="block text-sm font-medium text-slate-700 mb-1.5 tracking-wider">Periode <span class="text-red-500">*</span></label>
                                 <input type="text"
                                     name="periode"
                                     id="create_periode"
@@ -237,7 +237,7 @@
 
                             <!-- Calculation Method -->
                             <div class="col-span-2">
-                                <label class="block text-sm font-medium text-slate-700 mb-1.5">Calculation Method <span class="text-red-500">*</span></label>
+                                <label class="block text-sm font-medium text-slate-700 mb-1.5 tracking-wider">Calculation Method <span class="text-red-500">*</span></label>
                                 <x-searchable-select
                                     name="calculation_method"
                                     id="create_calculation_method"

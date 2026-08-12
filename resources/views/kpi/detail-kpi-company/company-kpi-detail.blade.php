@@ -41,20 +41,20 @@
                 <!-- Summary Info -->
                 <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 pb-6 border-b border-slate-200">
                     <div class="lg:col-span-3">
-                        <span class="text-xs font-normal text-slate-400 block mb-1">KPI Objective</span>
+                        <span class="text-slate-500 text-[10px] sm:text-xs tracking-wider block mb-1">KPI Objective</span>
                         <span class="text-sm font-semibold text-slate-700 block">{{ $kpi->no_kpi }} - {{ $kpi->objective }}</span>
                     </div>
                     <div class="lg:col-span-2">
-                        <span class="text-xs font-normal text-slate-400 block mb-1">Pillar / Dept</span>
+                        <span class="text-slate-500 text-[10px] sm:text-xs tracking-wider block mb-1">Pillar / Dept</span>
                         <span class="text-sm font-semibold text-slate-700">{{ $kpi->pillar ?? '-' }} / {{ $kpi->department_code }}</span>
                     </div>
                     <div class="lg:col-span-2">
-                        <span class="text-xs font-normal text-slate-400 block mb-1">Period / Target</span>
+                        <span class="text-slate-500 text-[10px] sm:text-xs tracking-wider block mb-1">Period / Target</span>
                         <span class="text-sm font-semibold text-slate-700">{{ $kpi->periode }} / {{ $kpi->operator }} {{ $kpi->target }} {{ $kpi->unit }}</span>
                     </div>
                     <div class="lg:col-span-5 flex flex-wrap items-center justify-between gap-4">
                         <div>
-                            <span class="text-xs font-normal text-slate-400 block mb-1">Calculation Method</span>
+                            <span class="text-slate-500 text-[10px] sm:text-xs tracking-wider block mb-1">Calculation Method</span>
                             <span class="text-sm font-semibold text-slate-700">{{ $kpi->calculation_method }}</span>
                         </div>
                         <div class="flex items-center gap-2">

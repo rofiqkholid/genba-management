@@ -34,6 +34,7 @@
                         'internal-audit' => 'fa-sitemap',
                         'internal-audit-main' => 'fa-sitemap',
                         'key-performance-indicator' => 'fa-arrow-trend-up',
+                        'kpi' => 'fa-arrow-trend-up',
                         default => 'fa-folder'
                     };
                 @endphp

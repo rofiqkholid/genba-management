@@ -382,7 +382,7 @@ class KPICompanyController extends Controller
         $formattedItems = $items->map(function($item) {
             return [
                 'id' => $item->Key1,
-                'name' => $item->Key1 . ' - ' . $item->Desc
+                'name' => $item->Key1
             ];
         });
 

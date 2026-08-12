@@ -1,8 +1,8 @@
 @extends('layouts.app')
 
 @php
-    $hideCentralToast = true;
-    $approve = $approve ?? null;
+$hideCentralToast = true;
+$approve = $approve ?? null;
 @endphp
 
 @section('title', 'Action Report Preview')
@@ -19,11 +19,11 @@
         <div class="mb-4 sm:mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
             <div class="flex items-center gap-3 sm:gap-4">
                 @php
-                    $backUrl = route('internal_audit.action_report');
-                    $previousUrl = url()->previous();
-                    if ($previousUrl && (str_contains($previousUrl, 'verification') || str_contains($previousUrl, 'verifkasi') || str_contains($previousUrl, 'verifikasi'))) {
-                        $backUrl = route('internal_audit.verification');
-                    }
+                $backUrl = route('internal_audit.action_report');
+                $previousUrl = url()->previous();
+                if ($previousUrl && (str_contains($previousUrl, 'verification') || str_contains($previousUrl, 'verifkasi') || str_contains($previousUrl, 'verifikasi'))) {
+                $backUrl = route('internal_audit.verification');
+                }
                 @endphp
                 <a href="{{ $backUrl }}"
                     class="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-blue-50 border border-blue-200 text-blue-600 hover:bg-blue-100 hover:text-blue-700 transition-all duration-200">
@@ -44,7 +44,7 @@
 
         <!-- Combined Details Card -->
         <div class="bg-white rounded-lg border border-slate-200 p-4 sm:p-8 space-y-8">
-            
+
             <!-- Section 1: Finding General Information -->
             <div>
                 <h2 class="text-lg font-bold text-slate-800 mb-5 pb-2 border-b border-slate-100">
@@ -175,27 +175,27 @@
                             {{ $car->finding ?? '-' }}
                         </div>
                         @if(!empty($car->finding_file_path))
-                            <div class="mt-2 flex flex-wrap gap-3">
-                                <div id="finding_images_container" class="flex flex-wrap gap-2">
-                                    @foreach(explode(',', $car->finding_file_path) as $path)
-                                        @if(!empty(trim($path)))
-                                            @php
-                                                $pathTrimmed = trim($path);
-                                                $ext = strtolower(pathinfo($pathTrimmed, PATHINFO_EXTENSION));
-                                            @endphp
-                                            @if($ext === 'pdf')
-                                                <button type="button" onclick="openActionFileModal('{{ asset($pathTrimmed) }}', 'pdf')" class="w-16 h-16 flex flex-col items-center justify-center rounded-lg border border-slate-200 bg-red-50 text-red-500 hover:bg-red-100 transition-colors">
-                                                    <i class="fa-solid fa-file-pdf text-xl"></i>
-                                                    <span class="text-[9px] font-bold mt-1">PDF</span>
-                                                </button>
-                                            @else
-                                                <img src="{{ asset($pathTrimmed) }}" class="w-16 h-16 object-cover rounded-lg border border-slate-200 cursor-pointer hover:opacity-90 transition">
-                                            @endif
-                                        @endif
-                                    @endforeach
-                                </div>
-                                <span class="text-[10px] sm:text-xs text-slate-400 italic whitespace-nowrap mt-2"><i class="fa-solid fa-magnifying-glass-plus mr-1"></i>Click to zoom / preview</span>
+                        <div class="mt-2 flex flex-wrap gap-3">
+                            <div id="finding_images_container" class="flex flex-wrap gap-2">
+                                @foreach(explode(',', $car->finding_file_path) as $path)
+                                @if(!empty(trim($path)))
+                                @php
+                                $pathTrimmed = trim($path);
+                                $ext = strtolower(pathinfo($pathTrimmed, PATHINFO_EXTENSION));
+                                @endphp
+                                @if($ext === 'pdf')
+                                <button type="button" onclick="openActionFileModal('{{ asset($pathTrimmed) }}', 'pdf')" class="w-16 h-16 flex flex-col items-center justify-center rounded-lg border border-slate-200 bg-red-50 text-red-500 hover:bg-red-100 transition-colors">
+                                    <i class="fa-solid fa-file-pdf text-xl"></i>
+                                    <span class="text-[9px] font-bold mt-1">PDF</span>
+                                </button>
+                                @else
+                                <img src="{{ asset($pathTrimmed) }}" class="w-16 h-16 object-cover rounded-lg border border-slate-200 cursor-pointer hover:opacity-90 transition">
+                                @endif
+                                @endif
+                                @endforeach
                             </div>
+                            <span class="text-[10px] sm:text-xs text-slate-400 italic whitespace-nowrap mt-2"><i class="fa-solid fa-magnifying-glass-plus mr-1"></i>Click to zoom / preview</span>
+                        </div>
                         @endif
                     </div>
                 </div>
@@ -205,41 +205,41 @@
         <!-- Action Plan Form Card -->
         <form id="actionPlanForm" action="{{ route('internal_audit.action_report.save_action', request()->route('id')) }}" method="POST" enctype="multipart/form-data" class="mt-6">
             @csrf
-            @php 
-                $isComplete = isset($action) && in_array($action->action_status, ['open_verif', 'approve_superior', 'verified']); 
-                
-                $isSuperiorUser = isset($action) && strcasecmp(Auth::user()->full_name, $action->auditee_superior_name ?? '') === 0;
-                
-                $isAuditorUser = false;
-                if (!empty($car->auditor)) {
-                    $auditors = array_map('trim', explode(',', $car->auditor));
-                    foreach ($auditors as $auditorName) {
-                        if (strcasecmp(Auth::user()->full_name, $auditorName) === 0) {
-                            $isAuditorUser = true;
-                            break;
-                        }
-                    }
-                }
+            @php
+            $isComplete = isset($action) && in_array($action->action_status, ['open_verif', 'approve_superior', 'verified']);
 
-                $isQmr = in_array(Auth::user()->username, ['031114-001', '260422-001', '121020-002']);
+            $isSuperiorUser = isset($action) && strcasecmp(Auth::user()->full_name, $action->auditee_superior_name ?? '') === 0;
 
-                $isReviewing = false;
-                if ($isSuperiorUser && ($car->status ?? '') === 'Under Review') {
-                    $isReviewing = true;
-                } elseif ($isAuditorUser && ($car->status ?? '') === 'Need Verification') {
-                    $isReviewing = true;
-                } elseif ($isQmr && ($car->status ?? '') === 'Closed' && empty($car->qmr_approved_at)) {
-                    $isReviewing = true;
-                }
+            $isAuditorUser = false;
+            if (!empty($car->auditor)) {
+            $auditors = array_map('trim', explode(',', $car->auditor));
+            foreach ($auditors as $auditorName) {
+            if (strcasecmp(Auth::user()->full_name, $auditorName) === 0) {
+            $isAuditorUser = true;
+            break;
+            }
+            }
+            }
 
-                $isAuditorReviewing = $isAuditorUser && ($car->status ?? '') === 'Need Verification';
+            $isQmr = in_array(Auth::user()->username, ['031114-001', '260422-001', '121020-002']);
+
+            $isReviewing = false;
+            if ($isSuperiorUser && ($car->status ?? '') === 'Under Review') {
+            $isReviewing = true;
+            } elseif ($isAuditorUser && ($car->status ?? '') === 'Need Verification') {
+            $isReviewing = true;
+            } elseif ($isQmr && ($car->status ?? '') === 'Closed' && empty($car->qmr_approved_at)) {
+            $isReviewing = true;
+            }
+
+            $isAuditorReviewing = $isAuditorUser && ($car->status ?? '') === 'Need Verification';
             @endphp
             <div class="bg-white rounded-lg border border-slate-200 p-4 sm:p-8 space-y-8">
                 <div>
                     <h2 class="text-lg font-bold text-slate-800 mb-5 pb-2 border-b border-slate-100">
                         Action Plan & Analysis
                     </h2>
-                    
+
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <!-- Left Column: Why 1 to Why 5 -->
                         <div class="flex flex-col gap-4">
@@ -276,51 +276,51 @@
                                     <div class="flex flex-col gap-1.5 w-full">
                                         <textarea name="root_cause" required rows="5" style="min-height: 120px;" {{ $isComplete ? 'readonly' : '' }} class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm outline-none text-slate-700 resize-none overflow-hidden autogrow-textarea {{ $isComplete ? 'bg-slate-50 text-slate-500 cursor-not-allowed' : '' }}" placeholder="Enter Root Cause...">{{ old('root_cause', $action->root_cause ?? '') }}</textarea>
                                         @if(!$isReviewing && !empty($approve->root_cause_verif ?? ''))
-                                            <div class="flex">
-                                                @if(($approve->root_cause_verif ?? '') === 'approve')
-                                                    @if(($car->status ?? '') === 'Need Verification')
-                                                        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-blue-700 bg-blue-50 rounded-lg border border-blue-200"><i class="fa-solid fa-circle-check"></i> Approved by Superior</span>
-                                                    @else
-                                                        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-green-700 bg-green-50 rounded-lg border border-green-200"><i class="fa-solid fa-circle-check"></i> Approved</span>
-                                                    @endif
-                                                @elseif(($approve->root_cause_verif ?? '') === 'reject')
-                                                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-red-700 bg-red-50 rounded-lg border border-red-200"><i class="fa-solid fa-circle-xmark text-red-500"></i> Rejected</span>
-                                                @endif
-                                            </div>
+                                        <div class="flex">
+                                            @if(($approve->root_cause_verif ?? '') === 'approve')
+                                            @if(($car->status ?? '') === 'Need Verification')
+                                            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-blue-700 bg-blue-50 rounded-lg border border-blue-200"><i class="fa-solid fa-circle-check"></i> Approved by Superior</span>
+                                            @else
+                                            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-green-700 bg-green-50 rounded-lg border border-green-200"><i class="fa-solid fa-circle-check"></i> Approved</span>
+                                            @endif
+                                            @elseif(($approve->root_cause_verif ?? '') === 'reject')
+                                            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-red-700 bg-red-50 rounded-lg border border-red-200"><i class="fa-solid fa-circle-xmark text-red-500"></i> Rejected</span>
+                                            @endif
+                                        </div>
                                         @endif
                                     </div>
                                     @if($isAuditorReviewing)
-                                        <input type="hidden" name="root_cause_verif" id="root_cause_verif" value="">
-                                        <div class="flex flex-col gap-1 shrink-0 ml-2">
-                                            <button type="button" onclick="setFieldVerif('root_cause', 'approve')" id="btn_approve_root_cause" class="w-9 h-9 rounded-lg flex items-center justify-center border transition-all bg-green-50 border-green-200 text-green-600 hover:bg-green-100" title="Approve Root Cause">
-                                                <i class="fa-solid fa-check text-xs"></i>
-                                            </button>
-                                            <button type="button" onclick="setFieldVerif('root_cause', 'reject')" id="btn_reject_root_cause" class="w-9 h-9 rounded-lg flex items-center justify-center border transition-all bg-red-50 border-red-200 text-red-600 hover:bg-red-100" title="Reject Root Cause">
-                                                <i class="fa-solid fa-xmark text-xs"></i>
-                                            </button>
-                                        </div>
+                                    <input type="hidden" name="root_cause_verif" id="root_cause_verif" value="">
+                                    <div class="flex flex-col gap-1 shrink-0 ml-2">
+                                        <button type="button" onclick="setFieldVerif('root_cause', 'approve')" id="btn_approve_root_cause" class="w-9 h-9 rounded-lg flex items-center justify-center border transition-all bg-green-50 border-green-200 text-green-600 hover:bg-green-100" title="Approve Root Cause">
+                                            <i class="fa-solid fa-check text-xs"></i>
+                                        </button>
+                                        <button type="button" onclick="setFieldVerif('root_cause', 'reject')" id="btn_reject_root_cause" class="w-9 h-9 rounded-lg flex items-center justify-center border transition-all bg-red-50 border-red-200 text-red-600 hover:bg-red-100" title="Reject Root Cause">
+                                            <i class="fa-solid fa-xmark text-xs"></i>
+                                        </button>
+                                    </div>
                                     @endif
                                 </div>
-                                
+
                                 <div class="flex items-center justify-between mt-1">
                                     <div id="root_cause_preview" class="flex flex-wrap gap-2 items-center">
                                         @if($isComplete && !empty($action->root_cause_path))
-                                            @foreach(explode(',', $action->root_cause_path) as $idx => $path)
-                                                @php $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION)); @endphp
-                                                <button type="button" onclick="openActionFileModal('{{ asset(trim($path)) }}', '{{ $ext }}')" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg border border-slate-200 transition-colors">
-                                                    <i class="fa-solid {{ $ext === 'pdf' ? 'fa-file-pdf text-red-500' : 'fa-image text-blue-500' }}"></i>
-                                                    Show File {{ $idx + 1 }}
-                                                </button>
-                                            @endforeach
+                                        @foreach(explode(',', $action->root_cause_path) as $idx => $path)
+                                        @php $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION)); @endphp
+                                        <button type="button" onclick="openActionFileModal('{{ asset(trim($path)) }}', '{{ $ext }}')" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg border border-slate-200 transition-colors">
+                                            <i class="fa-solid {{ $ext === 'pdf' ? 'fa-file-pdf text-red-500' : 'fa-image text-blue-500' }}"></i>
+                                            Show File {{ $idx + 1 }}
+                                        </button>
+                                        @endforeach
                                         @endif
                                     </div>
                                     @if(!$isComplete)
-                                        <div class="shrink-0">
-                                            <input type="file" id="root_cause_file" name="root_cause_photo[]" multiple accept="image/*,application/pdf" class="hidden" onchange="handleActionFiles(this, 'root_cause')">
-                                            <button type="button" onclick="document.getElementById('root_cause_file').click()" class="inline-flex items-center gap-1.5 px-3 py-1.5 border border-dashed border-blue-300 bg-blue-50/50 hover:bg-blue-50 text-blue-600 rounded-lg text-xs font-semibold transition-all relative" title="Take / Upload Photo or PDF">
-                                                <i class="fas fa-camera text-xs"></i> Upload File
-                                            </button>
-                                        </div>
+                                    <div class="shrink-0">
+                                        <input type="file" id="root_cause_file" name="root_cause_photo[]" multiple accept="image/*,application/pdf" class="hidden" onchange="handleActionFiles(this, 'root_cause')">
+                                        <button type="button" onclick="document.getElementById('root_cause_file').click()" class="inline-flex items-center gap-1.5 px-3 py-1.5 border border-dashed border-blue-300 bg-blue-50/50 hover:bg-blue-50 text-blue-600 rounded-lg text-xs font-semibold transition-all relative" title="Take / Upload Photo or PDF">
+                                            <i class="fas fa-camera text-xs"></i> Upload File
+                                        </button>
+                                    </div>
                                     @endif
                                 </div>
                                 <input type="hidden" name="existing_root_cause_photo" id="existing_root_cause" value="{{ $action->root_cause_path ?? '' }}">
@@ -347,23 +347,23 @@
                 <!-- Corrective & Preventive Action Row-by-Row Grid Alignment -->
                 <div class="border-t border-slate-100 pt-6">
                     @php
-                        $isCorrOneApproved = ($approve->corrective_action_one_verif ?? '') === 'approve';
-                        $isCorrOneReadonly = $isComplete || (!$isComplete && $isCorrOneApproved);
-                        
-                        $isPrevOneApproved = ($approve->preventive_action_one_verif ?? '') === 'approve';
-                        $isPrevOneReadonly = $isComplete || (!$isComplete && $isPrevOneApproved);
+                    $isCorrOneApproved = ($approve->corrective_action_one_verif ?? '') === 'approve';
+                    $isCorrOneReadonly = $isComplete || (!$isComplete && $isCorrOneApproved);
 
-                        $isCorrTwoApproved = ($approve->corrective_action_two_verif ?? '') === 'approve';
-                        $isCorrTwoReadonly = $isComplete || (!$isComplete && $isCorrTwoApproved);
-                        
-                        $isPrevTwoApproved = ($approve->preventive_action_two_verif ?? '') === 'approve';
-                        $isPrevTwoReadonly = $isComplete || (!$isComplete && $isPrevTwoApproved);
+                    $isPrevOneApproved = ($approve->preventive_action_one_verif ?? '') === 'approve';
+                    $isPrevOneReadonly = $isComplete || (!$isComplete && $isPrevOneApproved);
 
-                        $isCorrThreeApproved = ($approve->corrective_action_three_verif ?? '') === 'approve';
-                        $isCorrThreeReadonly = $isComplete || (!$isComplete && $isCorrThreeApproved);
-                        
-                        $isPrevThreeApproved = ($approve->preventive_action_three_verif ?? '') === 'approve';
-                        $isPrevThreeReadonly = $isComplete || (!$isComplete && $isPrevThreeApproved);
+                    $isCorrTwoApproved = ($approve->corrective_action_two_verif ?? '') === 'approve';
+                    $isCorrTwoReadonly = $isComplete || (!$isComplete && $isCorrTwoApproved);
+
+                    $isPrevTwoApproved = ($approve->preventive_action_two_verif ?? '') === 'approve';
+                    $isPrevTwoReadonly = $isComplete || (!$isComplete && $isPrevTwoApproved);
+
+                    $isCorrThreeApproved = ($approve->corrective_action_three_verif ?? '') === 'approve';
+                    $isCorrThreeReadonly = $isComplete || (!$isComplete && $isCorrThreeApproved);
+
+                    $isPrevThreeApproved = ($approve->preventive_action_three_verif ?? '') === 'approve';
+                    $isPrevThreeReadonly = $isComplete || (!$isComplete && $isPrevThreeApproved);
                     @endphp
 
                     <!-- Column Headers -->
@@ -389,49 +389,49 @@
                                 <div class="flex items-center gap-2">
                                     <textarea name="corrective_action_one" required rows="1" {{ $isCorrOneReadonly ? 'readonly' : '' }} class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm resize-none overflow-hidden autogrow-textarea text-slate-700 {{ $isCorrOneReadonly ? 'bg-slate-50 text-slate-500 cursor-not-allowed' : '' }}" placeholder="Corrective Action 1...">{{ old('corrective_action_one', $action->corrective_action_one ?? '') }}</textarea>
                                     @if(!$isComplete && !$isCorrOneApproved)
-                                        <div class="shrink-0">
-                                            <input type="file" id="corr_one_file" name="corrective_photo_one[]" multiple accept="image/*,application/pdf" class="hidden" onchange="handleActionFiles(this, 'corr_one')">
-                                            <button type="button" onclick="document.getElementById('corr_one_file').click()" class="w-10 h-10 border border-dashed border-blue-300 bg-blue-50/50 hover:bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center transition-all relative" title="Take / Upload Photo or PDF">
-                                                <i class="fas fa-camera text-xs"></i>
-                                                <span class="text-red-500 absolute -top-2 -right-2 text-[10px] font-bold">*</span>
-                                            </button>
-                                        </div>
+                                    <div class="shrink-0">
+                                        <input type="file" id="corr_one_file" name="corrective_photo_one[]" multiple accept="image/*,application/pdf" class="hidden" onchange="handleActionFiles(this, 'corr_one')">
+                                        <button type="button" onclick="document.getElementById('corr_one_file').click()" class="w-10 h-10 border border-dashed border-blue-300 bg-blue-50/50 hover:bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center transition-all relative" title="Take / Upload Photo or PDF">
+                                            <i class="fas fa-camera text-xs"></i>
+                                            <span class="text-red-500 absolute -top-2 -right-2 text-[10px] font-bold">*</span>
+                                        </button>
+                                    </div>
                                     @endif
                                     @if($isAuditorReviewing)
-                                        <input type="hidden" name="corrective_action_one_verif" id="corrective_action_one_verif" value="">
-                                        <div class="flex items-center gap-1 shrink-0 ml-2">
-                                            <button type="button" onclick="setFieldVerif('corrective_action_one', 'approve')" id="btn_approve_corrective_action_one" class="w-9 h-9 rounded-lg flex items-center justify-center border transition-all bg-green-50 border-green-200 text-green-600 hover:bg-green-100" title="Approve this row">
-                                                <i class="fa-solid fa-check text-xs"></i>
-                                            </button>
-                                            <button type="button" onclick="setFieldVerif('corrective_action_one', 'reject')" id="btn_reject_corrective_action_one" class="w-9 h-9 rounded-lg flex items-center justify-center border transition-all bg-red-50 border-red-200 text-red-600 hover:bg-red-100" title="Reject this row">
-                                                <i class="fa-solid fa-xmark text-xs"></i>
-                                            </button>
-                                        </div>
+                                    <input type="hidden" name="corrective_action_one_verif" id="corrective_action_one_verif" value="">
+                                    <div class="flex items-center gap-1 shrink-0 ml-2">
+                                        <button type="button" onclick="setFieldVerif('corrective_action_one', 'approve')" id="btn_approve_corrective_action_one" class="w-9 h-9 rounded-lg flex items-center justify-center border transition-all bg-green-50 border-green-200 text-green-600 hover:bg-green-100" title="Approve this row">
+                                            <i class="fa-solid fa-check text-xs"></i>
+                                        </button>
+                                        <button type="button" onclick="setFieldVerif('corrective_action_one', 'reject')" id="btn_reject_corrective_action_one" class="w-9 h-9 rounded-lg flex items-center justify-center border transition-all bg-red-50 border-red-200 text-red-600 hover:bg-red-100" title="Reject this row">
+                                            <i class="fa-solid fa-xmark text-xs"></i>
+                                        </button>
+                                    </div>
                                     @endif
                                 </div>
                                 <div id="corr_one_preview" class="flex flex-wrap gap-2 items-center mt-1.5">
                                     @if(!$isReviewing && !empty($approve->corrective_action_one_verif ?? ''))
-                                        @if(($approve->corrective_action_one_verif ?? '') === 'approve')
-                                            @if(($car->status ?? '') === 'Need Verification')
-                                                <span class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-blue-700 bg-blue-50 rounded-lg border border-blue-200"><i class="fa-solid fa-circle-check"></i> Approved by Superior</span>
-                                            @else
-                                                <span class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-green-700 bg-green-50 rounded-lg border border-green-200"><i class="fa-solid fa-circle-check"></i> Approved</span>
-                                            @endif
-                                        @elseif(($approve->corrective_action_one_verif ?? '') === 'reject')
-                                            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-red-700 bg-red-50 rounded-lg border border-red-200"><i class="fa-solid fa-circle-xmark text-red-500"></i> Rejected</span>
-                                        @endif
-                                        @if($isComplete && !empty($action->corrective_path_one))
-                                            <div class="h-6 w-[1px] bg-slate-200 mx-1 self-center shrink-0"></div>
-                                        @endif
+                                    @if(($approve->corrective_action_one_verif ?? '') === 'approve')
+                                    @if(($car->status ?? '') === 'Need Verification')
+                                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-blue-700 bg-blue-50 rounded-lg border border-blue-200"><i class="fa-solid fa-circle-check"></i> Approved by Superior</span>
+                                    @else
+                                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-green-700 bg-green-50 rounded-lg border border-green-200"><i class="fa-solid fa-circle-check"></i> Approved</span>
+                                    @endif
+                                    @elseif(($approve->corrective_action_one_verif ?? '') === 'reject')
+                                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-red-700 bg-red-50 rounded-lg border border-red-200"><i class="fa-solid fa-circle-xmark text-red-500"></i> Rejected</span>
                                     @endif
                                     @if($isComplete && !empty($action->corrective_path_one))
-                                        @foreach(explode(',', $action->corrective_path_one) as $idx => $path)
-                                            @php $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION)); @endphp
-                                            <button type="button" onclick="openActionFileModal('{{ asset(trim($path)) }}', '{{ $ext }}')" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg border border-slate-200 transition-colors">
-                                                <i class="fa-solid {{ $ext === 'pdf' ? 'fa-file-pdf text-red-500' : 'fa-image text-blue-500' }}"></i>
-                                                Show File {{ $idx + 1 }}
-                                            </button>
-                                        @endforeach
+                                    <div class="h-6 w-[1px] bg-slate-200 mx-1 self-center shrink-0"></div>
+                                    @endif
+                                    @endif
+                                    @if($isComplete && !empty($action->corrective_path_one))
+                                    @foreach(explode(',', $action->corrective_path_one) as $idx => $path)
+                                    @php $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION)); @endphp
+                                    <button type="button" onclick="openActionFileModal('{{ asset(trim($path)) }}', '{{ $ext }}')" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg border border-slate-200 transition-colors">
+                                        <i class="fa-solid {{ $ext === 'pdf' ? 'fa-file-pdf text-red-500' : 'fa-image text-blue-500' }}"></i>
+                                        Show File {{ $idx + 1 }}
+                                    </button>
+                                    @endforeach
                                     @endif
                                 </div>
                                 <input type="hidden" name="existing_corrective_photo_one" id="existing_corr_one" value="{{ $action->corrective_path_one ?? '' }}">
@@ -442,49 +442,49 @@
                                 <div class="flex items-center gap-2">
                                     <textarea name="preventive_action_one" required rows="1" {{ $isPrevOneReadonly ? 'readonly' : '' }} class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm resize-none overflow-hidden autogrow-textarea text-slate-700 {{ $isPrevOneReadonly ? 'bg-slate-50 text-slate-500 cursor-not-allowed' : '' }}" placeholder="Preventive Action 1...">{{ old('preventive_action_one', $action->preventive_action_one ?? '') }}</textarea>
                                     @if(!$isComplete && !$isPrevOneApproved)
-                                        <div class="shrink-0">
-                                            <input type="file" id="prev_one_file" name="preventive_photo_one[]" multiple accept="image/*,application/pdf" class="hidden" onchange="handleActionFiles(this, 'prev_one')">
-                                            <button type="button" onclick="document.getElementById('prev_one_file').click()" class="w-10 h-10 border border-dashed border-blue-300 bg-blue-50/50 hover:bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center transition-all relative" title="Take / Upload Photo or PDF">
-                                                <i class="fas fa-camera text-xs"></i>
-                                                <span class="text-red-500 absolute -top-2 -right-2 text-[10px] font-bold">*</span>
-                                            </button>
-                                        </div>
+                                    <div class="shrink-0">
+                                        <input type="file" id="prev_one_file" name="preventive_photo_one[]" multiple accept="image/*,application/pdf" class="hidden" onchange="handleActionFiles(this, 'prev_one')">
+                                        <button type="button" onclick="document.getElementById('prev_one_file').click()" class="w-10 h-10 border border-dashed border-blue-300 bg-blue-50/50 hover:bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center transition-all relative" title="Take / Upload Photo or PDF">
+                                            <i class="fas fa-camera text-xs"></i>
+                                            <span class="text-red-500 absolute -top-2 -right-2 text-[10px] font-bold">*</span>
+                                        </button>
+                                    </div>
                                     @endif
                                     @if($isAuditorReviewing)
-                                        <input type="hidden" name="preventive_action_one_verif" id="preventive_action_one_verif" value="">
-                                        <div class="flex items-center gap-1 shrink-0 ml-2">
-                                            <button type="button" onclick="setFieldVerif('preventive_action_one', 'approve')" id="btn_approve_preventive_action_one" class="w-9 h-9 rounded-lg flex items-center justify-center border transition-all bg-green-50 border-green-200 text-green-600 hover:bg-green-100" title="Approve this row">
-                                                <i class="fa-solid fa-check text-xs"></i>
-                                            </button>
-                                            <button type="button" onclick="setFieldVerif('preventive_action_one', 'reject')" id="btn_reject_preventive_action_one" class="w-9 h-9 rounded-lg flex items-center justify-center border transition-all bg-red-50 border-red-200 text-red-600 hover:bg-red-100" title="Reject this row">
-                                                <i class="fa-solid fa-xmark text-xs"></i>
-                                            </button>
-                                        </div>
+                                    <input type="hidden" name="preventive_action_one_verif" id="preventive_action_one_verif" value="">
+                                    <div class="flex items-center gap-1 shrink-0 ml-2">
+                                        <button type="button" onclick="setFieldVerif('preventive_action_one', 'approve')" id="btn_approve_preventive_action_one" class="w-9 h-9 rounded-lg flex items-center justify-center border transition-all bg-green-50 border-green-200 text-green-600 hover:bg-green-100" title="Approve this row">
+                                            <i class="fa-solid fa-check text-xs"></i>
+                                        </button>
+                                        <button type="button" onclick="setFieldVerif('preventive_action_one', 'reject')" id="btn_reject_preventive_action_one" class="w-9 h-9 rounded-lg flex items-center justify-center border transition-all bg-red-50 border-red-200 text-red-600 hover:bg-red-100" title="Reject this row">
+                                            <i class="fa-solid fa-xmark text-xs"></i>
+                                        </button>
+                                    </div>
                                     @endif
                                 </div>
                                 <div id="prev_one_preview" class="flex flex-wrap gap-2 items-center mt-1.5">
                                     @if(!$isReviewing && !empty($approve->preventive_action_one_verif ?? ''))
-                                        @if(($approve->preventive_action_one_verif ?? '') === 'approve')
-                                            @if(($car->status ?? '') === 'Need Verification')
-                                                <span class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-blue-700 bg-blue-50 rounded-lg border border-blue-200"><i class="fa-solid fa-circle-check"></i> Approved by Superior</span>
-                                            @else
-                                                <span class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-green-700 bg-green-50 rounded-lg border border-green-200"><i class="fa-solid fa-circle-check"></i> Approved</span>
-                                            @endif
-                                        @elseif(($approve->preventive_action_one_verif ?? '') === 'reject')
-                                            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-red-700 bg-red-50 rounded-lg border border-red-200"><i class="fa-solid fa-circle-xmark"></i> Rejected</span>
-                                        @endif
-                                        @if($isComplete && !empty($action->preventive_path_one))
-                                            <div class="h-6 w-[1px] bg-slate-200 mx-1 self-center shrink-0"></div>
-                                        @endif
+                                    @if(($approve->preventive_action_one_verif ?? '') === 'approve')
+                                    @if(($car->status ?? '') === 'Need Verification')
+                                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-blue-700 bg-blue-50 rounded-lg border border-blue-200"><i class="fa-solid fa-circle-check"></i> Approved by Superior</span>
+                                    @else
+                                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-green-700 bg-green-50 rounded-lg border border-green-200"><i class="fa-solid fa-circle-check"></i> Approved</span>
+                                    @endif
+                                    @elseif(($approve->preventive_action_one_verif ?? '') === 'reject')
+                                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-red-700 bg-red-50 rounded-lg border border-red-200"><i class="fa-solid fa-circle-xmark"></i> Rejected</span>
                                     @endif
                                     @if($isComplete && !empty($action->preventive_path_one))
-                                        @foreach(explode(',', $action->preventive_path_one) as $idx => $path)
-                                            @php $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION)); @endphp
-                                            <button type="button" onclick="openActionFileModal('{{ asset(trim($path)) }}', '{{ $ext }}')" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg border border-slate-200 transition-colors">
-                                                <i class="fa-solid {{ $ext === 'pdf' ? 'fa-file-pdf text-red-500' : 'fa-image text-blue-500' }}"></i>
-                                                Show File {{ $idx + 1 }}
-                                            </button>
-                                        @endforeach
+                                    <div class="h-6 w-[1px] bg-slate-200 mx-1 self-center shrink-0"></div>
+                                    @endif
+                                    @endif
+                                    @if($isComplete && !empty($action->preventive_path_one))
+                                    @foreach(explode(',', $action->preventive_path_one) as $idx => $path)
+                                    @php $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION)); @endphp
+                                    <button type="button" onclick="openActionFileModal('{{ asset(trim($path)) }}', '{{ $ext }}')" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg border border-slate-200 transition-colors">
+                                        <i class="fa-solid {{ $ext === 'pdf' ? 'fa-file-pdf text-red-500' : 'fa-image text-blue-500' }}"></i>
+                                        Show File {{ $idx + 1 }}
+                                    </button>
+                                    @endforeach
                                     @endif
                                 </div>
                                 <input type="hidden" name="existing_preventive_photo_one" id="existing_prev_one" value="{{ $action->preventive_path_one ?? '' }}">
@@ -498,48 +498,48 @@
                                 <div class="flex items-center gap-2">
                                     <textarea name="corrective_action_two" rows="1" {{ $isCorrTwoReadonly ? 'readonly' : '' }} class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm resize-none overflow-hidden autogrow-textarea text-slate-700 {{ $isCorrTwoReadonly ? 'bg-slate-50 text-slate-500 cursor-not-allowed' : '' }}" placeholder="Corrective Action 2...">{{ old('corrective_action_two', $action->corrective_action_two ?? '') }}</textarea>
                                     @if(!$isComplete && !$isCorrTwoApproved)
-                                        <div class="shrink-0">
-                                            <input type="file" id="corr_two_file" name="corrective_photo_two[]" multiple accept="image/*,application/pdf" class="hidden" onchange="handleActionFiles(this, 'corr_two')">
-                                            <button type="button" onclick="document.getElementById('corr_two_file').click()" class="w-10 h-10 border border-dashed border-blue-300 bg-blue-50/50 hover:bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center transition-all relative" title="Take / Upload Photo or PDF">
-                                                <i class="fas fa-camera text-xs"></i>
-                                            </button>
-                                        </div>
+                                    <div class="shrink-0">
+                                        <input type="file" id="corr_two_file" name="corrective_photo_two[]" multiple accept="image/*,application/pdf" class="hidden" onchange="handleActionFiles(this, 'corr_two')">
+                                        <button type="button" onclick="document.getElementById('corr_two_file').click()" class="w-10 h-10 border border-dashed border-blue-300 bg-blue-50/50 hover:bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center transition-all relative" title="Take / Upload Photo or PDF">
+                                            <i class="fas fa-camera text-xs"></i>
+                                        </button>
+                                    </div>
                                     @endif
                                     @if($isAuditorReviewing)
-                                        <input type="hidden" name="corrective_action_two_verif" id="corrective_action_two_verif" value="">
-                                        <div class="flex items-center gap-1 shrink-0 ml-2">
-                                            <button type="button" onclick="setFieldVerif('corrective_action_two', 'approve')" id="btn_approve_corrective_action_two" class="w-9 h-9 rounded-lg flex items-center justify-center border transition-all bg-green-50 border-green-200 text-green-600 hover:bg-green-100" title="Approve this row">
-                                                <i class="fa-solid fa-check text-xs"></i>
-                                            </button>
-                                            <button type="button" onclick="setFieldVerif('corrective_action_two', 'reject')" id="btn_reject_corrective_action_two" class="w-9 h-9 rounded-lg flex items-center justify-center border transition-all bg-red-50 border-red-200 text-red-600 hover:bg-red-100" title="Reject this row">
-                                                <i class="fa-solid fa-xmark text-xs"></i>
-                                            </button>
-                                        </div>
+                                    <input type="hidden" name="corrective_action_two_verif" id="corrective_action_two_verif" value="">
+                                    <div class="flex items-center gap-1 shrink-0 ml-2">
+                                        <button type="button" onclick="setFieldVerif('corrective_action_two', 'approve')" id="btn_approve_corrective_action_two" class="w-9 h-9 rounded-lg flex items-center justify-center border transition-all bg-green-50 border-green-200 text-green-600 hover:bg-green-100" title="Approve this row">
+                                            <i class="fa-solid fa-check text-xs"></i>
+                                        </button>
+                                        <button type="button" onclick="setFieldVerif('corrective_action_two', 'reject')" id="btn_reject_corrective_action_two" class="w-9 h-9 rounded-lg flex items-center justify-center border transition-all bg-red-50 border-red-200 text-red-600 hover:bg-red-100" title="Reject this row">
+                                            <i class="fa-solid fa-xmark text-xs"></i>
+                                        </button>
+                                    </div>
                                     @endif
                                 </div>
                                 <div id="corr_two_preview" class="flex flex-wrap gap-2 items-center mt-1.5">
                                     @if(!$isReviewing && !empty($approve->corrective_action_two_verif ?? ''))
-                                        @if(($approve->corrective_action_two_verif ?? '') === 'approve')
-                                            @if(($car->status ?? '') === 'Need Verification')
-                                                <span class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-blue-700 bg-blue-50 rounded-lg border border-blue-200"><i class="fa-solid fa-circle-check"></i> Approved by Superior</span>
-                                            @else
-                                                <span class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-green-700 bg-green-50 rounded-lg border border-green-200"><i class="fa-solid fa-circle-check"></i> Approved</span>
-                                            @endif
-                                        @elseif(($approve->corrective_action_two_verif ?? '') === 'reject')
-                                            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-red-700 bg-red-50 rounded-lg border border-red-200"><i class="fa-solid fa-circle-xmark"></i> Rejected</span>
-                                        @endif
-                                        @if($isComplete && !empty($action->corrective_path_two))
-                                            <div class="h-6 w-[1px] bg-slate-200 mx-1 self-center shrink-0"></div>
-                                        @endif
+                                    @if(($approve->corrective_action_two_verif ?? '') === 'approve')
+                                    @if(($car->status ?? '') === 'Need Verification')
+                                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-blue-700 bg-blue-50 rounded-lg border border-blue-200"><i class="fa-solid fa-circle-check"></i> Approved by Superior</span>
+                                    @else
+                                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-green-700 bg-green-50 rounded-lg border border-green-200"><i class="fa-solid fa-circle-check"></i> Approved</span>
+                                    @endif
+                                    @elseif(($approve->corrective_action_two_verif ?? '') === 'reject')
+                                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-red-700 bg-red-50 rounded-lg border border-red-200"><i class="fa-solid fa-circle-xmark"></i> Rejected</span>
                                     @endif
                                     @if($isComplete && !empty($action->corrective_path_two))
-                                        @foreach(explode(',', $action->corrective_path_two) as $idx => $path)
-                                            @php $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION)); @endphp
-                                            <button type="button" onclick="openActionFileModal('{{ asset(trim($path)) }}', '{{ $ext }}')" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg border border-slate-200 transition-colors">
-                                                <i class="fa-solid {{ $ext === 'pdf' ? 'fa-file-pdf text-red-500' : 'fa-image text-blue-500' }}"></i>
-                                                Show File {{ $idx + 1 }}
-                                            </button>
-                                        @endforeach
+                                    <div class="h-6 w-[1px] bg-slate-200 mx-1 self-center shrink-0"></div>
+                                    @endif
+                                    @endif
+                                    @if($isComplete && !empty($action->corrective_path_two))
+                                    @foreach(explode(',', $action->corrective_path_two) as $idx => $path)
+                                    @php $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION)); @endphp
+                                    <button type="button" onclick="openActionFileModal('{{ asset(trim($path)) }}', '{{ $ext }}')" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg border border-slate-200 transition-colors">
+                                        <i class="fa-solid {{ $ext === 'pdf' ? 'fa-file-pdf text-red-500' : 'fa-image text-blue-500' }}"></i>
+                                        Show File {{ $idx + 1 }}
+                                    </button>
+                                    @endforeach
                                     @endif
                                 </div>
                                 <input type="hidden" name="existing_corrective_photo_two" id="existing_corr_two" value="{{ $action->corrective_path_two ?? '' }}">
@@ -550,48 +550,48 @@
                                 <div class="flex items-center gap-2">
                                     <textarea name="preventive_action_two" rows="1" {{ $isPrevTwoReadonly ? 'readonly' : '' }} class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm resize-none overflow-hidden autogrow-textarea text-slate-700 {{ $isPrevTwoReadonly ? 'bg-slate-50 text-slate-500 cursor-not-allowed' : '' }}" placeholder="Preventive Action 2...">{{ old('preventive_action_two', $action->preventive_action_two ?? '') }}</textarea>
                                     @if(!$isComplete && !$isPrevTwoApproved)
-                                        <div class="shrink-0">
-                                            <input type="file" id="prev_two_file" name="preventive_photo_two[]" multiple accept="image/*,application/pdf" class="hidden" onchange="handleActionFiles(this, 'prev_two')">
-                                            <button type="button" onclick="document.getElementById('prev_two_file').click()" class="w-10 h-10 border border-dashed border-blue-300 bg-blue-50/50 hover:bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center transition-all relative" title="Take / Upload Photo or PDF">
-                                                <i class="fas fa-camera text-xs"></i>
-                                            </button>
-                                        </div>
+                                    <div class="shrink-0">
+                                        <input type="file" id="prev_two_file" name="preventive_photo_two[]" multiple accept="image/*,application/pdf" class="hidden" onchange="handleActionFiles(this, 'prev_two')">
+                                        <button type="button" onclick="document.getElementById('prev_two_file').click()" class="w-10 h-10 border border-dashed border-blue-300 bg-blue-50/50 hover:bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center transition-all relative" title="Take / Upload Photo or PDF">
+                                            <i class="fas fa-camera text-xs"></i>
+                                        </button>
+                                    </div>
                                     @endif
                                     @if($isAuditorReviewing)
-                                        <input type="hidden" name="preventive_action_two_verif" id="preventive_action_two_verif" value="">
-                                        <div class="flex items-center gap-1 shrink-0 ml-2">
-                                            <button type="button" onclick="setFieldVerif('preventive_action_two', 'approve')" id="btn_approve_preventive_action_two" class="w-9 h-9 rounded-lg flex items-center justify-center border transition-all bg-green-50 border-green-200 text-green-600 hover:bg-green-100" title="Approve this row">
-                                                <i class="fa-solid fa-check text-xs"></i>
-                                            </button>
-                                            <button type="button" onclick="setFieldVerif('preventive_action_two', 'reject')" id="btn_reject_preventive_action_two" class="w-9 h-9 rounded-lg flex items-center justify-center border transition-all bg-red-50 border-red-200 text-red-600 hover:bg-red-100" title="Reject this row">
-                                                <i class="fa-solid fa-xmark text-xs"></i>
-                                            </button>
-                                        </div>
+                                    <input type="hidden" name="preventive_action_two_verif" id="preventive_action_two_verif" value="">
+                                    <div class="flex items-center gap-1 shrink-0 ml-2">
+                                        <button type="button" onclick="setFieldVerif('preventive_action_two', 'approve')" id="btn_approve_preventive_action_two" class="w-9 h-9 rounded-lg flex items-center justify-center border transition-all bg-green-50 border-green-200 text-green-600 hover:bg-green-100" title="Approve this row">
+                                            <i class="fa-solid fa-check text-xs"></i>
+                                        </button>
+                                        <button type="button" onclick="setFieldVerif('preventive_action_two', 'reject')" id="btn_reject_preventive_action_two" class="w-9 h-9 rounded-lg flex items-center justify-center border transition-all bg-red-50 border-red-200 text-red-600 hover:bg-red-100" title="Reject this row">
+                                            <i class="fa-solid fa-xmark text-xs"></i>
+                                        </button>
+                                    </div>
                                     @endif
                                 </div>
                                 <div id="prev_two_preview" class="flex flex-wrap gap-2 items-center mt-1.5">
                                     @if(!$isReviewing && !empty($approve->preventive_action_two_verif ?? ''))
-                                        @if(($approve->preventive_action_two_verif ?? '') === 'approve')
-                                            @if(($car->status ?? '') === 'Need Verification')
-                                                <span class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-blue-700 bg-blue-50 rounded-lg border border-blue-200"><i class="fa-solid fa-circle-check"></i> Approved by Superior</span>
-                                            @else
-                                                <span class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-green-700 bg-green-50 rounded-lg border border-green-200"><i class="fa-solid fa-circle-check"></i> Approved</span>
-                                            @endif
-                                        @elseif(($approve->preventive_action_two_verif ?? '') === 'reject')
-                                            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-red-700 bg-red-50 rounded-lg border border-red-200"><i class="fa-solid fa-circle-xmark"></i> Rejected</span>
-                                        @endif
-                                        @if($isComplete && !empty($action->preventive_path_two))
-                                            <div class="h-6 w-[1px] bg-slate-200 mx-1 self-center shrink-0"></div>
-                                        @endif
+                                    @if(($approve->preventive_action_two_verif ?? '') === 'approve')
+                                    @if(($car->status ?? '') === 'Need Verification')
+                                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-blue-700 bg-blue-50 rounded-lg border border-blue-200"><i class="fa-solid fa-circle-check"></i> Approved by Superior</span>
+                                    @else
+                                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-green-700 bg-green-50 rounded-lg border border-green-200"><i class="fa-solid fa-circle-check"></i> Approved</span>
+                                    @endif
+                                    @elseif(($approve->preventive_action_two_verif ?? '') === 'reject')
+                                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-red-700 bg-red-50 rounded-lg border border-red-200"><i class="fa-solid fa-circle-xmark"></i> Rejected</span>
                                     @endif
                                     @if($isComplete && !empty($action->preventive_path_two))
-                                        @foreach(explode(',', $action->preventive_path_two) as $idx => $path)
-                                            @php $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION)); @endphp
-                                            <button type="button" onclick="openActionFileModal('{{ asset(trim($path)) }}', '{{ $ext }}')" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg border border-slate-200 transition-colors">
-                                                <i class="fa-solid {{ $ext === 'pdf' ? 'fa-file-pdf text-red-500' : 'fa-image text-blue-500' }}"></i>
-                                                Show File {{ $idx + 1 }}
-                                            </button>
-                                        @endforeach
+                                    <div class="h-6 w-[1px] bg-slate-200 mx-1 self-center shrink-0"></div>
+                                    @endif
+                                    @endif
+                                    @if($isComplete && !empty($action->preventive_path_two))
+                                    @foreach(explode(',', $action->preventive_path_two) as $idx => $path)
+                                    @php $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION)); @endphp
+                                    <button type="button" onclick="openActionFileModal('{{ asset(trim($path)) }}', '{{ $ext }}')" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg border border-slate-200 transition-colors">
+                                        <i class="fa-solid {{ $ext === 'pdf' ? 'fa-file-pdf text-red-500' : 'fa-image text-blue-500' }}"></i>
+                                        Show File {{ $idx + 1 }}
+                                    </button>
+                                    @endforeach
                                     @endif
                                 </div>
                                 <input type="hidden" name="existing_preventive_photo_two" id="existing_prev_two" value="{{ $action->preventive_path_two ?? '' }}">
@@ -605,48 +605,48 @@
                                 <div class="flex items-center gap-2">
                                     <textarea name="corrective_action_three" rows="1" {{ $isCorrThreeReadonly ? 'readonly' : '' }} class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm resize-none overflow-hidden autogrow-textarea text-slate-700 {{ $isCorrThreeReadonly ? 'bg-slate-50 text-slate-500 cursor-not-allowed' : '' }}" placeholder="Corrective Action 3...">{{ old('corrective_action_three', $action->corrective_action_three ?? '') }}</textarea>
                                     @if(!$isComplete && !$isCorrThreeApproved)
-                                        <div class="shrink-0">
-                                            <input type="file" id="corr_three_file" name="corrective_photo_three[]" multiple accept="image/*,application/pdf" class="hidden" onchange="handleActionFiles(this, 'corr_three')">
-                                            <button type="button" onclick="document.getElementById('corr_three_file').click()" class="w-10 h-10 border border-dashed border-blue-300 bg-blue-50/50 hover:bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center transition-all relative" title="Take / Upload Photo or PDF">
-                                                <i class="fas fa-camera text-xs"></i>
-                                            </button>
-                                        </div>
+                                    <div class="shrink-0">
+                                        <input type="file" id="corr_three_file" name="corrective_photo_three[]" multiple accept="image/*,application/pdf" class="hidden" onchange="handleActionFiles(this, 'corr_three')">
+                                        <button type="button" onclick="document.getElementById('corr_three_file').click()" class="w-10 h-10 border border-dashed border-blue-300 bg-blue-50/50 hover:bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center transition-all relative" title="Take / Upload Photo or PDF">
+                                            <i class="fas fa-camera text-xs"></i>
+                                        </button>
+                                    </div>
                                     @endif
                                     @if($isAuditorReviewing)
-                                        <input type="hidden" name="corrective_action_three_verif" id="corrective_action_three_verif" value="">
-                                        <div class="flex items-center gap-1 shrink-0 ml-2">
-                                            <button type="button" onclick="setFieldVerif('corrective_action_three', 'approve')" id="btn_approve_corrective_action_three" class="w-9 h-9 rounded-lg flex items-center justify-center border transition-all bg-green-50 border-green-200 text-green-600 hover:bg-green-100" title="Approve this row">
-                                                <i class="fa-solid fa-check text-xs"></i>
-                                            </button>
-                                            <button type="button" onclick="setFieldVerif('corrective_action_three', 'reject')" id="btn_reject_corrective_action_three" class="w-9 h-9 rounded-lg flex items-center justify-center border transition-all bg-red-50 border-red-200 text-red-600 hover:bg-red-100" title="Reject this row">
-                                                <i class="fa-solid fa-xmark text-xs"></i>
-                                            </button>
-                                        </div>
+                                    <input type="hidden" name="corrective_action_three_verif" id="corrective_action_three_verif" value="">
+                                    <div class="flex items-center gap-1 shrink-0 ml-2">
+                                        <button type="button" onclick="setFieldVerif('corrective_action_three', 'approve')" id="btn_approve_corrective_action_three" class="w-9 h-9 rounded-lg flex items-center justify-center border transition-all bg-green-50 border-green-200 text-green-600 hover:bg-green-100" title="Approve this row">
+                                            <i class="fa-solid fa-check text-xs"></i>
+                                        </button>
+                                        <button type="button" onclick="setFieldVerif('corrective_action_three', 'reject')" id="btn_reject_corrective_action_three" class="w-9 h-9 rounded-lg flex items-center justify-center border transition-all bg-red-50 border-red-200 text-red-600 hover:bg-red-100" title="Reject this row">
+                                            <i class="fa-solid fa-xmark text-xs"></i>
+                                        </button>
+                                    </div>
                                     @endif
                                 </div>
                                 <div id="corr_three_preview" class="flex flex-wrap gap-2 items-center mt-1.5">
                                     @if(!$isReviewing && !empty($approve->corrective_action_three_verif ?? ''))
-                                        @if(($approve->corrective_action_three_verif ?? '') === 'approve')
-                                            @if(($car->status ?? '') === 'Need Verification')
-                                                <span class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-blue-700 bg-blue-50 rounded-lg border border-blue-200"><i class="fa-solid fa-circle-check"></i> Approved by Superior</span>
-                                            @else
-                                                <span class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-green-700 bg-green-50 rounded-lg border border-green-200"><i class="fa-solid fa-circle-check"></i> Approved</span>
-                                            @endif
-                                        @elseif(($approve->corrective_action_three_verif ?? '') === 'reject')
-                                            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-red-700 bg-red-50 rounded-lg border border-red-200"><i class="fa-solid fa-circle-xmark"></i> Rejected</span>
-                                        @endif
-                                        @if($isComplete && !empty($action->corrective_path_three))
-                                            <div class="h-6 w-[1px] bg-slate-200 mx-1 self-center shrink-0"></div>
-                                        @endif
+                                    @if(($approve->corrective_action_three_verif ?? '') === 'approve')
+                                    @if(($car->status ?? '') === 'Need Verification')
+                                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-blue-700 bg-blue-50 rounded-lg border border-blue-200"><i class="fa-solid fa-circle-check"></i> Approved by Superior</span>
+                                    @else
+                                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-green-700 bg-green-50 rounded-lg border border-green-200"><i class="fa-solid fa-circle-check"></i> Approved</span>
+                                    @endif
+                                    @elseif(($approve->corrective_action_three_verif ?? '') === 'reject')
+                                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-red-700 bg-red-50 rounded-lg border border-red-200"><i class="fa-solid fa-circle-xmark"></i> Rejected</span>
                                     @endif
                                     @if($isComplete && !empty($action->corrective_path_three))
-                                        @foreach(explode(',', $action->corrective_path_three) as $idx => $path)
-                                            @php $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION)); @endphp
-                                            <button type="button" onclick="openActionFileModal('{{ asset(trim($path)) }}', '{{ $ext }}')" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg border border-slate-200 transition-colors">
-                                                <i class="fa-solid {{ $ext === 'pdf' ? 'fa-file-pdf text-red-500' : 'fa-image text-blue-500' }}"></i>
-                                                Show File {{ $idx + 1 }}
-                                            </button>
-                                        @endforeach
+                                    <div class="h-6 w-[1px] bg-slate-200 mx-1 self-center shrink-0"></div>
+                                    @endif
+                                    @endif
+                                    @if($isComplete && !empty($action->corrective_path_three))
+                                    @foreach(explode(',', $action->corrective_path_three) as $idx => $path)
+                                    @php $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION)); @endphp
+                                    <button type="button" onclick="openActionFileModal('{{ asset(trim($path)) }}', '{{ $ext }}')" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg border border-slate-200 transition-colors">
+                                        <i class="fa-solid {{ $ext === 'pdf' ? 'fa-file-pdf text-red-500' : 'fa-image text-blue-500' }}"></i>
+                                        Show File {{ $idx + 1 }}
+                                    </button>
+                                    @endforeach
                                     @endif
                                 </div>
                                 <input type="hidden" name="existing_corrective_photo_three" id="existing_corr_three" value="{{ $action->corrective_path_three ?? '' }}">
@@ -657,48 +657,48 @@
                                 <div class="flex items-center gap-2">
                                     <textarea name="preventive_action_three" rows="1" {{ $isPrevThreeReadonly ? 'readonly' : '' }} class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm resize-none overflow-hidden autogrow-textarea text-slate-700 {{ $isPrevThreeReadonly ? 'bg-slate-50 text-slate-500 cursor-not-allowed' : '' }}" placeholder="Preventive Action 3...">{{ old('preventive_action_three', $action->preventive_action_three ?? '') }}</textarea>
                                     @if(!$isComplete && !$isPrevThreeApproved)
-                                        <div class="shrink-0">
-                                            <input type="file" id="prev_three_file" name="preventive_photo_three[]" multiple accept="image/*,application/pdf" class="hidden" onchange="handleActionFiles(this, 'prev_three')">
-                                            <button type="button" onclick="document.getElementById('prev_three_file').click()" class="w-10 h-10 border border-dashed border-blue-300 bg-blue-50/50 hover:bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center transition-all relative" title="Take / Upload Photo or PDF">
-                                                <i class="fas fa-camera text-xs"></i>
-                                            </button>
-                                        </div>
+                                    <div class="shrink-0">
+                                        <input type="file" id="prev_three_file" name="preventive_photo_three[]" multiple accept="image/*,application/pdf" class="hidden" onchange="handleActionFiles(this, 'prev_three')">
+                                        <button type="button" onclick="document.getElementById('prev_three_file').click()" class="w-10 h-10 border border-dashed border-blue-300 bg-blue-50/50 hover:bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center transition-all relative" title="Take / Upload Photo or PDF">
+                                            <i class="fas fa-camera text-xs"></i>
+                                        </button>
+                                    </div>
                                     @endif
                                     @if($isAuditorReviewing)
-                                        <input type="hidden" name="preventive_action_three_verif" id="preventive_action_three_verif" value="">
-                                        <div class="flex items-center gap-1 shrink-0 ml-2">
-                                            <button type="button" onclick="setFieldVerif('preventive_action_three', 'approve')" id="btn_approve_preventive_action_three" class="w-9 h-9 rounded-lg flex items-center justify-center border transition-all bg-green-50 border-green-200 text-green-600 hover:bg-green-100" title="Approve this row">
-                                                <i class="fa-solid fa-check text-xs"></i>
-                                            </button>
-                                            <button type="button" onclick="setFieldVerif('preventive_action_three', 'reject')" id="btn_reject_preventive_action_three" class="w-9 h-9 rounded-lg flex items-center justify-center border transition-all bg-red-50 border-red-200 text-red-600 hover:bg-red-100" title="Reject this row">
-                                                <i class="fa-solid fa-xmark text-xs"></i>
-                                            </button>
-                                        </div>
+                                    <input type="hidden" name="preventive_action_three_verif" id="preventive_action_three_verif" value="">
+                                    <div class="flex items-center gap-1 shrink-0 ml-2">
+                                        <button type="button" onclick="setFieldVerif('preventive_action_three', 'approve')" id="btn_approve_preventive_action_three" class="w-9 h-9 rounded-lg flex items-center justify-center border transition-all bg-green-50 border-green-200 text-green-600 hover:bg-green-100" title="Approve this row">
+                                            <i class="fa-solid fa-check text-xs"></i>
+                                        </button>
+                                        <button type="button" onclick="setFieldVerif('preventive_action_three', 'reject')" id="btn_reject_preventive_action_three" class="w-9 h-9 rounded-lg flex items-center justify-center border transition-all bg-red-50 border-red-200 text-red-600 hover:bg-red-100" title="Reject this row">
+                                            <i class="fa-solid fa-xmark text-xs"></i>
+                                        </button>
+                                    </div>
                                     @endif
                                 </div>
                                 <div id="prev_three_preview" class="flex flex-wrap gap-2 items-center mt-1.5">
                                     @if(!$isReviewing && !empty($approve->preventive_action_three_verif ?? ''))
-                                        @if(($approve->preventive_action_three_verif ?? '') === 'approve')
-                                            @if(($car->status ?? '') === 'Need Verification')
-                                                <span class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-blue-700 bg-blue-50 rounded-lg border border-blue-200"><i class="fa-solid fa-circle-check"></i> Approved by Superior</span>
-                                            @else
-                                                <span class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-green-700 bg-green-50 rounded-lg border border-green-200"><i class="fa-solid fa-circle-check"></i> Approved</span>
-                                            @endif
-                                        @elseif(($approve->preventive_action_three_verif ?? '') === 'reject')
-                                            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-red-700 bg-red-50 rounded-lg border border-red-200"><i class="fa-solid fa-circle-xmark"></i> Rejected</span>
-                                        @endif
-                                        @if($isComplete && !empty($action->preventive_path_three))
-                                            <div class="h-6 w-[1px] bg-slate-200 mx-1 self-center shrink-0"></div>
-                                        @endif
+                                    @if(($approve->preventive_action_three_verif ?? '') === 'approve')
+                                    @if(($car->status ?? '') === 'Need Verification')
+                                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-blue-700 bg-blue-50 rounded-lg border border-blue-200"><i class="fa-solid fa-circle-check"></i> Approved by Superior</span>
+                                    @else
+                                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-green-700 bg-green-50 rounded-lg border border-green-200"><i class="fa-solid fa-circle-check"></i> Approved</span>
+                                    @endif
+                                    @elseif(($approve->preventive_action_three_verif ?? '') === 'reject')
+                                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-red-700 bg-red-50 rounded-lg border border-red-200"><i class="fa-solid fa-circle-xmark"></i> Rejected</span>
                                     @endif
                                     @if($isComplete && !empty($action->preventive_path_three))
-                                        @foreach(explode(',', $action->preventive_path_three) as $idx => $path)
-                                            @php $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION)); @endphp
-                                            <button type="button" onclick="openActionFileModal('{{ asset(trim($path)) }}', '{{ $ext }}')" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg border border-slate-200 transition-colors">
-                                                <i class="fa-solid {{ $ext === 'pdf' ? 'fa-file-pdf text-red-500' : 'fa-image text-blue-500' }}"></i>
-                                                Show File {{ $idx + 1 }}
-                                            </button>
-                                        @endforeach
+                                    <div class="h-6 w-[1px] bg-slate-200 mx-1 self-center shrink-0"></div>
+                                    @endif
+                                    @endif
+                                    @if($isComplete && !empty($action->preventive_path_three))
+                                    @foreach(explode(',', $action->preventive_path_three) as $idx => $path)
+                                    @php $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION)); @endphp
+                                    <button type="button" onclick="openActionFileModal('{{ asset(trim($path)) }}', '{{ $ext }}')" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg border border-slate-200 transition-colors">
+                                        <i class="fa-solid {{ $ext === 'pdf' ? 'fa-file-pdf text-red-500' : 'fa-image text-blue-500' }}"></i>
+                                        Show File {{ $idx + 1 }}
+                                    </button>
+                                    @endforeach
                                     @endif
                                 </div>
                                 <input type="hidden" name="existing_preventive_photo_three" id="existing_prev_three" value="{{ $action->preventive_path_three ?? '' }}">
@@ -711,30 +711,30 @@
                 <div class="border-t border-slate-100 pt-6">
                     <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 sm:gap-6">
                         @php
-                            $isAuditorUser = false;
-                            if (!empty($car->auditor)) {
-                                $auditors = array_map('trim', explode(',', $car->auditor));
-                                foreach ($auditors as $auditorName) {
-                                    if (strcasecmp(Auth::user()->full_name, $auditorName) === 0) {
-                                        $isAuditorUser = true;
-                                        break;
-                                    }
-                                }
-                            }
-                            $isQmr = in_array(Auth::user()->username, ['031114-001', '260422-001', '121020-002']);
-                            // Notes is editable only if:
-                            // 1. Action is completed (i.e. status is no longer Draft)
-                            // 2. CAR status is 'Need Verification' (meaning superior has already verified it) and user is Auditor
-                            // 3. CAR status is 'Closed' (waiting for final verif) and user is QMR
-                            $isNotesEditable = ($isComplete && (($car->status ?? '') === 'Need Verification') && $isAuditorUser)
-                                || ($isComplete && (($car->status ?? '') === 'Closed' && empty($car->qmr_approved_at)) && $isQmr);
+                        $isAuditorUser = false;
+                        if (!empty($car->auditor)) {
+                        $auditors = array_map('trim', explode(',', $car->auditor));
+                        foreach ($auditors as $auditorName) {
+                        if (strcasecmp(Auth::user()->full_name, $auditorName) === 0) {
+                        $isAuditorUser = true;
+                        break;
+                        }
+                        }
+                        }
+                        $isQmr = in_array(Auth::user()->username, ['031114-001', '260422-001', '121020-002']);
+                        // Notes is editable only if:
+                        // 1. Action is completed (i.e. status is no longer Draft)
+                        // 2. CAR status is 'Need Verification' (meaning superior has already verified it) and user is Auditor
+                        // 3. CAR status is 'Closed' (waiting for final verif) and user is QMR
+                        $isNotesEditable = ($isComplete && (($car->status ?? '') === 'Need Verification') && $isAuditorUser)
+                        || ($isComplete && (($car->status ?? '') === 'Closed' && empty($car->qmr_approved_at)) && $isQmr);
                         @endphp
                         <!-- Notes for A & B -->
                         <div class="flex flex-col gap-1.5 sm:col-span-2">
                             <label class="text-slate-700 font-semibold text-sm tracking-wider">Notes for A & B @if($isNotesEditable)<span class="text-red-500">*</span>@endif</label>
                             <textarea name="notes" rows="1" {{ $isNotesEditable ? '' : 'readonly' }} class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm outline-none text-slate-700 resize-none overflow-hidden autogrow-textarea {{ !$isNotesEditable ? 'bg-slate-50 text-slate-500 cursor-not-allowed' : '' }}" placeholder="{{ $isNotesEditable ? 'Enter verification notes...' : 'Notes can only be filled by the Auditor during verification...' }}">{{ old('notes', $action->notes ?? '') }}</textarea>
                         </div>
-                        
+
                         <!-- Auditee -->
                         <div class="flex flex-col gap-1.5 sm:col-span-1">
                             <label class="text-slate-700 font-semibold text-sm tracking-wider">Auditee</label>
@@ -757,34 +757,34 @@
                         <div class="flex flex-col items-center justify-between p-1 sm:p-4 rounded-lg sm:rounded-xl border border-slate-200 bg-slate-50/50 text-center min-h-[90px] sm:min-h-[140px]">
                             <span class="text-[8px] sm:text-xs font-semibold text-slate-500 tracking-wider">Prepare by</span>
                             @if(isset($action) && !empty($action->auditee_name) && $isComplete)
-                                <div class="my-0.5 sm:my-2 select-none">
-                                    <div class="inline-flex items-center border-[0.5px] sm:border-2 border-red-500 font-bold uppercase tracking-widest text-[6px] sm:text-sm bg-white overflow-hidden">
-                                        <div class="px-0.5 sm:px-2 py-0.5 border-r-[0.5px] sm:border-r-2 border-red-500 text-red-500">
-                                            <i class="fa-solid fa-check text-[5px] sm:text-xs" style="-webkit-text-stroke: 0.5px currentColor;"></i>
-                                        </div>
-                                        <div class="px-0.5 sm:px-2 py-0.5 text-red-500">
-                                            PREPARED
-                                        </div>
+                            <div class="my-0.5 sm:my-2 select-none">
+                                <div class="inline-flex items-center border-[0.5px] sm:border-2 border-red-500 font-bold uppercase tracking-widest text-[6px] sm:text-sm bg-white overflow-hidden">
+                                    <div class="px-0.5 sm:px-2 py-0.5 border-r-[0.5px] sm:border-r-2 border-red-500 text-red-500">
+                                        <i class="fa-solid fa-check text-[5px] sm:text-xs" style="-webkit-text-stroke: 0.5px currentColor;"></i>
+                                    </div>
+                                    <div class="px-0.5 sm:px-2 py-0.5 text-red-500">
+                                        PREPARED
                                     </div>
                                 </div>
-                                <div class="text-[8px] sm:text-xs">
-                                    <p class="font-bold text-slate-700 truncate max-w-[55px] sm:max-w-none" title="{{ $action->auditee_name }}">{{ $action->auditee_name }}</p>
-                                    <p class="text-slate-400 text-[7px] sm:text-[10px] mt-0.5">{{ \Carbon\Carbon::parse($action->created_at)->format('d/m/Y') }}</p>
-                                </div>
+                            </div>
+                            <div class="text-[8px] sm:text-xs">
+                                <p class="font-bold text-slate-700 truncate max-w-[55px] sm:max-w-none" title="{{ $action->auditee_name }}">{{ $action->auditee_name }}</p>
+                                <p class="text-slate-400 text-[7px] sm:text-[10px] mt-0.5">{{ \Carbon\Carbon::parse($action->created_at)->format('d/m/Y') }}</p>
+                            </div>
                             @else
-                                <div class="my-0.5 sm:my-2 select-none">
-                                    <div class="inline-flex items-center border-[0.5px] sm:border-2 border-slate-300 font-bold uppercase tracking-widest text-[6px] sm:text-sm bg-white overflow-hidden">
-                                        <div class="px-0.5 sm:px-2 py-0.5 border-r-[0.5px] sm:border-r-2 border-slate-300 text-slate-400">
-                                            <i class="fa-solid fa-clock text-[5px] sm:text-[11px]"></i>
-                                        </div>
-                                        <div class="px-0.5 sm:px-2 py-0.5 text-slate-400">
-                                            PENDING
-                                        </div>
+                            <div class="my-0.5 sm:my-2 select-none">
+                                <div class="inline-flex items-center border-[0.5px] sm:border-2 border-slate-300 font-bold uppercase tracking-widest text-[6px] sm:text-sm bg-white overflow-hidden">
+                                    <div class="px-0.5 sm:px-2 py-0.5 border-r-[0.5px] sm:border-r-2 border-slate-300 text-slate-400">
+                                        <i class="fa-solid fa-clock text-[5px] sm:text-[11px]"></i>
+                                    </div>
+                                    <div class="px-0.5 sm:px-2 py-0.5 text-slate-400">
+                                        PENDING
                                     </div>
                                 </div>
-                                <div class="text-[8px] sm:text-xs">
-                                    <p class="text-slate-400 font-medium truncate max-w-[55px] sm:max-w-none">{{ $action->auditee_name ?? $car->header_auditee ?? $car->auditee ?? '-' }}</p>
-                                </div>
+                            </div>
+                            <div class="text-[8px] sm:text-xs">
+                                <p class="text-slate-400 font-medium truncate max-w-[55px] sm:max-w-none">{{ $action->auditee_name ?? $car->header_auditee ?? $car->auditee ?? '-' }}</p>
+                            </div>
                             @endif
                         </div>
 
@@ -792,39 +792,39 @@
                         <div class="flex flex-col items-center justify-between p-1 sm:p-4 rounded-lg sm:rounded-xl border border-slate-200 bg-slate-50/50 text-center min-h-[90px] sm:min-h-[140px]">
                             <span class="text-[8px] sm:text-xs font-semibold text-slate-500 tracking-wider">Checked by</span>
                             @php
-                                $isVerifiedBySuperior = isset($action) && (in_array($action->action_status, ['approve_superior', 'verified']) || !empty($approve->superior_approved_at ?? ''));
+                            $isVerifiedBySuperior = isset($action) && (in_array($action->action_status, ['approve_superior', 'verified']) || !empty($approve->superior_approved_at ?? ''));
                             @endphp
                             @if($isVerifiedBySuperior && !empty($action->auditee_superior_name))
-                                <div class="my-0.5 sm:my-2 select-none">
-                                    <div class="inline-flex items-center border-[0.5px] sm:border-2 border-red-500 font-bold uppercase tracking-widest text-[6px] sm:text-sm bg-white overflow-hidden">
-                                        <div class="px-0.5 sm:px-2 py-0.5 border-r-[0.5px] sm:border-r-2 border-red-500 text-red-500">
-                                            <i class="fa-solid fa-check text-[5px] sm:text-xs" style="-webkit-text-stroke: 0.5px currentColor;"></i>
-                                        </div>
-                                        <div class="px-0.5 sm:px-2 py-0.5 text-red-500">
-                                            CHECKED
-                                        </div>
+                            <div class="my-0.5 sm:my-2 select-none">
+                                <div class="inline-flex items-center border-[0.5px] sm:border-2 border-red-500 font-bold uppercase tracking-widest text-[6px] sm:text-sm bg-white overflow-hidden">
+                                    <div class="px-0.5 sm:px-2 py-0.5 border-r-[0.5px] sm:border-r-2 border-red-500 text-red-500">
+                                        <i class="fa-solid fa-check text-[5px] sm:text-xs" style="-webkit-text-stroke: 0.5px currentColor;"></i>
+                                    </div>
+                                    <div class="px-0.5 sm:px-2 py-0.5 text-red-500">
+                                        CHECKED
                                     </div>
                                 </div>
-                                <div class="text-[8px] sm:text-xs">
-                                    <p class="font-bold text-slate-700 truncate max-w-[55px] sm:max-w-none" title="{{ $action->auditee_superior_name }}">{{ $action->auditee_superior_name }}</p>
-                                    <p class="text-slate-400 text-[7px] sm:text-[10px] mt-0.5">
-                                        {{ !empty($approve->superior_approved_at ?? '') ? \Carbon\Carbon::parse($approve->superior_approved_at)->format('d/m/Y') : '' }}
-                                    </p>
-                                </div>
+                            </div>
+                            <div class="text-[8px] sm:text-xs">
+                                <p class="font-bold text-slate-700 truncate max-w-[55px] sm:max-w-none" title="{{ $action->auditee_superior_name }}">{{ $action->auditee_superior_name }}</p>
+                                <p class="text-slate-400 text-[7px] sm:text-[10px] mt-0.5">
+                                    {{ !empty($approve->superior_approved_at ?? '') ? \Carbon\Carbon::parse($approve->superior_approved_at)->format('d/m/Y') : '' }}
+                                </p>
+                            </div>
                             @else
-                                <div class="my-0.5 sm:my-2 select-none">
-                                    <div class="inline-flex items-center border-[0.5px] sm:border-2 border-slate-300 font-bold uppercase tracking-widest text-[6px] sm:text-sm bg-white overflow-hidden">
-                                        <div class="px-0.5 sm:px-2 py-0.5 border-r-[0.5px] sm:border-r-2 border-slate-300 text-slate-400">
-                                            <i class="fa-solid fa-clock text-[5px] sm:text-[11px]"></i>
-                                        </div>
-                                        <div class="px-0.5 sm:px-2 py-0.5 text-slate-400">
-                                            PENDING
-                                        </div>
+                            <div class="my-0.5 sm:my-2 select-none">
+                                <div class="inline-flex items-center border-[0.5px] sm:border-2 border-slate-300 font-bold uppercase tracking-widest text-[6px] sm:text-sm bg-white overflow-hidden">
+                                    <div class="px-0.5 sm:px-2 py-0.5 border-r-[0.5px] sm:border-r-2 border-slate-300 text-slate-400">
+                                        <i class="fa-solid fa-clock text-[5px] sm:text-[11px]"></i>
+                                    </div>
+                                    <div class="px-0.5 sm:px-2 py-0.5 text-slate-400">
+                                        PENDING
                                     </div>
                                 </div>
-                                <div class="text-[8px] sm:text-xs">
-                                    <p class="text-slate-400 font-medium truncate max-w-[55px] sm:max-w-none">{{ !empty($action->auditee_superior_name) ? $action->auditee_superior_name : 'Superior' }}</p>
-                                </div>
+                            </div>
+                            <div class="text-[8px] sm:text-xs">
+                                <p class="text-slate-400 font-medium truncate max-w-[55px] sm:max-w-none">{{ !empty($action->auditee_superior_name) ? $action->auditee_superior_name : 'Superior' }}</p>
+                            </div>
                             @endif
                         </div>
 
@@ -832,39 +832,39 @@
                         <div class="flex flex-col items-center justify-between p-1 sm:p-4 rounded-lg sm:rounded-xl border border-slate-200 bg-slate-50/50 text-center min-h-[90px] sm:min-h-[140px]">
                             <span class="text-[8px] sm:text-xs font-semibold text-slate-500 tracking-wider">Confirm by</span>
                             @php
-                                $isConfirmedByAuditor = isset($action) && ($action->action_status === 'verified' || !empty($approve->auditor_approved_at ?? '') || ($car->status ?? '') === 'Closed');
+                            $isConfirmedByAuditor = isset($action) && ($action->action_status === 'verified' || !empty($approve->auditor_approved_at ?? '') || ($car->status ?? '') === 'Closed');
                             @endphp
                             @if($isConfirmedByAuditor && !empty($car->auditor))
-                                <div class="my-0.5 sm:my-2 select-none">
-                                    <div class="inline-flex items-center border-[0.5px] sm:border-2 border-red-500 font-bold uppercase tracking-widest text-[6px] sm:text-sm bg-white overflow-hidden">
-                                        <div class="px-0.5 sm:px-2 py-0.5 border-r-[0.5px] sm:border-r-2 border-red-500 text-red-500">
-                                            <i class="fa-solid fa-check text-[5px] sm:text-xs" style="-webkit-text-stroke: 0.5px currentColor;"></i>
-                                        </div>
-                                        <div class="px-0.5 sm:px-2 py-0.5 text-red-500">
-                                            CONFIRMED
-                                        </div>
+                            <div class="my-0.5 sm:my-2 select-none">
+                                <div class="inline-flex items-center border-[0.5px] sm:border-2 border-red-500 font-bold uppercase tracking-widest text-[6px] sm:text-sm bg-white overflow-hidden">
+                                    <div class="px-0.5 sm:px-2 py-0.5 border-r-[0.5px] sm:border-r-2 border-red-500 text-red-500">
+                                        <i class="fa-solid fa-check text-[5px] sm:text-xs" style="-webkit-text-stroke: 0.5px currentColor;"></i>
+                                    </div>
+                                    <div class="px-0.5 sm:px-2 py-0.5 text-red-500">
+                                        CONFIRMED
                                     </div>
                                 </div>
-                                <div class="text-[8px] sm:text-xs">
-                                    <p class="font-bold text-slate-700 truncate max-w-[55px] sm:max-w-none" title="{{ $car->auditor }}">{{ $car->auditor }}</p>
-                                    <p class="text-slate-400 text-[7px] sm:text-[10px] mt-0.5">
-                                        {{ !empty($approve->auditor_approved_at ?? '') ? \Carbon\Carbon::parse($approve->auditor_approved_at)->format('d/m/Y') : '' }}
-                                    </p>
-                                </div>
+                            </div>
+                            <div class="text-[8px] sm:text-xs">
+                                <p class="font-bold text-slate-700 truncate max-w-[55px] sm:max-w-none" title="{{ $car->auditor }}">{{ $car->auditor }}</p>
+                                <p class="text-slate-400 text-[7px] sm:text-[10px] mt-0.5">
+                                    {{ !empty($approve->auditor_approved_at ?? '') ? \Carbon\Carbon::parse($approve->auditor_approved_at)->format('d/m/Y') : '' }}
+                                </p>
+                            </div>
                             @else
-                                <div class="my-0.5 sm:my-2 select-none">
-                                    <div class="inline-flex items-center border-[0.5px] sm:border-2 border-slate-300 font-bold uppercase tracking-widest text-[6px] sm:text-sm bg-white overflow-hidden">
-                                        <div class="px-0.5 sm:px-2 py-0.5 border-r-[0.5px] sm:border-r-2 border-slate-300 text-slate-400">
-                                            <i class="fa-solid fa-clock text-[5px] sm:text-[11px]"></i>
-                                        </div>
-                                        <div class="px-0.5 sm:px-2 py-0.5 text-slate-400">
-                                            PENDING
-                                        </div>
+                            <div class="my-0.5 sm:my-2 select-none">
+                                <div class="inline-flex items-center border-[0.5px] sm:border-2 border-slate-300 font-bold uppercase tracking-widest text-[6px] sm:text-sm bg-white overflow-hidden">
+                                    <div class="px-0.5 sm:px-2 py-0.5 border-r-[0.5px] sm:border-r-2 border-slate-300 text-slate-400">
+                                        <i class="fa-solid fa-clock text-[5px] sm:text-[11px]"></i>
+                                    </div>
+                                    <div class="px-0.5 sm:px-2 py-0.5 text-slate-400">
+                                        PENDING
                                     </div>
                                 </div>
-                                <div class="text-[8px] sm:text-xs">
-                                    <p class="text-slate-400 font-medium truncate max-w-[55px] sm:max-w-none">{{ $car->auditor ?? '-' }}</p>
-                                </div>
+                            </div>
+                            <div class="text-[8px] sm:text-xs">
+                                <p class="text-slate-400 font-medium truncate max-w-[55px] sm:max-w-none">{{ $car->auditor ?? '-' }}</p>
+                            </div>
                             @endif
                         </div>
 
@@ -872,37 +872,37 @@
                         <div class="flex flex-col items-center justify-between p-1 sm:p-4 rounded-lg sm:rounded-xl border border-slate-200 bg-slate-50/50 text-center min-h-[90px] sm:min-h-[140px]">
                             <span class="text-[8px] sm:text-xs font-semibold text-slate-500 tracking-wider">Known by</span>
                             @php
-                                $isApprovedByQmr = (!empty($approve) && !empty($approve->qmr_approved_at)) || !empty($car->qmr_approved_at);
+                            $isApprovedByQmr = (!empty($approve) && !empty($approve->qmr_approved_at)) || !empty($car->qmr_approved_at);
                             @endphp
                             @if($isApprovedByQmr)
-                                <div class="my-0.5 sm:my-2 select-none">
-                                    <div class="inline-flex items-center border-[0.5px] sm:border-2 border-red-500 font-bold uppercase tracking-widest text-[6px] sm:text-sm bg-white overflow-hidden">
-                                        <div class="px-0.5 sm:px-2 py-0.5 border-r-[0.5px] sm:border-r-2 border-red-500 text-red-500">
-                                            <i class="fa-solid fa-check text-[5px] sm:text-xs" style="-webkit-text-stroke: 0.5px currentColor;"></i>
-                                        </div>
-                                        <div class="px-0.5 sm:px-2 py-0.5 text-red-500">
-                                            APPROVED
-                                        </div>
+                            <div class="my-0.5 sm:my-2 select-none">
+                                <div class="inline-flex items-center border-[0.5px] sm:border-2 border-red-500 font-bold uppercase tracking-widest text-[6px] sm:text-sm bg-white overflow-hidden">
+                                    <div class="px-0.5 sm:px-2 py-0.5 border-r-[0.5px] sm:border-r-2 border-red-500 text-red-500">
+                                        <i class="fa-solid fa-check text-[5px] sm:text-xs" style="-webkit-text-stroke: 0.5px currentColor;"></i>
+                                    </div>
+                                    <div class="px-0.5 sm:px-2 py-0.5 text-red-500">
+                                        APPROVED
                                     </div>
                                 </div>
-                                <div class="text-[8px] sm:text-xs">
-                                    <p class="font-bold text-slate-700 truncate max-w-[55px] sm:max-w-none" title="{{ $qmrUser->full_name ?? 'PAK ARIF' }}">{{ $qmrUser->full_name ?? 'PAK ARIF' }}</p>
-                                    <p class="text-slate-400 text-[7px] sm:text-[10px] mt-0.5">{{ !empty($approve->qmr_approved_at ?? '') ? \Carbon\Carbon::parse($approve->qmr_approved_at)->format('d/m/Y') : (!empty($car->qmr_approved_at) ? \Carbon\Carbon::parse($car->qmr_approved_at)->format('d/m/Y') : '') }}</p>
-                                </div>
+                            </div>
+                            <div class="text-[8px] sm:text-xs">
+                                <p class="font-bold text-slate-700 truncate max-w-[55px] sm:max-w-none" title="{{ $qmrUser->full_name ?? 'PAK ARIF' }}">{{ $qmrUser->full_name ?? 'PAK ARIF' }}</p>
+                                <p class="text-slate-400 text-[7px] sm:text-[10px] mt-0.5">{{ !empty($approve->qmr_approved_at ?? '') ? \Carbon\Carbon::parse($approve->qmr_approved_at)->format('d/m/Y') : (!empty($car->qmr_approved_at) ? \Carbon\Carbon::parse($car->qmr_approved_at)->format('d/m/Y') : '') }}</p>
+                            </div>
                             @else
-                                <div class="my-0.5 sm:my-2 select-none">
-                                    <div class="inline-flex items-center border-[0.5px] sm:border-2 border-slate-300 font-bold uppercase tracking-widest text-[6px] sm:text-sm bg-white overflow-hidden">
-                                        <div class="px-0.5 sm:px-2 py-0.5 border-r-[0.5px] sm:border-r-2 border-slate-300 text-slate-400">
-                                            <i class="fa-solid fa-clock text-[5px] sm:text-[11px]"></i>
-                                        </div>
-                                        <div class="px-0.5 sm:px-2 py-0.5 text-slate-400">
-                                            PENDING
-                                        </div>
+                            <div class="my-0.5 sm:my-2 select-none">
+                                <div class="inline-flex items-center border-[0.5px] sm:border-2 border-slate-300 font-bold uppercase tracking-widest text-[6px] sm:text-sm bg-white overflow-hidden">
+                                    <div class="px-0.5 sm:px-2 py-0.5 border-r-[0.5px] sm:border-r-2 border-slate-300 text-slate-400">
+                                        <i class="fa-solid fa-clock text-[5px] sm:text-[11px]"></i>
+                                    </div>
+                                    <div class="px-0.5 sm:px-2 py-0.5 text-slate-400">
+                                        PENDING
                                     </div>
                                 </div>
-                                <div class="text-[8px] sm:text-xs">
-                                    <p class="text-slate-400 font-medium">QMR</p>
-                                </div>
+                            </div>
+                            <div class="text-[8px] sm:text-xs">
+                                <p class="text-slate-400 font-medium">QMR</p>
+                            </div>
                             @endif
                         </div>
                     </div>
@@ -911,86 +911,86 @@
                 <!-- Submit Button / Rollback -->
                 <div class="flex justify-end gap-3 border-t border-slate-100 pt-6">
                     @if($isComplete)
-                        @php
-                            $isAuditor = false;
-                            if (!empty($car->auditor)) {
-                                $auditors = array_map('trim', explode(',', $car->auditor));
-                                foreach ($auditors as $auditorName) {
-                                    if (strcasecmp(Auth::user()->full_name, $auditorName) === 0) {
-                                        $isAuditor = true;
-                                        break;
-                                    }
-                                }
-                            }
-                            $isQmr = in_array(Auth::user()->username, ['031114-001', '260422-001', '121020-002']);
-                            $isSuperior = isset($action) && strcasecmp(Auth::user()->full_name, $action->auditee_superior_name ?? '') === 0;
-                            
-                            $showActionButtons = false;
-                            if ($isSuperior && ($car->status ?? '') === 'Under Review') {
-                                $showActionButtons = true;
-                            } elseif ($isAuditor && ($car->status ?? '') === 'Need Verification') {
-                                $showActionButtons = true;
-                            } elseif ($isQmr && ($car->status ?? '') === 'Closed' && empty($car->qmr_approved_at)) {
-                                $showActionButtons = true;
-                            }
-                        @endphp
-                        @if($showActionButtons)
-                            @if(($car->status ?? '') === 'Need Verification' || ($car->status ?? '') === 'Closed')
-                                @if(($car->status ?? '') === 'Need Verification')
-                                    <button type="button" id="btnSaveVerification" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition-all text-sm flex items-center gap-2">
-                                        <i class="fa-solid fa-floppy-disk text-base"></i> Save
-                                    </button>
-                                @endif
-                                <button type="button" id="btnApproveAction" class="px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-xl font-bold transition-all text-sm flex items-center gap-2">
-                                    <i class="fa-solid fa-check text-base"></i> Approve
-                                </button>
-                            @else
-                                <button type="button" id="btnApproveAction" class="px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-xl font-bold transition-all text-sm flex items-center gap-2">
-                                    <i class="fa-solid fa-check text-base"></i> Approve
-                                </button>
-                            @endif
-                            @if(($car->status ?? '') === 'Under Review' || ($car->status ?? '') === 'Closed')
-                                <button type="button" id="btnRejectAction" class="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold transition-all text-sm flex items-center gap-2">
-                                    <i class="fa-solid fa-xmark text-base"></i> Reject
-                                </button>
-                            @endif
-                        @endif
-                        @php
-                            $showRollback = false;
-                            if (($car->status ?? '') === 'Closed' && !empty($car->qmr_approved_at) && ($isAuditor || $isQmr)) {
-                                $showRollback = true;
-                            }
-                        @endphp
-                        @if($showRollback)
-                            <button type="button" id="btnRollback" class="px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-bold transition-all text-sm flex items-center gap-2">
-                                <i class="fa-solid fa-rotate-left text-base"></i> Rollback
-                            </button>
-                        @endif
-                        @php
-                            $isAuditee = false;
-                            if (!empty($car->auditee)) {
-                                $auditees = array_map('trim', explode(',', $car->auditee));
-                                foreach ($auditees as $auditeeName) {
-                                    if (strcasecmp(Auth::user()->full_name, $auditeeName) === 0) {
-                                        $isAuditee = true;
-                                        break;
-                                    }
-                                }
-                            }
-                            $showAuditeeRollback = false;
-                            if ($isAuditee && ($car->status ?? '') === 'Under Review') {
-                                $showAuditeeRollback = true;
-                            }
-                        @endphp
-                        @if($showAuditeeRollback)
-                            <button type="button" id="btnAuditeeRollback" class="px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-bold transition-all text-sm flex items-center gap-2">
-                                <i class="fa-solid fa-rotate-left text-base"></i> Cancel submission & edit
-                            </button>
-                        @endif
+                    @php
+                    $isAuditor = false;
+                    if (!empty($car->auditor)) {
+                    $auditors = array_map('trim', explode(',', $car->auditor));
+                    foreach ($auditors as $auditorName) {
+                    if (strcasecmp(Auth::user()->full_name, $auditorName) === 0) {
+                    $isAuditor = true;
+                    break;
+                    }
+                    }
+                    }
+                    $isQmr = in_array(Auth::user()->username, ['031114-001', '260422-001', '121020-002']);
+                    $isSuperior = isset($action) && strcasecmp(Auth::user()->full_name, $action->auditee_superior_name ?? '') === 0;
+
+                    $showActionButtons = false;
+                    if ($isSuperior && ($car->status ?? '') === 'Under Review') {
+                    $showActionButtons = true;
+                    } elseif ($isAuditor && ($car->status ?? '') === 'Need Verification') {
+                    $showActionButtons = true;
+                    } elseif ($isQmr && ($car->status ?? '') === 'Closed' && empty($car->qmr_approved_at)) {
+                    $showActionButtons = true;
+                    }
+                    @endphp
+                    @if($showActionButtons)
+                    @if(($car->status ?? '') === 'Need Verification' || ($car->status ?? '') === 'Closed')
+                    @if(($car->status ?? '') === 'Need Verification')
+                    <button type="button" id="btnSaveVerification" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition-all text-sm flex items-center gap-2">
+                        <i class="fa-solid fa-floppy-disk text-base"></i> Save
+                    </button>
+                    @endif
+                    <button type="button" id="btnApproveAction" class="px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-xl font-bold transition-all text-sm flex items-center gap-2">
+                        <i class="fa-solid fa-check text-base"></i> Approve
+                    </button>
                     @else
-                        <button type="submit" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition-all text-sm flex items-center gap-2">
-                            <i class="fa-solid fa-floppy-disk text-base"></i> Save Action Plan
-                        </button>
+                    <button type="button" id="btnApproveAction" class="px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-xl font-bold transition-all text-sm flex items-center gap-2">
+                        <i class="fa-solid fa-check text-base"></i> Approve
+                    </button>
+                    @endif
+                    @if(($car->status ?? '') === 'Under Review' || ($car->status ?? '') === 'Closed')
+                    <button type="button" id="btnRejectAction" class="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold transition-all text-sm flex items-center gap-2">
+                        <i class="fa-solid fa-xmark text-base"></i> Reject
+                    </button>
+                    @endif
+                    @endif
+                    @php
+                    $showRollback = false;
+                    if (($car->status ?? '') === 'Closed' && !empty($car->qmr_approved_at) && ($isAuditor || $isQmr)) {
+                    $showRollback = true;
+                    }
+                    @endphp
+                    @if($showRollback)
+                    <button type="button" id="btnRollback" class="px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-bold transition-all text-sm flex items-center gap-2">
+                        <i class="fa-solid fa-rotate-left text-base"></i> Rollback
+                    </button>
+                    @endif
+                    @php
+                    $isAuditee = false;
+                    if (!empty($car->auditee)) {
+                    $auditees = array_map('trim', explode(',', $car->auditee));
+                    foreach ($auditees as $auditeeName) {
+                    if (strcasecmp(Auth::user()->full_name, $auditeeName) === 0) {
+                    $isAuditee = true;
+                    break;
+                    }
+                    }
+                    }
+                    $showAuditeeRollback = false;
+                    if ($isAuditee && ($car->status ?? '') === 'Under Review') {
+                    $showAuditeeRollback = true;
+                    }
+                    @endphp
+                    @if($showAuditeeRollback)
+                    <button type="button" id="btnAuditeeRollback" class="px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-bold transition-all text-sm flex items-center gap-2">
+                        <i class="fa-solid fa-rotate-left text-base"></i> Cancel submission & edit
+                    </button>
+                    @endif
+                    @else
+                    <button type="submit" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition-all text-sm flex items-center gap-2">
+                        <i class="fa-solid fa-floppy-disk text-base"></i> Save Action Plan
+                    </button>
                     @endif
                 </div>
             </div>
@@ -1109,14 +1109,34 @@
 
             const role = "{{ ($car->status ?? '') === 'Need Verification' ? 'auditor' : (($car->status ?? '') === 'Closed' ? 'closed' : 'superior') }}";
             if (role === 'auditor') {
-                const fields = [
-                    { id: 'corrective_action_one_verif', name: 'Corrective Action 1' },
-                    { id: 'corrective_action_two_verif', name: 'Corrective Action 2' },
-                    { id: 'corrective_action_three_verif', name: 'Corrective Action 3' },
-                    { id: 'preventive_action_one_verif', name: 'Preventive Action 1' },
-                    { id: 'preventive_action_two_verif', name: 'Preventive Action 2' },
-                    { id: 'preventive_action_three_verif', name: 'Preventive Action 3' },
-                    { id: 'root_cause_verif', name: 'Root Cause' }
+                const fields = [{
+                        id: 'corrective_action_one_verif',
+                        name: 'Corrective Action 1'
+                    },
+                    {
+                        id: 'corrective_action_two_verif',
+                        name: 'Corrective Action 2'
+                    },
+                    {
+                        id: 'corrective_action_three_verif',
+                        name: 'Corrective Action 3'
+                    },
+                    {
+                        id: 'preventive_action_one_verif',
+                        name: 'Preventive Action 1'
+                    },
+                    {
+                        id: 'preventive_action_two_verif',
+                        name: 'Preventive Action 2'
+                    },
+                    {
+                        id: 'preventive_action_three_verif',
+                        name: 'Preventive Action 3'
+                    },
+                    {
+                        id: 'root_cause_verif',
+                        name: 'Root Cause'
+                    }
                 ];
                 for (const field of fields) {
                     const el = document.getElementById(field.id);
@@ -1140,7 +1160,7 @@
             url = "{{ route('internal_audit.cars.approve') }}";
             payload = {
                 _token: "{{ csrf_token() }}",
-                car_id: {{ $car->id }},
+                car_id: parseInt('{{ $car->id }}'),
                 role: "{{ ($car->status ?? '') === 'Need Verification' ? 'auditor' : (($car->status ?? '') === 'Closed' ? 'closed' : 'superior') }}",
                 notes: document.querySelector('textarea[name="notes"]').value,
                 corrective_action_one_verif: document.getElementById('corrective_action_one_verif')?.value || null,
@@ -1155,7 +1175,7 @@
             url = "{{ route('internal_audit.cars.reject') }}";
             payload = {
                 _token: "{{ csrf_token() }}",
-                car_id: {{ $car->id }},
+                car_id: parseInt('{{ $car->id }}'),
                 notes: document.querySelector('textarea[name="notes"]').value
             };
         } else if (currentAction === 'rollback' || currentAction === 'auditee_rollback') {
@@ -1166,35 +1186,35 @@
         }
 
         fetch(url, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest',
-                'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value
-            },
-            body: JSON.stringify(payload)
-        })
-        .then(response => response.json())
-        .then(data => {
-            closeConfirmationModal();
-            if (data.success) {
-                showToast(data.message, 'success');
-                setTimeout(() => {
-                    window.location.reload();
-                }, 1500);
-            } else {
-                showToast(data.message || 'Action failed.', 'warning');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            closeConfirmationModal();
-            showToast('Something went wrong. Please try again.', 'warning');
-        })
-        .finally(() => {
-            confirmBtn.disabled = false;
-            confirmBtn.innerText = originalText;
-        });
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(response => response.json())
+            .then(data => {
+                closeConfirmationModal();
+                if (data.success) {
+                    showToast(data.message, 'success');
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1500);
+                } else {
+                    showToast(data.message || 'Action failed.', 'warning');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                closeConfirmationModal();
+                showToast('Something went wrong. Please try again.', 'warning');
+            })
+            .finally(() => {
+                confirmBtn.disabled = false;
+                confirmBtn.innerText = originalText;
+            });
     }
 
     document.addEventListener('DOMContentLoaded', function() {
@@ -1205,23 +1225,25 @@
             setTimeout(() => {
                 autoGrow(textarea);
             }, 10);
-            
+
             textarea.addEventListener('input', function() {
                 autoGrow(this);
             });
         });
-        @if(isset($action) && !empty($action->analyzed_by))
-            window.dispatchEvent(new CustomEvent('update-analyzed-by', { 
-                detail: { 
-                    id: '{{ $action->analyzed_by }}', 
-                    name: '{{ $action->analyzed_by }}' 
-                } 
+        const analyzedBy = '{{ $action->analyzed_by ?? '
+        ' }}';
+        if (analyzedBy) {
+            window.dispatchEvent(new CustomEvent('update-analyzed-by', {
+                detail: {
+                    id: analyzedBy,
+                    name: analyzedBy
+                }
             }));
             const superiorInput = document.getElementById('auditee_superior_name');
             if (superiorInput && !superiorInput.value) {
-                superiorInput.value = '{{ $action->analyzed_by }}';
+                superiorInput.value = analyzedBy;
             }
-        @endif
+        }
 
         // Rollback Action Plan Handler
         const btnRollback = document.getElementById('btnRollback');
@@ -1298,9 +1320,14 @@
                 }
 
                 // Validate mandatory file uploads
-                const requiredFiles = [
-                    { key: 'corr_one', name: 'Corrective Action 1' },
-                    { key: 'prev_one', name: 'Preventive Action 1' }
+                const requiredFiles = [{
+                        key: 'corr_one',
+                        name: 'Corrective Action 1'
+                    },
+                    {
+                        key: 'prev_one',
+                        name: 'Preventive Action 1'
+                    }
                 ];
 
                 for (const item of requiredFiles) {
@@ -1310,52 +1337,52 @@
                         return;
                     }
                 }
-                
+
                 // Get submit button and show loading state
                 const submitBtn = form.querySelector('button[type="submit"]');
                 const originalText = submitBtn.innerHTML;
                 submitBtn.disabled = true;
                 submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Saving...';
-                
+
                 const formData = new FormData(form);
-                
+
                 fetch(form.action, {
-                    method: 'POST',
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value
-                    },
-                    body: formData
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        showToast(data.message, 'success');
-                        setTimeout(() => {
-                            window.location.reload();
-                        }, 1500);
-                    } else {
-                        showToast(data.message || 'An error occurred.', 'error');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    showToast('An error occurred while saving.', 'error');
-                })
-                .finally(() => {
-                    submitBtn.disabled = false;
-                    submitBtn.innerHTML = originalText;
-                });
+                        method: 'POST',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value
+                        },
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            showToast(data.message, 'success');
+                            setTimeout(() => {
+                                window.location.reload();
+                            }, 1500);
+                        } else {
+                            showToast(data.message || 'An error occurred.', 'error');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        showToast('An error occurred while saving.', 'error');
+                    })
+                    .finally(() => {
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = originalText;
+                    });
             });
         }
 
         window.setFieldVerif = function(fieldName, status) {
             const input = document.getElementById(fieldName + '_verif');
             if (!input) return;
-            
+
             const approveBtn = document.getElementById('btn_approve_' + fieldName);
             const rejectBtn = document.getElementById('btn_reject_' + fieldName);
-            
+
             if (status === 'approve') {
                 input.value = 'approve';
                 if (approveBtn) approveBtn.className = "w-9 h-9 rounded-lg flex items-center justify-center border transition-all bg-green-600 border-green-600 text-white shadow-sm";
@@ -1367,13 +1394,34 @@
             }
         };
         const actionFilesState = {
-            corr_one: { files: [], existing: {!! json_encode(array_filter(explode(',', $action->corrective_path_one ?? ''))) !!} },
-            corr_two: { files: [], existing: {!! json_encode(array_filter(explode(',', $action->corrective_path_two ?? ''))) !!} },
-            corr_three: { files: [], existing: {!! json_encode(array_filter(explode(',', $action->corrective_path_three ?? ''))) !!} },
-            prev_one: { files: [], existing: {!! json_encode(array_filter(explode(',', $action->preventive_path_one ?? ''))) !!} },
-            prev_two: { files: [], existing: {!! json_encode(array_filter(explode(',', $action->preventive_path_two ?? ''))) !!} },
-            prev_three: { files: [], existing: {!! json_encode(array_filter(explode(',', $action->preventive_path_three ?? ''))) !!} },
-            root_cause: { files: [], existing: {!! json_encode(array_filter(explode(',', $action->root_cause_path ?? ''))) !!} }
+            corr_one: {
+                files: [],
+                existing: JSON.parse('{!! json_encode(array_filter(explode(",", $action->corrective_path_one ?? ""))) !!}')
+            },
+            corr_two: {
+                files: [],
+                existing: JSON.parse('{!! json_encode(array_filter(explode(",", $action->corrective_path_two ?? ""))) !!}')
+            },
+            corr_three: {
+                files: [],
+                existing: JSON.parse('{!! json_encode(array_filter(explode(",", $action->corrective_path_three ?? ""))) !!}')
+            },
+            prev_one: {
+                files: [],
+                existing: JSON.parse('{!! json_encode(array_filter(explode(",", $action->preventive_path_one ?? ""))) !!}')
+            },
+            prev_two: {
+                files: [],
+                existing: JSON.parse('{!! json_encode(array_filter(explode(",", $action->preventive_path_two ?? ""))) !!}')
+            },
+            prev_three: {
+                files: [],
+                existing: JSON.parse('{!! json_encode(array_filter(explode(",", $action->preventive_path_three ?? ""))) !!}')
+            },
+            root_cause: {
+                files: [],
+                existing: JSON.parse('{!! json_encode(array_filter(explode(",", $action->root_cause_path ?? ""))) !!}')
+            }
         };
 
         window.handleActionFiles = function(input, key) {
@@ -1431,7 +1479,7 @@
                 wrapper.onclick = function() {
                     openActionFileModal(assetUrl + path, ext);
                 };
-                
+
                 if (ext === 'pdf') {
                     const icon = document.createElement('i');
                     icon.className = "fa-solid fa-file-pdf text-red-500 text-lg";
@@ -1442,7 +1490,7 @@
                     img.className = "w-full h-full object-cover rounded-lg";
                     wrapper.appendChild(img);
                 }
-                
+
                 const btn = document.createElement('button');
                 btn.type = "button";
                 btn.className = "absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-3.5 h-3.5 flex items-center justify-center text-[9px] font-bold hover:bg-red-600 transition-colors z-20";
@@ -1451,7 +1499,7 @@
                     e.stopPropagation();
                     removeActionFile(key, idx, true);
                 };
-                
+
                 wrapper.appendChild(btn);
                 container.appendChild(wrapper);
             });
@@ -1461,12 +1509,12 @@
                 const ext = file.name.split('.').pop().toLowerCase();
                 const wrapper = document.createElement('div');
                 wrapper.className = "relative w-12 h-12 bg-slate-100 border border-slate-200 rounded-lg group cursor-pointer flex items-center justify-center";
-                
+
                 if (ext === 'pdf') {
                     const icon = document.createElement('i');
                     icon.className = "fa-solid fa-file-pdf text-red-500 text-lg";
                     wrapper.appendChild(icon);
-                    
+
                     wrapper.onclick = function() {
                         const reader = new FileReader();
                         reader.onload = function(e) {
@@ -1478,7 +1526,7 @@
                     const img = document.createElement('img');
                     img.className = "w-full h-full object-cover rounded-lg";
                     wrapper.appendChild(img);
-                    
+
                     const reader = new FileReader();
                     reader.onload = function(e) {
                         img.src = e.target.result;
@@ -1488,7 +1536,7 @@
                     };
                     reader.readAsDataURL(file);
                 }
-                
+
                 const btn = document.createElement('button');
                 btn.type = "button";
                 btn.className = "absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-3.5 h-3.5 flex items-center justify-center text-[9px] font-bold hover:bg-red-600 transition-colors z-20";
@@ -1497,18 +1545,19 @@
                     evt.stopPropagation();
                     removeActionFile(key, idx, false);
                 };
-                
+
                 wrapper.appendChild(btn);
                 container.appendChild(wrapper);
             });
         }
 
         // Initial render for edit mode
-        @if(!$isComplete)
+        const isComplete = parseInt('{{ $isComplete ? 1 : 0 }}') === 1;
+        if (!isComplete) {
             Object.keys(actionFilesState).forEach(key => {
                 renderActionPreviews(key);
             });
-        @endif
+        }
 
         let currentFileUrl = '';
         let currentFileType = '';
@@ -1521,12 +1570,12 @@
             const modal = document.getElementById('actionFileModal');
             const img = document.getElementById('actionFileImg');
             const iframe = document.getElementById('actionFileIframe');
-            
+
             img.classList.add('hidden');
             iframe.classList.add('hidden');
             img.src = '';
             iframe.src = '';
-            
+
             if (ext === 'pdf') {
                 iframe.src = url;
                 iframe.classList.remove('hidden');
@@ -1534,7 +1583,7 @@
                 img.src = url;
                 img.classList.remove('hidden');
             }
-            
+
             modal.classList.remove('hidden');
         };
 
@@ -1549,7 +1598,7 @@
 
         window.handleActionFullscreen = function() {
             if (!currentFileUrl) return;
-            
+
             if (currentFileType === 'pdf') {
                 window.open(currentFileUrl, '_blank');
             } else {
@@ -1562,9 +1611,17 @@
                         title: false,
                         navbar: false,
                         toolbar: {
-                            zoomIn: 1, zoomOut: 1, oneToOne: 1, reset: 1,
-                            prev: 0, play: 0, next: 0, rotateLeft: 1, rotateRight: 1,
-                            flipHorizontal: 1, flipVertical: 1
+                            zoomIn: 1,
+                            zoomOut: 1,
+                            oneToOne: 1,
+                            reset: 1,
+                            prev: 0,
+                            play: 0,
+                            next: 0,
+                            rotateLeft: 1,
+                            rotateRight: 1,
+                            flipHorizontal: 1,
+                            flipVertical: 1
                         }
                     });
                     img.viewer.show();
@@ -1579,9 +1636,17 @@
                 title: false,
                 navbar: false,
                 toolbar: {
-                    zoomIn: 1, zoomOut: 1, oneToOne: 1, reset: 1,
-                    prev: 0, play: 0, next: 0, rotateLeft: 1, rotateRight: 1,
-                    flipHorizontal: 1, flipVertical: 1,
+                    zoomIn: 1,
+                    zoomOut: 1,
+                    oneToOne: 1,
+                    reset: 1,
+                    prev: 0,
+                    play: 0,
+                    next: 0,
+                    rotateLeft: 1,
+                    rotateRight: 1,
+                    flipHorizontal: 1,
+                    flipVertical: 1,
                 }
             });
         }

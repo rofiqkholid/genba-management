@@ -11,7 +11,7 @@
      data-pillars="{{ json_encode($kpiList->pluck('pillar', 'id')) }}"
      data-targets="{{ json_encode($kpiList->pluck('target', 'id')) }}"
      data-objectives="{{ json_encode($kpiList->mapWithKeys(function($item) { return [$item->id => $item->no_kpi . ' - ' . $item->objective]; })) }}"
-     data-departments="{{ json_encode($departments->mapWithKeys(function($dept) { return [$dept->Key1 => $dept->Key1 . ' - ' . $dept->Desc]; })) }}">
+     data-departments="{{ json_encode($departments->mapWithKeys(function($dept) { return [$dept->Key1 => $dept->Key1]; })) }}">
 </div>
 
 <!-- Main Content -->
@@ -86,7 +86,7 @@
                                 name="filter_department"
                                 id="filter_department"
                                 label="Department"
-                                :initialOptions="$departments->map(fn($item) => ['id' => $item->Key1, 'name' => $item->Key1 . ' - ' . $item->Desc])->toArray()"
+                                :initialOptions="$departments->map(fn($item) => ['id' => $item->Key1, 'name' => $item->Key1])->toArray()"
                                 updateEvent="set-filter-department"
                                 changeEvent="filter-department-changed"
                                 hideLabel="true" />

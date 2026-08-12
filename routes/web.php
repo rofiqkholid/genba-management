@@ -53,6 +53,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/internal-audit/schedules/delete/{id}', [InternalAuditController::class, 'deleteSchedule'])->name('internal_audit.schedules.delete');
     Route::get('/internal-audit/checksheet', [InternalAuditController::class, 'getChecksheet'])->name('internal_audit.checksheet');
     Route::post('/internal-audit/get-users', [InternalAuditController::class, 'getUsers'])->name('internal_audit.get_users');
+    Route::post('/internal-audit/get-auditors', [InternalAuditController::class, 'getAuditors'])->name('internal_audit.get_auditors');
     Route::post('/internal-audit/get-superiors', [InternalAuditController::class, 'getSuperiors'])->name('internal_audit.get_superiors');
     Route::get('/internal-audit/conduct/{schedule_id}', [InternalAuditController::class, 'conduct'])->name('internal_audit.conduct');
     Route::get('/internal-audit/conduct/{schedule_id}/export', [InternalAuditController::class, 'exportExcel'])->name('internal_audit.export');

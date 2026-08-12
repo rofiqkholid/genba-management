@@ -167,7 +167,7 @@
                                     id="formAuditor"
                                     label="Auditor"
                                     required="true"
-                                    apiUrl="{{ route('internal_audit.get_users') }}"
+                                    apiUrl="{{ route('internal_audit.get_auditors') }}"
                                     updateEvent="update-auditor"
                                     changeEvent="auditor-changed"
                                     hideLabel="true"

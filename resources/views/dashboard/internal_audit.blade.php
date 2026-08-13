@@ -525,6 +525,49 @@
 <script>
     let statsPieChart = null;
     let closedStatsPieChart = null;
+    let lastPieData = null;
+
+    function renderPieChart() {
+        if (!lastPieData) return;
+
+        if (statsPieChart) {
+            statsPieChart.destroy();
+            statsPieChart = null;
+        }
+
+        const canvas = document.getElementById('statsPieChart');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        statsPieChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['OK', 'Minor', 'Major', 'OFI'],
+                datasets: [{
+                    data: lastPieData,
+                    backgroundColor: ['#22c55e', '#FEB019', '#FF4560', '#008FFB'],
+                    borderWidth: 0,
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '70%',
+                resizeDelay: 1500,
+                animation: {
+                    duration: 1000,
+                    easing: 'easeOutQuart',
+                    onComplete: function() {
+                        this.options.resizeDelay = 0;
+                        clearTimeout(this._resizeDelay);
+                    }
+                },
+                plugins: {
+                    legend: { display: false }
+                }
+            }
+        });
+    }
 
     function loadDataCards(yearMonth) {
         $.ajax({
@@ -542,65 +585,16 @@
                 $('#val_major').text(new Intl.NumberFormat().format(response.major));
                 $('#val_ofi').text(new Intl.NumberFormat().format(response.ofi));
 
-                const pieData = [
+                lastPieData = [
                     response.ok,
                     response.minor,
                     response.major,
                     response.ofi
                 ];
 
-                if (statsPieChart) {
-                    statsPieChart.data.datasets[0].data = pieData;
-                    statsPieChart.update();
-                } else {
-                    const ctx = document.getElementById('statsPieChart').getContext('2d');
-                    statsPieChart = new Chart(ctx, {
-                        type: 'doughnut',
-                        data: {
-                            labels: ['OK', 'Minor', 'Major', 'OFI'],
-                            datasets: [{
-                                data: pieData,
-                                backgroundColor: [
-                                    '#22c55e',
-                                    '#FEB019',
-                                    '#FF4560',
-                                    '#008FFB'
-                                ],
-                                borderWidth: 0,
-                                hoverOffset: 4
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            cutout: '70%',
-                            animations: {
-                                animateScale: {
-                                    type: 'number',
-                                    easing: 'easeOutQuart',
-                                    duration: 2000,
-                                    delay: 500,
-                                    from: 0,
-                                    to: 1,
-                                    loop: false
-                                },
-                                animateRotate: {
-                                    type: 'number',
-                                    easing: 'easeOutQuart',
-                                    duration: 2000,
-                                    delay: 500,
-                                    from: 0,
-                                    to: 360, // Full rotation
-                                    loop: false
-                                }
-                            },
-                            plugins: {
-                                legend: {
-                                    display: false // Use custom legend below
-                                }
-                            }
-                        }
-                    });
+                // Only render if bar chart already exists; else renderDeptChart() will call this
+                if (deptChart) {
+                    renderPieChart();
                 }
             },
             error: function(xhr, status, error) {
@@ -908,6 +902,11 @@
         setTimeout(() => {
             delayed = true;
         }, 1500);
+
+        // Always create pie chart AFTER bar chart so grid layout is stable
+        requestAnimationFrame(function() {
+            renderPieChart();
+        });
     }
 
     // --- Closed Department Chart Logic ---
@@ -1242,10 +1241,13 @@
         ];
 
         if (closedStatsPieChart) {
-            closedStatsPieChart.data.datasets[0].data = closedPieData;
-            closedStatsPieChart.update();
-        } else {
-            const pieCtx = document.getElementById('closedStatsPieChart').getContext('2d');
+            closedStatsPieChart.destroy();
+        }
+
+        setTimeout(function() {
+            const canvas = document.getElementById('closedStatsPieChart');
+            if (!canvas) return;
+            const pieCtx = canvas.getContext('2d');
             closedStatsPieChart = new Chart(pieCtx, {
                 type: 'doughnut',
                 data: {
@@ -1268,23 +1270,15 @@
                     maintainAspectRatio: false,
                     cutout: '70%',
                     animations: {
-                        animateScale: {
-                            type: 'number',
+                        circumference: {
+                            duration: 1500,
                             easing: 'easeOutQuart',
-                            duration: 2000,
-                            delay: 500,
-                            from: 0,
-                            to: 1,
-                            loop: false
+                            from: 0
                         },
-                        animateRotate: {
-                            type: 'number',
+                        rotation: {
+                            duration: 1500,
                             easing: 'easeOutQuart',
-                            duration: 2000,
-                            delay: 500,
-                            from: 0,
-                            to: 360,
-                            loop: false
+                            from: 0
                         }
                     },
                     plugins: {
@@ -1294,7 +1288,7 @@
                     }
                 }
             });
-        }
+        }, 100);
     }
 
     let clauseChart = null;
@@ -1584,10 +1578,13 @@
         const clausePieData = [sumMinor, sumMajor, sumOfi];
 
         if (clauseStatsPieChart) {
-            clauseStatsPieChart.data.datasets[0].data = clausePieData;
-            clauseStatsPieChart.update();
-        } else {
-            const pieCtx = document.getElementById('clauseStatsPieChart').getContext('2d');
+            clauseStatsPieChart.destroy();
+        }
+
+        setTimeout(function() {
+            const canvas = document.getElementById('clauseStatsPieChart');
+            if (!canvas) return;
+            const pieCtx = canvas.getContext('2d');
             clauseStatsPieChart = new Chart(pieCtx, {
                 type: 'doughnut',
                 data: {
@@ -1604,23 +1601,15 @@
                     maintainAspectRatio: false,
                     cutout: '70%',
                     animations: {
-                        animateScale: {
-                            type: 'number',
+                        circumference: {
+                            duration: 1500,
                             easing: 'easeOutQuart',
-                            duration: 2000,
-                            delay: 500,
-                            from: 0,
-                            to: 1,
-                            loop: false
+                            from: 0
                         },
-                        animateRotate: {
-                            type: 'number',
+                        rotation: {
+                            duration: 1500,
                             easing: 'easeOutQuart',
-                            duration: 2000,
-                            delay: 500,
-                            from: 0,
-                            to: 360,
-                            loop: false
+                            from: 0
                         }
                     },
                     plugins: {
@@ -1630,7 +1619,7 @@
                     }
                 }
             });
-        }
+        }, 100);
     }
  
     // Initialize Chart
@@ -1744,6 +1733,7 @@
             if (currentMobile !== isMobileMode) {
                 currentChartPage = 1;
                 renderDeptChart();
+                renderPieChart();
                 currentClosedChartPage = 1;
                 renderClosedDeptChart();
                 currentClauseChartPage = 1;

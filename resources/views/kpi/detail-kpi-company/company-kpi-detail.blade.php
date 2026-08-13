@@ -455,109 +455,133 @@
 
 @push('scripts')
 <script>
-    document.addEventListener("DOMContentLoaded", function() {
+    function renderKPIChart() {
         const canvas = document.getElementById('kpiPerformanceChart');
         if (!canvas) return;
         
-        const ctx = canvas.getContext('2d');
-        const actualData = JSON.parse(canvas.dataset.actual || '[]');
-        const targetVal = parseFloat(canvas.dataset.target) || 0;
-        const operator = canvas.dataset.operator || '';
-        
-        const isNegativeTarget = ['<=', '<'].includes(operator);
-        const actualColor = isNegativeTarget ? '#FF4560' : '#22c55e';
-        const targetColor = isNegativeTarget ? '#22c55e' : '#FF4560';
-        const actualBgColor = isNegativeTarget ? 'rgba(255, 69, 96, 0.05)' : 'rgba(34, 197, 94, 0.05)';
-
-        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-        const targetData = new Array(12).fill(targetVal);
-
-        if (window.kpiChart) {
-            window.kpiChart.destroy();
+        if (typeof window.Chart === 'undefined') {
+            setTimeout(renderKPIChart, 50);
+            return;
         }
+        
+        try {
+            const ctx = canvas.getContext('2d');
+            const actualData = JSON.parse(canvas.dataset.actual || '[]');
+            const targetVal = parseFloat(canvas.dataset.target) || 0;
+            const operator = canvas.dataset.operator || '';
+            
+            const isNegativeTarget = ['<=', '<'].includes(operator);
+            const actualColor = isNegativeTarget ? '#FF4560' : '#22c55e';
+            const targetColor = isNegativeTarget ? '#22c55e' : '#FF4560';
+            const actualBgColor = isNegativeTarget ? 'rgba(255, 69, 96, 0.05)' : 'rgba(34, 197, 94, 0.05)';
 
-        window.kpiChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: months,
-                datasets: [
-                    {
-                        label: 'Actual',
-                        data: actualData,
-                        borderColor: actualColor,
-                        backgroundColor: actualBgColor,
-                        borderWidth: 2,
-                        pointStyle: 'circle',
-                        pointRadius: 6,
-                        pointHoverRadius: 8,
-                        pointBackgroundColor: actualColor,
-                        spanGaps: true,
-                        fill: false
-                    },
-                    {
-                        label: 'Target',
-                        data: targetData,
-                        borderColor: targetColor,
-                        borderDash: [5, 5],
-                        borderWidth: 1.5,
-                        pointStyle: 'circle',
-                        pointRadius: 6,
-                        pointHoverRadius: 8,
-                        pointBackgroundColor: targetColor,
-                        fill: false
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: {
-                            usePointStyle: true,
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            const targetData = new Array(12).fill(targetVal);
+
+            if (window.kpiChart && typeof window.kpiChart.destroy === 'function') {
+                window.kpiChart.destroy();
+            }
+
+            window.kpiChart = new window.Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: months,
+                    datasets: [
+                        {
+                            label: 'Actual',
+                            data: actualData,
+                            borderColor: actualColor,
+                            backgroundColor: actualBgColor,
+                            borderWidth: 2,
                             pointStyle: 'circle',
-                            padding: 20,
-                            font: {
-                                family: 'Outfit, sans-serif',
-                                size: 12
-                            },
-                            color: '#475569'
+                            pointRadius: 6,
+                            pointHoverRadius: 8,
+                            pointBackgroundColor: actualColor,
+                            spanGaps: true,
+                            fill: false
+                        },
+                        {
+                            label: 'Target',
+                            data: targetData,
+                            borderColor: targetColor,
+                            borderDash: [5, 5],
+                            borderWidth: 1.5,
+                            pointStyle: 'circle',
+                            pointRadius: 6,
+                            pointHoverRadius: 8,
+                            pointBackgroundColor: targetColor,
+                            fill: false
                         }
-                    }
+                    ]
                 },
-                scales: {
-                    y: {
-                        grid: {
-                            color: '#f1f5f9'
-                        },
-                        ticks: {
-                            maxTicksLimit: 5,
-                            font: {
-                                family: 'Outfit, sans-serif',
-                                size: 11
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animations: {
+                        y: {
+                            duration: 300,
+                            easing: 'easeInQuad',
+                            from: (context) => {
+                                if (context.type === 'data' && context.mode === 'default') {
+                                    const scale = context.chart.scales.y;
+                                    if (scale) return scale.getPixelForValue(0);
+                                }
+                                return undefined;
                             }
-                        },
-                        suggestedMax: targetVal + 1
+                        }
                     },
-                    x: {
-                        grid: {
-                            display: false
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                usePointStyle: true,
+                                pointStyle: 'circle',
+                                padding: 20,
+                                font: {
+                                    family: 'Outfit, sans-serif',
+                                    size: 12
+                                },
+                                color: '#475569'
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            grid: {
+                                color: '#f1f5f9'
+                            },
+                            ticks: {
+                                maxTicksLimit: 5,
+                                font: {
+                                    family: 'Outfit, sans-serif',
+                                    size: 11
+                                }
+                            },
+                            suggestedMax: targetVal + 1
                         },
-                        ticks: {
-                            font: {
-                                family: 'Outfit, sans-serif',
-                                size: 13
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                font: {
+                                    family: 'Outfit, sans-serif',
+                                    size: 13
+                                }
                             }
                         }
                     }
                 }
-            }
-        });
-    });
+            });
+        } catch (e) {
+            console.error("Error rendering chart:", e);
+        }
+    }
 
-    // Scroll to activity section if URL has #activity-section anchor
-    document.addEventListener('DOMContentLoaded', function() {
+    $(document).ready(function() {
+        renderKPIChart();
+        
+        // Scroll to activity section if URL has #activity-section anchor
         if (window.location.hash === '#activity-section') {
             const el = document.getElementById('activity-section');
             if (el) {
@@ -567,6 +591,9 @@
             }
         }
     });
+
+    // Execute immediately in case DOMContentLoaded or document ready has already fired
+    renderKPIChart();
     let deleteUrl = null;
 
     function openDeleteModal(el) {

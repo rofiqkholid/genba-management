@@ -317,6 +317,49 @@
 @push('scripts')
 <script>
     let statsPieChart = null;
+    let lastPieData = null;
+
+    function renderPieChart() {
+        if (!lastPieData) return;
+
+        if (statsPieChart) {
+            statsPieChart.destroy();
+            statsPieChart = null;
+        }
+
+        const canvas = document.getElementById('statsPieChart');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        statsPieChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Open', 'Need Verif', 'Closed', 'Overdue'],
+                datasets: [{
+                    data: lastPieData,
+                    backgroundColor: ['#FEB019', '#008FFB', '#00E396', '#FF4560'],
+                    borderWidth: 0,
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '70%',
+                resizeDelay: 1500,
+                animation: {
+                    duration: 1000,
+                    easing: 'easeOutQuart',
+                    onComplete: function() {
+                        this.options.resizeDelay = 0;
+                        clearTimeout(this._resizeDelay);
+                    }
+                },
+                plugins: {
+                    legend: { display: false }
+                }
+            }
+        });
+    }
 
     function loadDataCards(yearMonth) {
         $.ajax({
@@ -333,65 +376,16 @@
                 $('#val_dueDateCount').text(new Intl.NumberFormat().format(response.dueDateCount));
                 $('#val_findingsClose').text(new Intl.NumberFormat().format(response.findingsClose));
 
-                const pieData = [
+                lastPieData = [
                     response.findingsOpen,
                     response.needApprove,
                     response.findingsClose,
                     response.dueDateCount
                 ];
 
-                if (statsPieChart) {
-                    statsPieChart.data.datasets[0].data = pieData;
-                    statsPieChart.update();
-                } else {
-                    const ctx = document.getElementById('statsPieChart').getContext('2d');
-                    statsPieChart = new Chart(ctx, {
-                        type: 'doughnut',
-                        data: {
-                            labels: ['Open', 'Need Verif', 'Closed', 'Overdue'],
-                            datasets: [{
-                                data: pieData,
-                                backgroundColor: [
-                                    '#FEB019',
-                                    '#008FFB',
-                                    '#00E396',
-                                    '#FF4560'
-                                ],
-                                borderWidth: 0,
-                                hoverOffset: 4
-                             }]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            cutout: '70%',
-                            animations: {
-                                animateScale: {
-                                    type: 'number',
-                                    easing: 'easeOutQuart',
-                                    duration: 2000,
-                                    delay: 500,
-                                    from: 0,
-                                    to: 1,
-                                    loop: false
-                                },
-                                animateRotate: {
-                                    type: 'number',
-                                    easing: 'easeOutQuart',
-                                    duration: 2000,
-                                    delay: 500,
-                                    from: 0,
-                                    to: 360, // Full rotation
-                                    loop: false
-                                }
-                            },
-                            plugins: {
-                                legend: {
-                                    display: false // Use custom legend below
-                                }
-                            }
-                        }
-                    });
+                // Only render if bar chart already exists; else renderDeptChart() will call this
+                if (deptChart) {
+                    renderPieChart();
                 }
             },
             error: function(xhr, status, error) {
@@ -699,6 +693,11 @@
         setTimeout(() => {
             delayed = true;
         }, 1500);
+
+        // Always create pie chart AFTER bar chart so grid layout is stable
+        requestAnimationFrame(function() {
+            renderPieChart();
+        });
     }
 
     // Initialize Chart
@@ -737,6 +736,7 @@
             if (currentMobile !== isMobileMode) {
                 currentChartPage = 1;
                 renderDeptChart();
+                renderPieChart();
             }
         });
     });

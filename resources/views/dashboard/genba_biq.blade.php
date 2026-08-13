@@ -54,7 +54,7 @@
                 <!-- Right Column: Findings Overview (20%) -->
                 <div class="xl:col-span-1 pt-8 xl:pt-0">
                     <h3 class="text-lg font-bold text-slate-800 mb-3">Overview</h3>
-                    <div class="relative h-52 w-full flex justify-center mb-3">
+                    <div class="relative h-52 w-full mb-3">
                         <canvas id="statsPieChart"></canvas>
                     </div>
                     <div class="grid grid-cols-2 gap-4 text-sm text-slate-600">
@@ -317,6 +317,7 @@
 @push('scripts')
 <script>
     let statsPieChart = null;
+    let lastPieData = null;
 
     function loadDataCards(yearMonth) {
         $.ajax({
@@ -333,65 +334,17 @@
                 $('#val_dueDateCount').text(new Intl.NumberFormat().format(response.dueDateCount));
                 $('#val_findingsClose').text(new Intl.NumberFormat().format(response.findingsClose));
 
-                const pieData = [
+                lastPieData = [
                     response.findingsOpen,
                     response.needApprove,
                     response.findingsClose,
                     response.dueDateCount
                 ];
 
-                if (statsPieChart) {
-                    statsPieChart.data.datasets[0].data = pieData;
-                    statsPieChart.update();
-                } else {
-                    const ctx = document.getElementById('statsPieChart').getContext('2d');
-                    statsPieChart = new Chart(ctx, {
-                        type: 'doughnut',
-                        data: {
-                            labels: ['Open', 'Need Verif', 'Closed', 'Overdue'],
-                            datasets: [{
-                                data: pieData,
-                                backgroundColor: [
-                                    '#FEB019',
-                                    '#008FFB',
-                                    '#00E396',
-                                    '#FF4560'
-                                ],
-                                borderWidth: 0,
-                                hoverOffset: 4
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            cutout: '70%',
-                            animations: {
-                                animateScale: {
-                                    type: 'number',
-                                    easing: 'easeOutQuart',
-                                    duration: 2000,
-                                    delay: 500,
-                                    from: 0,
-                                    to: 1,
-                                    loop: false
-                                },
-                                animateRotate: {
-                                    type: 'number',
-                                    easing: 'easeOutQuart',
-                                    duration: 2000,
-                                    delay: 500,
-                                    from: 0,
-                                    to: 360, // Full rotation
-                                    loop: false
-                                }
-                            },
-                            plugins: {
-                                legend: {
-                                    display: false // Use custom legend below
-                                }
-                            }
-                        }
-                    });
+                // Only render pie chart now if bar chart already exists.
+                // If not, renderDeptChart() will call renderPieChart() once it finishes.
+                if (deptChart) {
+                    renderPieChart();
                 }
             },
             error: function(xhr, status, error) {
@@ -400,6 +353,50 @@
                 $('#val_needApprove').text('Error');
                 $('#val_dueDateCount').text('Error');
                 $('#val_findingsClose').text('Error');
+            }
+        });
+    }
+
+    function renderPieChart() {
+        if (!lastPieData) return;
+
+        if (statsPieChart) {
+            statsPieChart.destroy();
+            statsPieChart = null;
+        }
+
+        const canvas = document.getElementById('statsPieChart');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        statsPieChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Open', 'Need Verif', 'Closed', 'Overdue'],
+                datasets: [{
+                    data: lastPieData,
+                    backgroundColor: ['#FEB019', '#008FFB', '#00E396', '#FF4560'],
+                    borderWidth: 0,
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '70%',
+                resizeDelay: 1500,
+                animation: {
+                    duration: 1000,
+                    easing: 'easeOutQuart',
+                    onComplete: function() {
+                        // Reset resizeDelay to 0 so window resize is instant from now on
+                        this.options.resizeDelay = 0;
+                        // Cancel the pending resize timeout queued by the initial grid reflow
+                        clearTimeout(this._resizeDelay);
+                    }
+                },
+                plugins: {
+                    legend: { display: false }
+                }
             }
         });
     }
@@ -433,6 +430,13 @@
 
     function renderDeptChart() {
         if (!rawChartData) return;
+
+        if (typeof window.Chart === 'undefined') {
+            setTimeout(renderDeptChart, 50);
+            return;
+        }
+        
+        const Chart = window.Chart;
 
         const ctx = document.getElementById('deptChart').getContext('2d');
 
@@ -699,6 +703,12 @@
         setTimeout(() => {
             delayed = true;
         }, 1500);
+
+        // Wait one render frame for the grid layout to fully settle after bar chart creation.
+        // This prevents the pie chart's ResizeObserver from firing and cancelling its animation.
+        requestAnimationFrame(function() {
+            renderPieChart();
+        });
     }
 
     // Initialize Chart
@@ -731,12 +741,13 @@
             }
         });
 
-        // Handle resize
+        // Handle resize — rebuild both charts when crossing xl breakpoint
         $(window).resize(function() {
             const currentMobile = window.innerWidth < 1280;
             if (currentMobile !== isMobileMode) {
                 currentChartPage = 1;
                 renderDeptChart();
+                renderPieChart();
             }
         });
     });

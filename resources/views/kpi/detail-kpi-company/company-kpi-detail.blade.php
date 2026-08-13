@@ -519,7 +519,7 @@
                     maintainAspectRatio: false,
                     animations: {
                         y: {
-                            duration: 300,
+                            duration: 1000,
                             easing: 'easeInQuad',
                             from: (context) => {
                                 if (context.type === 'data' && context.mode === 'default') {

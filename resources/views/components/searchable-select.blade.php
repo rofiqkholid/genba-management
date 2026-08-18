@@ -12,7 +12,8 @@
 'initialOptions' => [],
 'valueField' => 'id',
 'hideLabel' => false,
-'disabled' => false
+'disabled' => false,
+'position' => 'down'
 ])
 
 <div class="@if(!$hideLabel) grid grid-cols-3 gap-4 items-center @else w-full @endif">
@@ -226,7 +227,7 @@
             x-transition:leave-start="opacity-100 scale-100"
             x-transition:leave-end="opacity-0 scale-95"
             @scroll.passive="$el.scrollTop + $el.clientHeight >= $el.scrollHeight - 50 ? loadMore() : null"
-            class="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-lg max-h-60 overflow-y-auto shadow-lg">
+            class="absolute z-10 w-full bg-white border border-slate-200 rounded-lg max-h-60 overflow-y-auto shadow-lg {{ $position === 'up' ? 'bottom-full mb-1' : 'top-full mt-1' }}">
 
             <template x-if="items.length === 0 && !loading">
                 <div class="px-4 py-3 text-sm text-slate-500 text-center">No {{ strtolower($label) }} found</div>

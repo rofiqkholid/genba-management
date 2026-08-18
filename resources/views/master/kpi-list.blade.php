@@ -73,62 +73,164 @@
 <div id="createModal" class="fixed inset-0 z-50 hidden">
     <div class="fixed inset-0 bg-slate-900/50 transition-opacity" onclick="closeCreateModal()"></div>
     <div class="fixed inset-0 flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl w-full max-w-5xl transform transition-all">
-            <div class="p-6 border-b border-slate-100 flex justify-between items-center">
+        <div class="bg-white rounded-xl w-full h-[92vh] flex flex-col transform transition-all overflow-hidden shadow-2xl" style="max-width: 90%;">
+            <!-- Modal Header (Sticky) -->
+            <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-white shrink-0">
                 <h3 class="text-lg font-bold text-slate-800">Add KPI</h3>
                 <button onclick="closeCreateModal()" class="text-slate-400 hover:text-slate-600">
                     <i class="fa-solid fa-xmark text-xl"></i>
                 </button>
             </div>
-            <form id="createForm" action="{{ route('master.kpi_list.store') }}" method="POST">
+            <!-- Modal Body (Scrollable with slate bg) -->
+            <form id="createForm" action="{{ route('master.kpi_list.store') }}" method="POST" class="flex flex-col flex-1 min-h-0 bg-slate-100">
                 @csrf
-                <div class="p-6 space-y-4">
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">No. KPI</label>
-                        <input type="text" name="no_kpi" required class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all uppercase" placeholder="Enter KPI number">
+                <div class="p-6 space-y-4 overflow-y-auto flex-1 min-h-0">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">No. KPI <span class="text-red-500">*</span></label>
+                            <input type="text" name="no_kpi" required class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all uppercase text-sm" placeholder="Enter KPI number">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Parent Objective</label>
+                            <x-searchable-select
+                                name="parent_objective_id"
+                                id="create_parent_objective_id"
+                                label="Parent Objective"
+                                apiUrl="{{ route('master.kpi_list.options') }}"
+                                :initialOptions="$kpiList->map(fn($item) => ['id' => $item->id, 'name' => $item->no_kpi . ' - ' . $item->objective])->toArray()"
+                                valueField="id"
+                                updateEvent="set-create-parent-objective"
+                                hideLabel="true" />
+                        </div>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Parent Objective</label>
-                        <x-searchable-select
-                            name="parent_objective_id"
-                            id="create_parent_objective_id"
-                            label="Parent Objective"
-                            apiUrl="{{ route('master.kpi_list.options') }}"
-                            :initialOptions="$kpiList->map(fn($item) => ['id' => $item->id, 'name' => $item->no_kpi . ' - ' . $item->objective])->toArray()"
-                            valueField="id"
-                            updateEvent="set-create-parent-objective"
-                            hideLabel="true" />
-                    </div>
-                </div>
-                    <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Objective</label>
-                        <input type="text" name="objective" required class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all" placeholder="Enter objective">
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Objective <span class="text-red-500">*</span></label>
+                        <input type="text" name="objective" required class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-sm" placeholder="Enter objective">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Definition</label>
-                        <textarea name="definition" id="create_definition" rows="3" required class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all resize-none overflow-y-auto max-h-40" placeholder="Enter definition"></textarea>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Definition <span class="text-red-500">*</span></label>
+                        <textarea name="definition" id="create_definition" rows="3" required class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all resize-none overflow-y-auto max-h-40 text-sm" placeholder="Enter definition"></textarea>
                     </div>
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-sm font-medium text-slate-700 mb-1">Pillar</label>
-                            <input type="text" name="pillar" required class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all" placeholder="Enter pillar">
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Pillar <span class="text-red-500">*</span></label>
+                            <x-searchable-select
+                                name="pillar"
+                                id="create_pillar_kpilist"
+                                label="Pillar"
+                                required="true"
+                                :initialOptions="[
+                                    ['id' => 'Safety', 'name' => 'Safety'],
+                                    ['id' => 'Quality', 'name' => 'Quality'],
+                                    ['id' => 'People', 'name' => 'People'],
+                                    ['id' => 'Cost', 'name' => 'Cost'],
+                                    ['id' => 'Responsiveness', 'name' => 'Responsiveness'],
+                                    ['id' => 'Delivery', 'name' => 'Delivery'],
+                                    ['id' => 'Environment & Energy', 'name' => 'Environment & Energy']
+                                ]"
+                                updateEvent="set-create-pillar-kpilist"
+                                hideLabel="true" />
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-slate-700 mb-1">Category</label>
-                            <input type="text" name="category" required class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all" placeholder="Enter category">
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Category <span class="text-red-500">*</span></label>
+                            <x-searchable-select
+                                name="category"
+                                id="create_category_kpilist"
+                                label="Category"
+                                required="true"
+                                :initialOptions="[
+                                    ['id' => 'KPI Company', 'name' => 'KPI Company'],
+                                    ['id' => 'KPI Department', 'name' => 'KPI Department'],
+                                    ['id' => 'Activity Plan', 'name' => 'Activity Plan']
+                                ]"
+                                updateEvent="set-create-category-kpilist"
+                                hideLabel="true" />
                         </div>
                     </div>
-                    <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Target</label>
-                        <input type="text" name="target" required class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all" placeholder="Enter target">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Target <span class="text-red-500">*</span></label>
+                            <input type="text" name="target" required class="w-full px-4 py-[9px] border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-sm" placeholder="Enter target">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Unit <span class="text-red-500">*</span></label>
+                            <x-searchable-select
+                                name="unit"
+                                id="create_unit_kpilist"
+                                label="Unit"
+                                required="true"
+                                apiUrl="{{ route('master.kpi_unit.options') }}"
+                                updateEvent="set-create-unit-kpilist"
+                                hideLabel="true" />
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Operator <span class="text-red-500">*</span></label>
+                            <x-searchable-select
+                                name="operator"
+                                id="create_operator_kpilist"
+                                label="Operator"
+                                required="true"
+                                :initialOptions="[
+                                    ['id' => '>=', 'name' => '>= (Greater than or equal to)'],
+                                    ['id' => '<=', 'name' => '<= (Less than or equal to)'],
+                                    ['id' => '=', 'name' => '= (Equal to)'],
+                                    ['id' => '>', 'name' => '> (Greater than)'],
+                                    ['id' => '<', 'name' => '< (Less than)']
+                                ]"
+                                updateEvent="set-create-operator-kpilist"
+                                hideLabel="true" />
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Calculation Method <span class="text-red-500">*</span></label>
+                            <x-searchable-select
+                                name="calculation_method"
+                                id="create_calculation_method_kpilist"
+                                label="Calculation Method"
+                                required="true"
+                                :initialOptions="[
+                                    ['id' => 'Direct Actual (Input Actual Data)', 'name' => 'Direct Actual (Input Actual Data)'],
+                                    ['id' => 'Custom (Using Formula Components)', 'name' => 'Custom (Using Formula Components)']
+                                ]"
+                                updateEvent="set-create-calculation-method-kpilist"
+                                hideLabel="true" />
+                        </div>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-slate-700 mb-2">Achievement History (Last 5 Years)</label>
-                        <div id="create_history_container" class="grid grid-cols-5 gap-3"></div>
+                        <div id="create_history_container" class="grid grid-cols-5 gap-3">
+                            @php
+                                $currentYear = date('Y');
+                            @endphp
+                            @for ($i = 5; $i >= 1; $i--)
+                                @php $yr = $currentYear - $i; @endphp
+                                <div class="border border-slate-200 rounded-lg p-3 bg-white space-y-2">
+                                    <div class="text-xs font-bold text-slate-600 text-center">{{ $yr }}</div>
+                                    <div class="grid grid-cols-[60%_40%] gap-2 items-end">
+                                        <div>
+                                            <label class="block text-[10px] font-semibold text-slate-500 mb-0.5">Achievement</label>
+                                            <input type="text" name="history[{{ $yr }}][achievement]" class="w-full px-2 py-[9px] border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-sm" placeholder="Achievement">
+                                        </div>
+                                        <div>
+                                            <label class="block text-[10px] font-semibold text-slate-500 mb-0.5">Unit</label>
+                                            <x-searchable-select
+                                                name="history[{{ $yr }}][unit]"
+                                                id="create_history_unit_{{ $yr }}"
+                                                label="Unit"
+                                                apiUrl="{{ route('master.kpi_unit.options') }}"
+                                                updateEvent="set-create-history-unit-{{ $yr }}"
+                                                position="up"
+                                                hideLabel="true" />
+                                        </div>
+                                    </div>
+                                </div>
+                            @endfor
+                        </div>
                     </div>
                 </div>
-                <div class="p-6 border-t border-slate-100 bg-slate-50/50 flex justify-end gap-3 rounded-b-xl">
+                <!-- Modal Footer (Sticky) -->
+                <div class="p-6 border-t border-slate-100 bg-white flex justify-end gap-3 rounded-b-xl shrink-0">
                     <button type="button" onclick="closeCreateModal()" class="px-4 py-2 text-slate-700 font-medium hover:bg-slate-200 rounded-lg transition-colors">Cancel</button>
                     <button type="submit" class="px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors">Save</button>
                 </div>
@@ -141,63 +243,165 @@
 <div id="editModal" class="fixed inset-0 z-50 hidden">
     <div class="fixed inset-0 bg-slate-900/50 transition-opacity" onclick="closeEditModal()"></div>
     <div class="fixed inset-0 flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl w-full max-w-5xl transform transition-all">
-            <div class="p-6 border-b border-slate-100 flex justify-between items-center">
+        <div class="bg-white rounded-xl w-full h-[92vh] flex flex-col transform transition-all overflow-hidden shadow-2xl" style="max-width: 90%;">
+            <!-- Modal Header (Sticky) -->
+            <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-white shrink-0">
                 <h3 class="text-lg font-bold text-slate-800">Edit KPI</h3>
                 <button onclick="closeEditModal()" class="text-slate-400 hover:text-slate-600">
                     <i class="fa-solid fa-xmark text-xl"></i>
                 </button>
             </div>
-            <form id="editForm" action="{{ route('master.kpi_list.update') }}" method="POST">
+            <!-- Modal Body (Scrollable with slate bg) -->
+            <form id="editForm" action="{{ route('master.kpi_list.update') }}" method="POST" class="flex flex-col flex-1 min-h-0 bg-slate-100">
                 @csrf
                 <input type="hidden" name="id" id="edit_id">
-                <div class="p-6 space-y-4">
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">No. KPI</label>
-                        <input type="text" name="no_kpi" id="edit_no_kpi" required class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all uppercase">
+                <div class="p-6 space-y-4 overflow-y-auto flex-1 min-h-0">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">No. KPI <span class="text-red-500">*</span></label>
+                            <input type="text" name="no_kpi" id="edit_no_kpi" required class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all uppercase text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Parent Objective</label>
+                            <x-searchable-select
+                                name="parent_objective_id"
+                                id="edit_parent_objective_id"
+                                label="Parent Objective"
+                                apiUrl="{{ route('master.kpi_list.options') }}"
+                                :initialOptions="$kpiList->map(fn($item) => ['id' => $item->id, 'name' => $item->no_kpi . ' - ' . $item->objective])->toArray()"
+                                valueField="id"
+                                updateEvent="set-edit-parent-objective"
+                                hideLabel="true" />
+                        </div>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Parent Objective</label>
-                        <x-searchable-select
-                            name="parent_objective_id"
-                            id="edit_parent_objective_id"
-                            label="Parent Objective"
-                            apiUrl="{{ route('master.kpi_list.options') }}"
-                            :initialOptions="$kpiList->map(fn($item) => ['id' => $item->id, 'name' => $item->no_kpi . ' - ' . $item->objective])->toArray()"
-                            valueField="id"
-                            updateEvent="set-edit-parent-objective"
-                            hideLabel="true" />
-                    </div>
-                </div>
-                    <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Objective</label>
-                        <input type="text" name="objective" id="edit_objective" required class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all">
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Objective <span class="text-red-500">*</span></label>
+                        <input type="text" name="objective" id="edit_objective" required class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-sm">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Definition</label>
-                        <textarea name="definition" id="edit_definition" rows="3" required class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all resize-none overflow-y-auto max-h-40"></textarea>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Definition <span class="text-red-500">*</span></label>
+                        <textarea name="definition" id="edit_definition" rows="3" required class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all resize-none overflow-y-auto max-h-40 text-sm"></textarea>
                     </div>
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-sm font-medium text-slate-700 mb-1">Pillar</label>
-                            <input type="text" name="pillar" id="edit_pillar" required class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all">
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Pillar <span class="text-red-500">*</span></label>
+                            <x-searchable-select
+                                name="pillar"
+                                id="edit_pillar_kpilist"
+                                label="Pillar"
+                                required="true"
+                                :initialOptions="[
+                                    ['id' => 'Safety', 'name' => 'Safety'],
+                                    ['id' => 'Quality', 'name' => 'Quality'],
+                                    ['id' => 'People', 'name' => 'People'],
+                                    ['id' => 'Cost', 'name' => 'Cost'],
+                                    ['id' => 'Responsiveness', 'name' => 'Responsiveness'],
+                                    ['id' => 'Delivery', 'name' => 'Delivery'],
+                                    ['id' => 'Environment & Energy', 'name' => 'Environment & Energy']
+                                ]"
+                                updateEvent="set-edit-pillar-kpilist"
+                                hideLabel="true" />
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-slate-700 mb-1">Category</label>
-                            <input type="text" name="category" id="edit_category" required class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all">
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Category <span class="text-red-500">*</span></label>
+                            <x-searchable-select
+                                name="category"
+                                id="edit_category_kpilist"
+                                label="Category"
+                                required="true"
+                                :initialOptions="[
+                                    ['id' => 'KPI Company', 'name' => 'KPI Company'],
+                                    ['id' => 'KPI Department', 'name' => 'KPI Department'],
+                                    ['id' => 'Activity Plan', 'name' => 'Activity Plan']
+                                ]"
+                                updateEvent="set-edit-category-kpilist"
+                                hideLabel="true" />
                         </div>
                     </div>
-                    <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Target</label>
-                        <input type="text" name="target" id="edit_target" required class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Target <span class="text-red-500">*</span></label>
+                            <input type="text" name="target" id="edit_target" required class="w-full px-4 py-[9px] border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Unit <span class="text-red-500">*</span></label>
+                            <x-searchable-select
+                                name="unit"
+                                id="edit_unit_kpilist"
+                                label="Unit"
+                                required="true"
+                                apiUrl="{{ route('master.kpi_unit.options') }}"
+                                updateEvent="set-edit-unit-kpilist"
+                                hideLabel="true" />
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Operator <span class="text-red-500">*</span></label>
+                            <x-searchable-select
+                                name="operator"
+                                id="edit_operator_kpilist"
+                                label="Operator"
+                                required="true"
+                                :initialOptions="[
+                                    ['id' => '>=', 'name' => '>= (Greater than or equal to)'],
+                                    ['id' => '<=', 'name' => '<= (Less than or equal to)'],
+                                    ['id' => '=', 'name' => '= (Equal to)'],
+                                    ['id' => '>', 'name' => '> (Greater than)'],
+                                    ['id' => '<', 'name' => '< (Less than)']
+                                ]"
+                                updateEvent="set-edit-operator-kpilist"
+                                hideLabel="true" />
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Calculation Method <span class="text-red-500">*</span></label>
+                            <x-searchable-select
+                                name="calculation_method"
+                                id="edit_calculation_method_kpilist"
+                                label="Calculation Method"
+                                required="true"
+                                :initialOptions="[
+                                    ['id' => 'Direct Actual (Input Actual Data)', 'name' => 'Direct Actual (Input Actual Data)'],
+                                    ['id' => 'Custom (Using Formula Components)', 'name' => 'Custom (Using Formula Components)']
+                                ]"
+                                updateEvent="set-edit-calculation-method-kpilist"
+                                hideLabel="true" />
+                        </div>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-slate-700 mb-2">Achievement History (Last 5 Years)</label>
-                        <div id="edit_history_container" class="grid grid-cols-5 gap-3"></div>
+                        <div id="edit_history_container" class="grid grid-cols-5 gap-3">
+                            @php
+                                $currentYear = date('Y');
+                            @endphp
+                            @for ($i = 5; $i >= 1; $i--)
+                                @php $yr = $currentYear - $i; @endphp
+                                <div class="border border-slate-200 rounded-lg p-3 bg-white space-y-2">
+                                    <div class="text-xs font-bold text-slate-600 text-center">{{ $yr }}</div>
+                                    <div class="grid grid-cols-[60%_40%] gap-2 items-end">
+                                        <div>
+                                            <label class="block text-[10px] font-semibold text-slate-500 mb-0.5">Achievement</label>
+                                            <input type="text" id="edit_ach_{{ $yr }}" name="history[{{ $yr }}][achievement]" class="w-full px-2 py-[9px] border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-sm" placeholder="Achievement">
+                                        </div>
+                                        <div>
+                                            <label class="block text-[10px] font-semibold text-slate-500 mb-0.5">Unit</label>
+                                            <x-searchable-select
+                                                name="history[{{ $yr }}][unit]"
+                                                id="edit_history_unit_{{ $yr }}"
+                                                label="Unit"
+                                                apiUrl="{{ route('master.kpi_unit.options') }}"
+                                                updateEvent="set-edit-history-unit-{{ $yr }}"
+                                                position="up"
+                                                hideLabel="true" />
+                                        </div>
+                                    </div>
+                                </div>
+                            @endfor
+                        </div>
                     </div>
                 </div>
-                <div class="p-6 border-t border-slate-100 bg-slate-50/50 flex justify-end gap-3 rounded-b-xl">
+                <!-- Modal Footer (Sticky) -->
+                <div class="p-6 border-t border-slate-100 bg-white flex justify-end gap-3 rounded-b-xl shrink-0">
                     <button type="button" onclick="closeEditModal()" class="px-4 py-2 text-slate-700 font-medium hover:bg-slate-200 rounded-lg transition-colors">Cancel</button>
                     <button type="submit" class="px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors">Update</button>
                 </div>
@@ -261,13 +465,7 @@
                 {
                     data: 'definition',
                     name: 'definition',
-                    className: 'text-slate-700',
-                    render: function(data, type, row) {
-                        if (data && data.length > 100) {
-                            return data.substring(0, 100) + '...';
-                        }
-                        return data;
-                    }
+                    className: 'text-slate-700'
                 },
                 {
                     data: 'pillar',
@@ -296,22 +494,30 @@
                 emptyTable: '<div class="flex flex-col items-center justify-center py-8 text-slate-500"><i class="fa-regular fa-folder-open text-4xl mb-3 text-slate-300"></i><p>No data available</p></div>',
             },
             dom: 'r<"overflow-x-auto"t><"flex flex-col sm:flex-row items-center justify-between p-4 border-t border-slate-200 gap-4"ip>',
-            pagingType: "simple_numbers",
+            pagingType: "simple_numbers"
         });
 
-        // Search keyup debounced
+        // Search trigger
         var searchTimer;
-        $(document).on('keyup', '#searchInput', function() {
+        $('#searchInput').on('keyup input', function() {
+            var self = this;
             clearTimeout(searchTimer);
-            const self = this;
             searchTimer = setTimeout(function() {
                 table.search($(self).val()).draw();
             }, 500);
         });
 
-        // Parent Objective is optional, so remove the required attribute from searchable-select hidden inputs
+        // Parent Objective is optional, so remove required attribute from searchable-select hidden inputs
         $('#create_parent_objective_id').removeAttr('required');
         $('#edit_parent_objective_id').removeAttr('required');
+
+        // History units are optional, remove required validation from historical inputs
+        const currentYear = new Date().getFullYear();
+        for (let i = 5; i >= 1; i--) {
+            const yr = currentYear - i;
+            $('#create_history_unit_' + yr).removeAttr('required');
+            $('#edit_history_unit_' + yr).removeAttr('required');
+        }
 
         function autoResizeTextarea(el) {
             if (!el) return;
@@ -346,13 +552,16 @@
                 type: 'POST',
                 data: $(form).serialize(),
                 success: function(response) {
-                    closeCreateModal();
-                    showToast('Data added successfully.', 'success');
-                    table.ajax.reload();
-                    form.reset();
+                    if (response.success) {
+                        showToast('KPI added successfully', 'success');
+                        closeCreateModal();
+                        table.ajax.reload();
+                    } else {
+                        showToast(response.message || 'Failed to add KPI', 'error');
+                    }
                 },
                 error: function(xhr) {
-                    showToast(xhr.responseJSON?.message || 'Failed to add data.', 'error');
+                    showToast(xhr.responseJSON?.message || 'Failed to save data.', 'error');
                 },
                 complete: function() {
                     submitBtn.prop('disabled', false).html(originalText);
@@ -374,9 +583,13 @@
                 type: 'POST',
                 data: $(form).serialize(),
                 success: function(response) {
-                    closeEditModal();
-                    showToast('Data updated successfully.', 'success');
-                    table.ajax.reload(null, false);
+                    if (response.success) {
+                        showToast('KPI updated successfully', 'success');
+                        closeEditModal();
+                        table.ajax.reload();
+                    } else {
+                        showToast(response.message || 'Failed to update KPI', 'error');
+                    }
                 },
                 error: function(xhr) {
                     showToast(xhr.responseJSON?.message || 'Failed to update data.', 'error');
@@ -392,20 +605,32 @@
         window.dispatchEvent(new CustomEvent('set-create-parent-objective', {
             detail: { id: "", name: "" }
         }));
-        
-        // Generate history inputs for last 5 years based on current year
+        window.dispatchEvent(new CustomEvent('set-create-pillar-kpilist', {
+            detail: { id: "", name: "" }
+        }));
+        window.dispatchEvent(new CustomEvent('set-create-category-kpilist', {
+            detail: { id: "", name: "" }
+        }));
+        window.dispatchEvent(new CustomEvent('set-create-unit-kpilist', {
+            detail: { id: "", name: "" }
+        }));
+        window.dispatchEvent(new CustomEvent('set-create-operator-kpilist', {
+            detail: { id: "", name: "" }
+        }));
+        window.dispatchEvent(new CustomEvent('set-create-calculation-method-kpilist', {
+            detail: { id: "", name: "" }
+        }));
+
+        // Reset inputs and values in history container
         const currentYear = new Date().getFullYear();
-        let createHtml = '';
         for (let i = 5; i >= 1; i--) {
             const yr = currentYear - i;
-            createHtml += `
-                <div class="border border-slate-200 rounded-lg p-2 bg-slate-50/50">
-                    <div class="text-xs font-bold text-slate-600 text-center mb-1.5">${yr}</div>
-                    <input type="text" name="history[${yr}][achievement]" class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-sm" placeholder="Achievement">
-                </div>
-            `;
+            $(`input[name="history[${yr}][achievement]"]`).val('');
+            window.dispatchEvent(new CustomEvent(`set-create-history-unit-${yr}`, {
+                detail: { id: "", name: "" }
+            }));
+            $('#create_history_unit_' + yr).removeAttr('required');
         }
-        $('#create_history_container').html(createHtml);
 
         $('#createModal').removeClass('hidden');
         setTimeout(() => {
@@ -429,11 +654,15 @@
         const category = btn.getAttribute('data-category');
         const target = btn.getAttribute('data-target');
 
+        const unit = btn.getAttribute('data-unit') || '';
+        const operator_val = btn.getAttribute('data-operator') || '';
+        const calculation_method = btn.getAttribute('data-calculation_method') || '';
+
         const parent_objective_name = btn.getAttribute('data-parent_objective_name') || "";
 
         $('#edit_id').val(id);
         
-        // Dispatch event to Alpine component of searchable select
+        // Dispatch events to Alpine components of searchable select
         window.dispatchEvent(new CustomEvent('set-edit-parent-objective', {
             detail: { id: parent_objective_id || "", name: parent_objective_id ? parent_objective_name : "" }
         }));
@@ -441,44 +670,62 @@
         $('#edit_no_kpi').val(no_kpi);
         $('#edit_objective').val(objective);
         $('#edit_definition').val(definition);
-        $('#edit_pillar').val(pillar);
-        $('#edit_category').val(category);
+        
+        window.dispatchEvent(new CustomEvent('set-edit-pillar-kpilist', {
+            detail: { id: pillar || "", name: pillar || "" }
+        }));
+        
+        window.dispatchEvent(new CustomEvent('set-edit-category-kpilist', {
+            detail: { id: category || "", name: category || "" }
+        }));
+        
         $('#edit_target').val(target);
 
-        // Fetch history data and render input fields
+        // Operator name helper
+        const opLabels = {
+            '>=': '>= (Greater than or equal to)',
+            '<=': '<= (Less than or equal to)',
+            '=': '= (Equal to)',
+            '>': '> (Greater than)',
+            '<': '< (Less than)'
+        };
+
+        window.dispatchEvent(new CustomEvent('set-edit-unit-kpilist', {
+            detail: { id: unit || "", name: unit || "" }
+        }));
+        window.dispatchEvent(new CustomEvent('set-edit-operator-kpilist', {
+            detail: { id: operator_val || "", name: operator_val ? (opLabels[operator_val] || operator_val) : "" }
+        }));
+        window.dispatchEvent(new CustomEvent('set-edit-calculation-method-kpilist', {
+            detail: { id: calculation_method || "", name: calculation_method || "" }
+        }));
+
+        // Reset edit achievements and load data
         const currentYear = new Date().getFullYear();
-        $('#edit_history_container').html('<div class="col-span-5 text-center py-2 text-slate-400"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Loading history...</div>');
-        
+        for (let i = 5; i >= 1; i--) {
+            const yr = currentYear - i;
+            $('#edit_ach_' + yr).val('');
+            window.dispatchEvent(new CustomEvent(`set-edit-history-unit-${yr}`, {
+                detail: { id: "", name: "" }
+            }));
+            $('#edit_history_unit_' + yr).removeAttr('required');
+        }
+
+        // Fetch history data and update input fields
         $.ajax({
             url: `{{ route('master.kpi_list.history', '') }}/${id}`,
             type: 'GET',
             success: function(response) {
                 const historyMap = response.history || {};
-                let editHtml = '';
                 for (let i = 5; i >= 1; i--) {
                     const yr = currentYear - i;
-                    const record = historyMap[yr] || { achievement: '' };
-                    editHtml += `
-                        <div class="border border-slate-200 rounded-lg p-2 bg-slate-50/50">
-                            <div class="text-xs font-bold text-slate-600 text-center mb-1.5">${yr}</div>
-                            <input type="text" name="history[${yr}][achievement]" value="${record.achievement || ''}" class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-sm" placeholder="Achievement">
-                        </div>
-                    `;
+                    const record = historyMap[yr] || { achievement: '', unit: '' };
+                    $('#edit_ach_' + yr).val(record.achievement !== null ? record.achievement : '');
+                    
+                    window.dispatchEvent(new CustomEvent(`set-edit-history-unit-${yr}`, {
+                        detail: { id: record.unit || '', name: record.unit || '' }
+                    }));
                 }
-                $('#edit_history_container').html(editHtml);
-            },
-            error: function() {
-                let editHtml = '';
-                for (let i = 5; i >= 1; i--) {
-                    const yr = currentYear - i;
-                    editHtml += `
-                        <div class="border border-slate-200 rounded-lg p-2 bg-slate-50/50">
-                            <div class="text-xs font-bold text-slate-600 text-center mb-1.5">${yr}</div>
-                            <input type="text" name="history[${yr}][achievement]" class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-sm" placeholder="Achievement">
-                        </div>
-                    `;
-                }
-                $('#edit_history_container').html(editHtml);
             }
         });
 
@@ -505,6 +752,7 @@
         $('#deleteModal').removeClass('hidden');
     }
 
+    // Modal dismiss logic
     function closeDeleteModal() {
         $('#deleteModal').addClass('hidden');
         deleteId = null;

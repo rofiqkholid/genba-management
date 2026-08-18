@@ -6,12 +6,24 @@
 @include('layouts.sidebar')
 @include('components.toast')
 
+@php
+    $currentYear = date('Y');
+    $years = [];
+    for ($i = 5; $i >= 1; $i--) {
+        $years[] = $currentYear - $i;
+    }
+@endphp
+
 <!-- JSON Config Data for JS -->
 <div id="kpi-config-data" class="hidden"
      data-pillars="{{ json_encode($kpiList->pluck('pillar', 'id')) }}"
      data-targets="{{ json_encode($kpiList->pluck('target', 'id')) }}"
      data-objectives="{{ json_encode($kpiList->mapWithKeys(function($item) { return [$item->id => $item->no_kpi . ' - ' . $item->objective]; })) }}"
-     data-departments="{{ json_encode($departments->mapWithKeys(function($dept) { return [$dept->Key1 => $dept->Key1]; })) }}">
+     data-departments="{{ json_encode($departments->mapWithKeys(function($dept) { return [$dept->Key1 => $dept->Key1]; })) }}"
+     data-years="{{ json_encode(array_values($years)) }}"
+     data-units="{{ json_encode($kpiList->pluck('unit', 'id')) }}"
+     data-operators="{{ json_encode($kpiList->pluck('operator', 'id')) }}"
+     data-calculation-methods="{{ json_encode($kpiList->pluck('calculation_method', 'id')) }}">
 </div>
 
 <!-- Main Content -->
@@ -125,7 +137,6 @@
                     <table id="companyKpiTable" class="qms-table w-full min-w-[1000px]">
                         <thead>
                             <tr>
-                                <th class="w-[5%]">No</th>
                                 <th class="w-[10%]">Department</th>
                                 <th class="w-[10%]">Pilar</th>
                                 <th class="w-[15%]">Objective</th>
@@ -171,18 +182,28 @@
                     <form id="createKpiForm" action="{{ route('kpi.company.store') }}" method="POST">
                         @csrf
                          <div class="grid grid-cols-2 gap-x-8 gap-y-6">
-                            <!-- Department -->
-                            <div class="col-span-2 lg:col-span-1">
-                                <label class="block text-sm font-medium text-slate-700 mb-1.5 tracking-wider">Department <span class="text-red-500">*</span></label>
-                                <x-searchable-select
-                                    name="department_code"
-                                    id="create_department_code"
-                                    label="Department"
-                                    required="true"
-                                    apiUrl="{{ route('kpi.company.departments') }}"
-                                    updateEvent="set-create-department"
-                                    hideLabel="true" />
-                            </div>
+                             <!-- Department -->
+                             <div class="col-span-2 lg:col-span-1">
+                                 <label class="block text-sm font-medium text-slate-700 mb-1.5 tracking-wider">Department <span class="text-red-500">*</span></label>
+                                 <div class="flex gap-2 items-start">
+                                     <div class="flex-1">
+                                         <x-searchable-select-multi
+                                             name="department_code"
+                                             id="create_department_code"
+                                             label="Department"
+                                             required="true"
+                                             maxItems="0"
+                                             apiUrl="{{ route('kpi.company.departments') }}"
+                                             updateEvent="set-create-department"
+                                             hideLabel="true" />
+                                     </div>
+                                     <div class="shrink-0 h-[40px] flex items-center">
+                                         <button type="button" id="btn_dept_toggle" onclick="toggleDeptSelection()" class="w-10 h-[40px] flex items-center justify-center text-slate-500 hover:text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors" title="Select All">
+                                             <i class="fa-solid fa-file-circle-check text-sm"></i>
+                                         </button>
+                                     </div>
+                                 </div>
+                             </div>
 
                             <!-- Objective -->
                             <div class="col-span-2 lg:col-span-1">
@@ -198,70 +219,75 @@
                                     hideLabel="true" />
                             </div>
 
-                            <!-- Operator -->
-                            <div class="col-span-2 lg:col-span-1">
-                                <label class="block text-sm font-medium text-slate-700 mb-1.5">Operator <span class="text-red-500">*</span></label>
-                                <x-searchable-select
-                                    name="operator"
-                                    id="create_operator"
-                                    label="Operator"
-                                    required="true"
-                                    :initialOptions="[
-                                        ['id' => '>=', 'name' => '>= (Greater than or equal to)'],
-                                        ['id' => '<=', 'name' => '<= (Less than or equal to)'],
-                                        ['id' => '=', 'name' => '= (Equal to)'],
-                                        ['id' => '>', 'name' => '> (Greater than)'],
-                                        ['id' => '<', 'name' => '< (Less than)']
-                                    ]"
-                                    updateEvent="set-create-operator"
-                                    hideLabel="true" />
-                            </div>
                             <!-- Target -->
-                            <div class="col-span-2 lg:col-span-1">
-                                <label class="block text-sm font-medium text-slate-700 mb-1.5 tracking-wider">Target <span class="text-red-500">*</span></label>
-                                <input type="text" name="target" id="create_target" disabled placeholder="Target from KPI List"
-                                    class="w-full px-4 py-2.5 border border-slate-200 rounded-lg bg-slate-50 text-slate-500 text-sm outline-none cursor-not-allowed">
-                            </div>                            <!-- Unit -->
-                            <div class="col-span-2 lg:col-span-1">
-                                <label class="block text-sm font-medium text-slate-700 mb-1.5 tracking-wider">Unit <span class="text-red-500">*</span></label>
-                                <x-searchable-select
-                                    name="unit"
-                                    id="create_unit"
-                                    label="Unit"
-                                    required="true"
-                                    apiUrl="{{ route('master.kpi_unit.options') }}"
-                                    updateEvent="set-create-unit"
-                                    hideLabel="true" />
-                            </div>
+                             <div class="col-span-2 lg:col-span-1">
+                                 <label class="block text-sm font-medium text-slate-700 mb-1.5 tracking-wider">Target <span class="text-red-500">*</span></label>
+                                 <input type="text" name="target" id="create_target" disabled placeholder="Target from KPI List"
+                                     class="w-full px-4 py-2.5 border border-slate-200 rounded-lg bg-slate-50 text-slate-500 text-sm outline-none cursor-not-allowed">
+                             </div>
 
-                            <!-- Periode -->
-                            <div class="col-span-2 lg:col-span-1">
-                                <label class="block text-sm font-medium text-slate-700 mb-1.5 tracking-wider">Periode <span class="text-red-500">*</span></label>
-                                <input type="text"
-                                    name="periode"
-                                    id="create_periode"
-                                    value="{{ date('Y') }}"
-                                    readonly
-                                    required
-                                    class="w-full px-4 py-2.5 border border-slate-200 rounded-lg bg-slate-50 text-slate-500 text-sm outline-none cursor-not-allowed focus:border-slate-200 focus:ring-0" />
-                            </div>
+                             <!-- Operator -->
+                             <div class="col-span-2 lg:col-span-1">
+                                 <label class="block text-sm font-medium text-slate-700 mb-1.5">Operator <span class="text-red-500">*</span></label>
+                                 <x-searchable-select
+                                     name="operator"
+                                     id="create_operator"
+                                     label="Operator"
+                                     required="true"
+                                     disabled="true"
+                                     :initialOptions="[
+                                         ['id' => '>=', 'name' => '>= (Greater than or equal to)'],
+                                         ['id' => '<=', 'name' => '<= (Less than or equal to)'],
+                                         ['id' => '=', 'name' => '= (Equal to)'],
+                                         ['id' => '>', 'name' => '> (Greater than)'],
+                                         ['id' => '<', 'name' => '< (Less than)']
+                                     ]"
+                                     updateEvent="set-create-operator"
+                                     hideLabel="true" />
+                             </div>
 
-                            <!-- Calculation Method -->
-                            <div class="col-span-2">
-                                <label class="block text-sm font-medium text-slate-700 mb-1.5 tracking-wider">Calculation Method <span class="text-red-500">*</span></label>
-                                <x-searchable-select
-                                    name="calculation_method"
-                                    id="create_calculation_method"
-                                    label="Calculation Method"
-                                    required="true"
-                                    :initialOptions="[
-                                        ['id' => 'Direct Actual (Input Actual Data)', 'name' => 'Direct Actual (Input Actual Data)'],
-                                        ['id' => 'Custom (Using Formula Components)', 'name' => 'Custom (Using Formula Components)']
-                                    ]"
-                                    updateEvent="set-create-calculation-method"
-                                    hideLabel="true" />
-                            </div>
-                        </div>
+                             <!-- Unit -->
+                             <div class="col-span-2 lg:col-span-1">
+                                 <label class="block text-sm font-medium text-slate-700 mb-1.5 tracking-wider">Unit <span class="text-red-500">*</span></label>
+                                 <x-searchable-select
+                                     name="unit"
+                                     id="create_unit"
+                                     label="Unit"
+                                     required="true"
+                                     disabled="true"
+                                     apiUrl="{{ route('master.kpi_unit.options') }}"
+                                     updateEvent="set-create-unit"
+                                     hideLabel="true" />
+                             </div>
+
+                             <!-- Periode -->
+                             <div class="col-span-2 lg:col-span-1">
+                                 <label class="block text-sm font-medium text-slate-700 mb-1.5 tracking-wider">Periode <span class="text-red-500">*</span></label>
+                                 <input type="text"
+                                     name="periode"
+                                     id="create_periode"
+                                     value="{{ date('Y') }}"
+                                     readonly
+                                     required
+                                     class="w-full px-4 py-2.5 border border-slate-200 rounded-lg bg-slate-50 text-slate-500 text-sm outline-none cursor-not-allowed focus:border-slate-200 focus:ring-0" />
+                             </div>
+
+                             <!-- Calculation Method -->
+                             <div class="col-span-2">
+                                 <label class="block text-sm font-medium text-slate-700 mb-1.5 tracking-wider">Calculation Method <span class="text-red-500">*</span></label>
+                                 <x-searchable-select
+                                     name="calculation_method"
+                                     id="create_calculation_method"
+                                     label="Calculation Method"
+                                     required="true"
+                                     disabled="true"
+                                     :initialOptions="[
+                                         ['id' => 'Direct Actual (Input Actual Data)', 'name' => 'Direct Actual (Input Actual Data)'],
+                                         ['id' => 'Custom (Using Formula Components)', 'name' => 'Custom (Using Formula Components)']
+                                     ]"
+                                     updateEvent="set-create-calculation-method"
+                                     hideLabel="true" />
+                             </div></div>
 
                         <!-- Action Buttons -->
                         <div class="flex justify-end gap-3 pt-8 mt-8 border-t border-slate-100">
@@ -334,69 +360,74 @@
                                     hideLabel="true" />
                             </div>
 
-                            <!-- Operator -->
-                            <div class="col-span-2 lg:col-span-1">
-                                <label class="block text-sm font-medium text-slate-700 mb-1.5">Operator <span class="text-red-500">*</span></label>
-                                <x-searchable-select
-                                    name="operator"
-                                    id="edit_operator"
-                                    label="Operator"
-                                    required="true"
-                                    :initialOptions="[
-                                        ['id' => '>=', 'name' => '>= (Greater than or equal to)'],
-                                        ['id' => '<=', 'name' => '<= (Less than or equal to)'],
-                                        ['id' => '=', 'name' => '= (Equal to)'],
-                                        ['id' => '>', 'name' => '> (Greater than)'],
-                                        ['id' => '<', 'name' => '< (Less than)']
-                                    ]"
-                                    updateEvent="set-edit-operator"
-                                    hideLabel="true" />
-                            </div>                            <!-- Target -->
-                            <div class="col-span-2 lg:col-span-1">
-                                <label class="block text-sm font-medium text-slate-700 mb-1.5">Target <span class="text-red-500">*</span></label>
-                                <input type="text" name="target" id="edit_target" disabled placeholder="Target from KPI List"
-                                    class="w-full px-4 py-2.5 border border-slate-200 rounded-lg bg-slate-50 text-slate-500 text-sm outline-none cursor-not-allowed">
-                            </div>
-                            <!-- Unit -->
-                            <div class="col-span-2 lg:col-span-1">
-                                <label class="block text-sm font-medium text-slate-700 mb-1.5">Unit <span class="text-red-500">*</span></label>
-                                <x-searchable-select
-                                    name="unit"
-                                    id="edit_unit"
-                                    label="Unit"
-                                    required="true"
-                                    apiUrl="{{ route('master.kpi_unit.options') }}"
-                                    updateEvent="set-edit-unit"
-                                    hideLabel="true" />
-                            </div>
+                            <!-- Target -->
+                             <div class="col-span-2 lg:col-span-1">
+                                 <label class="block text-sm font-medium text-slate-700 mb-1.5">Target <span class="text-red-500">*</span></label>
+                                 <input type="text" name="target" id="edit_target" disabled placeholder="Target from KPI List"
+                                     class="w-full px-4 py-2.5 border border-slate-200 rounded-lg bg-slate-50 text-slate-500 text-sm outline-none cursor-not-allowed">
+                             </div>
 
-                            <!-- Periode -->
-                            <div class="col-span-2 lg:col-span-1">
-                                <label class="block text-sm font-medium text-slate-700 mb-1.5">Periode <span class="text-red-500">*</span></label>
-                                <input type="text"
-                                    name="periode"
-                                    id="edit_periode"
-                                    readonly
-                                    required
-                                    class="w-full px-4 py-2.5 border border-slate-200 rounded-lg bg-slate-50 text-slate-500 text-sm outline-none cursor-not-allowed focus:border-slate-200 focus:ring-0" />
-                            </div>
+                             <!-- Operator -->
+                             <div class="col-span-2 lg:col-span-1">
+                                 <label class="block text-sm font-medium text-slate-700 mb-1.5">Operator <span class="text-red-500">*</span></label>
+                                 <x-searchable-select
+                                     name="operator"
+                                     id="edit_operator"
+                                     label="Operator"
+                                     required="true"
+                                     disabled="true"
+                                     :initialOptions="[
+                                         ['id' => '>=', 'name' => '>= (Greater than or equal to)'],
+                                         ['id' => '<=', 'name' => '<= (Less than or equal to)'],
+                                         ['id' => '=', 'name' => '= (Equal to)'],
+                                         ['id' => '>', 'name' => '> (Greater than)'],
+                                         ['id' => '<', 'name' => '< (Less than)']
+                                     ]"
+                                     updateEvent="set-edit-operator"
+                                     hideLabel="true" />
+                             </div>
 
-                            <!-- Calculation Method -->
-                            <div class="col-span-2">
-                                <label class="block text-sm font-medium text-slate-700 mb-1.5">Calculation Method <span class="text-red-500">*</span></label>
-                                <x-searchable-select
-                                    name="calculation_method"
-                                    id="edit_calculation_method"
-                                    label="Calculation Method"
-                                    required="true"
-                                    :initialOptions="[
-                                        ['id' => 'Direct Actual (Input Actual Data)', 'name' => 'Direct Actual (Input Actual Data)'],
-                                        ['id' => 'Custom (Using Formula Components)', 'name' => 'Custom (Using Formula Components)']
-                                    ]"
-                                    updateEvent="set-edit-calculation-method"
-                                    hideLabel="true" />
-                            </div>
-                        </div>
+                             <!-- Unit -->
+                             <div class="col-span-2 lg:col-span-1">
+                                 <label class="block text-sm font-medium text-slate-700 mb-1.5">Unit <span class="text-red-500">*</span></label>
+                                 <x-searchable-select
+                                     name="unit"
+                                     id="edit_unit"
+                                     label="Unit"
+                                     required="true"
+                                     disabled="true"
+                                     apiUrl="{{ route('master.kpi_unit.options') }}"
+                                     updateEvent="set-edit-unit"
+                                     hideLabel="true" />
+                             </div>
+
+                             <!-- Periode -->
+                             <div class="col-span-2 lg:col-span-1">
+                                 <label class="block text-sm font-medium text-slate-700 mb-1.5">Periode <span class="text-red-500">*</span></label>
+                                 <input type="text"
+                                     name="periode"
+                                     id="edit_periode"
+                                     readonly
+                                     required
+                                     class="w-full px-4 py-2.5 border border-slate-200 rounded-lg bg-slate-50 text-slate-500 text-sm outline-none cursor-not-allowed focus:border-slate-200 focus:ring-0" />
+                             </div>
+
+                             <!-- Calculation Method -->
+                             <div class="col-span-2">
+                                 <label class="block text-sm font-medium text-slate-700 mb-1.5">Calculation Method <span class="text-red-500">*</span></label>
+                                 <x-searchable-select
+                                     name="calculation_method"
+                                     id="edit_calculation_method"
+                                     label="Calculation Method"
+                                     required="true"
+                                     disabled="true"
+                                     :initialOptions="[
+                                         ['id' => 'Direct Actual (Input Actual Data)', 'name' => 'Direct Actual (Input Actual Data)'],
+                                         ['id' => 'Custom (Using Formula Components)', 'name' => 'Custom (Using Formula Components)']
+                                     ]"
+                                     updateEvent="set-edit-calculation-method"
+                                     hideLabel="true" />
+                             </div></div>
 
                         <!-- Action Buttons -->
                         <div class="flex justify-end gap-3 pt-8 mt-8 border-t border-slate-100">
@@ -448,16 +479,62 @@
     const kpiTargets = JSON.parse(configEl.getAttribute('data-targets') || '{}');
     const kpiObjectives = JSON.parse(configEl.getAttribute('data-objectives') || '{}');
 
+    const kpiUnits = JSON.parse(configEl.getAttribute('data-units') || '{}');
+    const kpiOperators = JSON.parse(configEl.getAttribute('data-operators') || '{}');
+    const kpiCalcMethods = JSON.parse(configEl.getAttribute('data-calculation-methods') || '{}');
+
     window.addEventListener('create-kpi-changed', function(e) {
         const kpiId = e.detail.id;
         const targetVal = kpiTargets[kpiId] || '';
         $('#create_target').val(targetVal);
+
+        // Auto-fill Operator, Unit, Calculation Method from KPI List
+        const unitVal = kpiUnits[kpiId] || '';
+        const operatorVal = kpiOperators[kpiId] || '';
+        const calcMethodVal = kpiCalcMethods[kpiId] || '';
+
+        if (unitVal) {
+            window.dispatchEvent(new CustomEvent('set-create-unit', { detail: { id: unitVal, name: unitVal } }));
+        } else {
+            window.dispatchEvent(new CustomEvent('set-create-unit', { detail: { id: '', name: '' } }));
+        }
+        if (operatorVal) {
+            window.dispatchEvent(new CustomEvent('set-create-operator', { detail: { id: operatorVal, name: (operatorLabels[operatorVal] || operatorVal) } }));
+        } else {
+            window.dispatchEvent(new CustomEvent('set-create-operator', { detail: { id: '', name: '' } }));
+        }
+        if (calcMethodVal) {
+            window.dispatchEvent(new CustomEvent('set-create-calculation-method', { detail: { id: calcMethodVal, name: calcMethodVal } }));
+        } else {
+            window.dispatchEvent(new CustomEvent('set-create-calculation-method', { detail: { id: '', name: '' } }));
+        }
     });
 
     window.addEventListener('edit-kpi-changed', function(e) {
         const kpiId = e.detail.id;
         const targetVal = kpiTargets[kpiId] || '';
         $('#edit_target').val(targetVal);
+
+        // Auto-fill Operator, Unit, Calculation Method from KPI List
+        const unitVal = kpiUnits[kpiId] || '';
+        const operatorVal = kpiOperators[kpiId] || '';
+        const calcMethodVal = kpiCalcMethods[kpiId] || '';
+
+        if (unitVal) {
+            window.dispatchEvent(new CustomEvent('set-edit-unit', { detail: { id: unitVal, name: unitVal } }));
+        } else {
+            window.dispatchEvent(new CustomEvent('set-edit-unit', { detail: { id: '', name: '' } }));
+        }
+        if (operatorVal) {
+            window.dispatchEvent(new CustomEvent('set-edit-operator', { detail: { id: operatorVal, name: (operatorLabels[operatorVal] || operatorVal) } }));
+        } else {
+            window.dispatchEvent(new CustomEvent('set-edit-operator', { detail: { id: '', name: '' } }));
+        }
+        if (calcMethodVal) {
+            window.dispatchEvent(new CustomEvent('set-edit-calculation-method', { detail: { id: calcMethodVal, name: calcMethodVal } }));
+        } else {
+            window.dispatchEvent(new CustomEvent('set-edit-calculation-method', { detail: { id: '', name: '' } }));
+        }
     });
 
     const departmentNames = JSON.parse(configEl.getAttribute('data-departments') || '{}');
@@ -486,23 +563,26 @@
                     d.department = $('#filter_department').val();
                 }
             },
-            columns: [
-                { data: 'no', name: 'no', orderable: false, searchable: false, className: 'font-base text-slate-700 py-4' },
-                { data: 'department_code', name: 'department_code', className: 'text-slate-700 py-4' },
-                { data: 'pillar', name: 'pillar', className: 'text-slate-700 py-4' },
-                { data: 'objective', name: 'objective', className: 'text-slate-700 py-4' },
-                { data: 'target', name: 'target', className: 'text-slate-700 py-4' },
-                @foreach($years as $yr)
-                { data: 'year_{{ $yr }}', name: 'year_{{ $yr }}', orderable: false, searchable: false, className: 'text-slate-700 py-4' },
-                @endforeach
-                { data: 'calculation_method', name: 'calculation_method', className: 'text-slate-700 py-4' },
-                { data: 'action', name: 'action', orderable: false, searchable: false, className: 'text-left py-4' }
-            ],
+            columns: (function() {
+                var years = JSON.parse(configEl.getAttribute('data-years') || '[]');
+                var cols = [
+                    { data: 'department_code', name: 'department_code', className: 'text-slate-700 py-4' },
+                    { data: 'pillar', name: 'pillar', className: 'text-slate-700 py-4' },
+                    { data: 'objective', name: 'objective', className: 'text-slate-700 py-4' },
+                    { data: 'target', name: 'target', className: 'text-slate-700 py-4' },
+                ];
+                years.forEach(function(yr) {
+                    cols.push({ data: 'year_' + yr, name: 'year_' + yr, orderable: false, searchable: false, className: 'text-slate-700 py-4' });
+                });
+                cols.push({ data: 'calculation_method', name: 'calculation_method', className: 'text-slate-700 py-4' });
+                cols.push({ data: 'action', name: 'action', orderable: false, searchable: false, className: 'text-left py-4' });
+                return cols;
+            }()),
             language: {
                 emptyTable: '<div class="flex flex-col items-center justify-center py-8 text-slate-500"><i class="fa-regular fa-folder-open text-4xl mb-3 text-slate-300"></i><p>No data available</p></div>',
             },
             dom: 'r<"overflow-x-auto"t><"flex flex-col sm:flex-row items-center justify-between p-4 border-t border-slate-200 gap-4"ip>',
-            pagingType: "simple_numbers",
+            pagingType: "simple_numbers"
         });
 
         // Search trigger
@@ -523,6 +603,24 @@
             window.dispatchEvent(new CustomEvent('set-filter-department', { detail: { id: "", name: "" } }));
             $('#searchInput').val('');
             table.search('').draw();
+        });
+
+        $('#create_department_code').on('change', function() {
+            const btn = $('#btn_dept_toggle');
+            if (btn.prop('disabled')) return; // Skip updating HTML if currently loading/disabled
+
+            const val = $(this).val();
+            if (val && val.trim() !== '') {
+                btn.html('<i class="fa-solid fa-trash-can text-sm"></i>')
+                   .attr('title', 'Clear All')
+                   .removeClass('text-slate-500 bg-slate-100 hover:bg-slate-200 hover:text-slate-600')
+                   .addClass('text-red-500 bg-red-50 hover:bg-red-100 hover:text-red-600');
+            } else {
+                btn.html('<i class="fa-solid fa-file-circle-check text-sm"></i>')
+                   .attr('title', 'Select All')
+                   .removeClass('text-red-500 bg-red-50 hover:bg-red-100 hover:text-red-600')
+                   .addClass('text-slate-500 bg-slate-100 hover:bg-slate-200 hover:text-slate-600');
+            }
         });
 
         // Remove required attribute from searchable select hidden inputs to bypass html5 check
@@ -657,11 +755,8 @@
         const id = btn.getAttribute('data-id');
         const kpi_list_id = btn.getAttribute('data-kpi_list_id');
         const department_code = btn.getAttribute('data-department_code');
-        const operator = btn.getAttribute('data-operator');
         const target = btn.getAttribute('data-target');
-        const unit = btn.getAttribute('data-unit');
         const periode = btn.getAttribute('data-periode');
-        const calculation_method = btn.getAttribute('data-calculation_method');
         
         $('#edit_id').val(id);
         $('#edit_target').val(target);
@@ -678,24 +773,8 @@
             detail: { id: department_code, name: deptLabel }
         }));
 
-        // Operator selection
-        const opLabel = operatorLabels[operator] || operator;
-        window.dispatchEvent(new CustomEvent('set-edit-operator', {
-            detail: { id: operator, name: opLabel }
-        }));
-
         // Periode selection
         $('#edit_periode').val(periode);
-
-        // Unit selection
-        window.dispatchEvent(new CustomEvent('set-edit-unit', {
-            detail: { id: unit, name: unit }
-        }));
-
-        // Calculation Method selection
-        window.dispatchEvent(new CustomEvent('set-edit-calculation-method', {
-            detail: { id: calculation_method, name: calculation_method }
-        }));
         
         showEditForm();
     }
@@ -771,6 +850,45 @@
 
     function handleDetail(id) {
         window.location.href = "{{ route('kpi.company.detail', '') }}/" + id;
+    }
+
+    function selectAllDepartments() {
+        const configEl = document.getElementById('kpi-config-data');
+        const departmentsObj = JSON.parse(configEl.getAttribute('data-departments') || '{}');
+        const deptKeys = Object.keys(departmentsObj);
+        if (deptKeys.length > 0) {
+            const ids = deptKeys.join(',');
+            const names = deptKeys.join(',');
+            window.dispatchEvent(new CustomEvent('set-create-department', {
+                detail: { id: ids, name: names }
+            }));
+        }
+    }
+
+    function clearAllDepartments() {
+        window.dispatchEvent(new CustomEvent('set-create-department', {
+            detail: { id: "", name: "" }
+        }));
+    }
+
+    function toggleDeptSelection() {
+        const btn = $('#btn_dept_toggle');
+        const originalHtml = btn.html();
+        
+        // Disable button and show spinner
+        btn.prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin text-sm"></i>');
+        
+        setTimeout(() => {
+            const currentVal = $('#create_department_code').val();
+            if (currentVal && currentVal.trim() !== '') {
+                clearAllDepartments();
+            } else {
+                selectAllDepartments();
+            }
+            btn.prop('disabled', false);
+            // Manually trigger change to update button icon after loading finishes
+            $('#create_department_code').trigger('change');
+        }, 1000);
     }
 </script>
 @endpush

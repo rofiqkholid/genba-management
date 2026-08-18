@@ -570,8 +570,8 @@ class KPICompanyController extends Controller
                     'act.actual',
                     'act.status',
                     'act.problem_solve',
-                    DB::raw('child.operator as operator'),
-                    DB::raw('child.unit as unit'),
+                    'parent.operator as operator',
+                    'parent.unit as unit',
                     'parent.target as master_target'
                 )
                 ->where('act.id', $dbId)

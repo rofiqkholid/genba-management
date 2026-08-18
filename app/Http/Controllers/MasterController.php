@@ -1762,6 +1762,7 @@ class MasterController extends Controller
                     "unit" => $item->unit,
                     "operator" => $item->operator,
                     "calculation_method" => $item->calculation_method,
+                    "arrow_target" => $item->arrow_target,
                     "action" => '<div class="flex items-center justify-start gap-2">
                                 <button type="button" title="Edit" class="w-10 h-10 flex items-center justify-center rounded-xl bg-blue-50 text-blue-500 hover:bg-blue-100 hover:text-blue-600 transition-all duration-200"
                                     onclick="handleEdit(this)"
@@ -1776,7 +1777,8 @@ class MasterController extends Controller
                                     data-target="' . htmlspecialchars($item->target) . '"
                                     data-unit="' . htmlspecialchars($item->unit ?? '') . '"
                                     data-operator="' . htmlspecialchars($item->operator ?? '') . '"
-                                    data-calculation_method="' . htmlspecialchars($item->calculation_method ?? '') . '">
+                                    data-calculation_method="' . htmlspecialchars($item->calculation_method ?? '') . '"
+                                    data-arrow_target="' . htmlspecialchars($item->arrow_target ?? '') . '">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
                                     <path opacity="0.3" d="M10 4H21C21.6 4 22 4.4 22 5V7H10V4Z" fill="currentColor"></path>
                                     <path opacity="0.3" d="M10.3 15.3L11 14.6L8.70002 12.3C8.30002 11.9 7.7 11.9 7.3 12.3C6.9 12.7 6.9 13.3 7.3 13.7L10.3 16.7C9.9 16.3 9.9 15.7 10.3 15.3Z" fill="currentColor"></path><path d="M10.4 3.60001L12 6H21C21.6 6 22 6.4 22 7V19C22 19.6 21.6 20 21 20H3C2.4 20 2 19.6 2 19V4C2 3.4 2.4 3 3 3H9.20001C9.70001 3 10.2 3.20001 10.4 3.60001ZM11.7 16.7L16.7 11.7C17.1 11.3 17.1 10.7 16.7 10.3C16.3 9.89999 15.7 9.89999 15.3 10.3L11 14.6L8.70001 12.3C8.30001 11.9 7.69999 11.9 7.29999 12.3C6.89999 12.7 6.89999 13.3 7.29999 13.7L10.3 16.7C10.5 16.9 10.8 17 11 17C11.2 17 11.5 16.9 11.7 16.7Z" fill="currentColor"></path>
@@ -1817,6 +1819,7 @@ class MasterController extends Controller
             'unit' => 'required',
             'operator' => 'required',
             'calculation_method' => 'required',
+            'arrow_target' => 'required|in:Down,Up',
         ]);
 
         try {
@@ -1831,6 +1834,7 @@ class MasterController extends Controller
                 'unit' => $request->unit,
                 'operator' => $request->operator,
                 'calculation_method' => $request->calculation_method,
+                'arrow_target' => $request->arrow_target,
                 'created_at' => \Carbon\Carbon::now(),
                 'updated_at' => \Carbon\Carbon::now()
             ]);
@@ -1843,6 +1847,7 @@ class MasterController extends Controller
                         'target' => $data['target'] ?? null,
                         'achievement' => $data['achievement'] ?? null,
                         'unit' => $data['unit'] ?? null,
+                        'status_achievement' => $data['status_achievement'] ?? null,
                         'created_at' => \Carbon\Carbon::now(),
                         'updated_at' => \Carbon\Carbon::now()
                     ]);
@@ -1874,6 +1879,7 @@ class MasterController extends Controller
             'unit' => 'required',
             'operator' => 'required',
             'calculation_method' => 'required',
+            'arrow_target' => 'required|in:Down,Up',
         ]);
 
         try {
@@ -1888,6 +1894,7 @@ class MasterController extends Controller
                 'unit' => $request->unit,
                 'operator' => $request->operator,
                 'calculation_method' => $request->calculation_method,
+                'arrow_target' => $request->arrow_target,
                 'updated_at' => \Carbon\Carbon::now()
             ]);
 
@@ -1899,6 +1906,7 @@ class MasterController extends Controller
                             'target' => $data['target'] ?? null,
                             'achievement' => $data['achievement'] ?? null,
                             'unit' => $data['unit'] ?? null,
+                            'status_achievement' => $data['status_achievement'] ?? null,
                             'created_at' => \Carbon\Carbon::now(),
                             'updated_at' => \Carbon\Carbon::now()
                         ]

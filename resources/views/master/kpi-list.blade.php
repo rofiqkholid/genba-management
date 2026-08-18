@@ -103,9 +103,26 @@
                                 hideLabel="true" />
                         </div>
                     </div>
-                    <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Objective <span class="text-red-500">*</span></label>
-                        <input type="text" name="objective" required class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-sm" placeholder="Enter objective">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Objective <span class="text-red-500">*</span></label>
+                            <input type="text" name="objective" required class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-sm" placeholder="Enter objective">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Category <span class="text-red-500">*</span></label>
+                            <x-searchable-select
+                                name="category"
+                                id="create_category_kpilist"
+                                label="Category"
+                                required="true"
+                                :initialOptions="[
+                                    ['id' => 'KPI Company', 'name' => 'KPI Company'],
+                                    ['id' => 'KPI Department', 'name' => 'KPI Department'],
+                                    ['id' => 'Activity Plan', 'name' => 'Activity Plan']
+                                ]"
+                                updateEvent="set-create-category-kpilist"
+                                hideLabel="true" />
+                        </div>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-slate-700 mb-1">Definition <span class="text-red-500">*</span></label>
@@ -132,18 +149,17 @@
                                 hideLabel="true" />
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-slate-700 mb-1">Category <span class="text-red-500">*</span></label>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Arrow Target <span class="text-red-500">*</span></label>
                             <x-searchable-select
-                                name="category"
-                                id="create_category_kpilist"
-                                label="Category"
+                                name="arrow_target"
+                                id="create_arrow_target_kpilist"
+                                label="Arrow Target"
                                 required="true"
                                 :initialOptions="[
-                                    ['id' => 'KPI Company', 'name' => 'KPI Company'],
-                                    ['id' => 'KPI Department', 'name' => 'KPI Department'],
-                                    ['id' => 'Activity Plan', 'name' => 'Activity Plan']
+                                    ['id' => 'Up', 'name' => 'Up'],
+                                    ['id' => 'Down', 'name' => 'Down']
                                 ]"
-                                updateEvent="set-create-category-kpilist"
+                                updateEvent="set-create-arrow-target-kpilist"
                                 hideLabel="true" />
                         </div>
                     </div>
@@ -205,15 +221,15 @@
                             @endphp
                             @for ($i = 5; $i >= 1; $i--)
                                 @php $yr = $currentYear - $i; @endphp
-                                <div class="border border-slate-200 rounded-lg p-3 bg-white space-y-2">
-                                    <div class="text-xs font-bold text-slate-600 text-center">{{ $yr }}</div>
+                                <div class="border border-slate-200 rounded-lg p-3 bg-white space-y-2.5">
+                                    <div class="text-sm font-bold text-slate-700 text-center">{{ $yr }}</div>
                                     <div class="grid grid-cols-[60%_40%] gap-2 items-end">
                                         <div>
-                                            <label class="block text-[10px] font-semibold text-slate-500 mb-0.5">Achievement</label>
+                                            <label class="block text-xs font-semibold text-slate-500 mb-1">Achievement</label>
                                             <input type="text" id="create_ach_{{ $yr }}" name="history[{{ $yr }}][achievement]" class="w-full px-2 py-[9px] border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-sm" placeholder="Achievement" oninput="onHistoryAchievementInput(this, '{{ $yr }}', 'create')">
                                         </div>
                                         <div>
-                                            <label class="block text-[10px] font-semibold text-slate-500 mb-0.5">Unit</label>
+                                            <label class="block text-xs font-semibold text-slate-500 mb-1">Unit</label>
                                             <x-searchable-select
                                                 name="history[{{ $yr }}][unit]"
                                                 id="create_history_unit_{{ $yr }}"
@@ -222,6 +238,23 @@
                                                 updateEvent="set-create-history-unit-{{ $yr }}"
                                                 position="up"
                                                 hideLabel="true" />
+                                        </div>
+                                    </div>
+                                    <div class="space-y-1.5 mt-2.5">
+                                        <label class="block text-xs font-semibold text-slate-600">Status Achievement</label>
+                                        <div class="flex items-center gap-1 bg-slate-100 rounded-lg p-1">
+                                            <label class="flex-1 cursor-pointer">
+                                                <input type="radio" name="history[{{ $yr }}][status_achievement]" value="Achieved" class="peer sr-only">
+                                                <div class="py-2 rounded-md flex items-center justify-center text-sm font-bold text-slate-400 hover:bg-white/50 hover:text-slate-600 transition-all peer-checked:bg-green-100 peer-checked:text-green-700 peer-checked:shadow-sm">
+                                                    <span>Achieve</span>
+                                                </div>
+                                            </label>
+                                            <label class="flex-1 cursor-pointer">
+                                                <input type="radio" name="history[{{ $yr }}][status_achievement]" value="Not Achieved" class="peer sr-only">
+                                                <div class="py-2 rounded-md flex items-center justify-center text-sm font-bold text-slate-400 hover:bg-white/50 hover:text-slate-600 transition-all peer-checked:bg-red-100 peer-checked:text-red-700 peer-checked:shadow-sm">
+                                                    <span>Not Achieve</span>
+                                                </div>
+                                            </label>
                                         </div>
                                     </div>
                                 </div>
@@ -274,9 +307,26 @@
                                 hideLabel="true" />
                         </div>
                     </div>
-                    <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Objective <span class="text-red-500">*</span></label>
-                        <input type="text" name="objective" id="edit_objective" required class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-sm">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Objective <span class="text-red-500">*</span></label>
+                            <input type="text" name="objective" id="edit_objective" required class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Category <span class="text-red-500">*</span></label>
+                            <x-searchable-select
+                                name="category"
+                                id="edit_category_kpilist"
+                                label="Category"
+                                required="true"
+                                :initialOptions="[
+                                    ['id' => 'KPI Company', 'name' => 'KPI Company'],
+                                    ['id' => 'KPI Department', 'name' => 'KPI Department'],
+                                    ['id' => 'Activity Plan', 'name' => 'Activity Plan']
+                                ]"
+                                updateEvent="set-edit-category-kpilist"
+                                hideLabel="true" />
+                        </div>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-slate-700 mb-1">Definition <span class="text-red-500">*</span></label>
@@ -303,18 +353,17 @@
                                 hideLabel="true" />
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-slate-700 mb-1">Category <span class="text-red-500">*</span></label>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Arrow Target <span class="text-red-500">*</span></label>
                             <x-searchable-select
-                                name="category"
-                                id="edit_category_kpilist"
-                                label="Category"
+                                name="arrow_target"
+                                id="edit_arrow_target_kpilist"
+                                label="Arrow Target"
                                 required="true"
                                 :initialOptions="[
-                                    ['id' => 'KPI Company', 'name' => 'KPI Company'],
-                                    ['id' => 'KPI Department', 'name' => 'KPI Department'],
-                                    ['id' => 'Activity Plan', 'name' => 'Activity Plan']
+                                    ['id' => 'Up', 'name' => 'Up'],
+                                    ['id' => 'Down', 'name' => 'Down']
                                 ]"
-                                updateEvent="set-edit-category-kpilist"
+                                updateEvent="set-edit-arrow-target-kpilist"
                                 hideLabel="true" />
                         </div>
                     </div>
@@ -376,15 +425,15 @@
                             @endphp
                             @for ($i = 5; $i >= 1; $i--)
                                 @php $yr = $currentYear - $i; @endphp
-                                <div class="border border-slate-200 rounded-lg p-3 bg-white space-y-2">
-                                    <div class="text-xs font-bold text-slate-600 text-center">{{ $yr }}</div>
+                                <div class="border border-slate-200 rounded-lg p-3 bg-white space-y-2.5">
+                                    <div class="text-sm font-bold text-slate-700 text-center">{{ $yr }}</div>
                                     <div class="grid grid-cols-[60%_40%] gap-2 items-end">
                                         <div>
-                                            <label class="block text-[10px] font-semibold text-slate-500 mb-0.5">Achievement</label>
+                                            <label class="block text-xs font-semibold text-slate-500 mb-1">Achievement</label>
                                             <input type="text" id="edit_ach_{{ $yr }}" name="history[{{ $yr }}][achievement]" class="w-full px-2 py-[9px] border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-sm" placeholder="Achievement">
                                         </div>
                                         <div>
-                                            <label class="block text-[10px] font-semibold text-slate-500 mb-0.5">Unit</label>
+                                            <label class="block text-xs font-semibold text-slate-500 mb-1">Unit</label>
                                             <x-searchable-select
                                                 name="history[{{ $yr }}][unit]"
                                                 id="edit_history_unit_{{ $yr }}"
@@ -393,6 +442,23 @@
                                                 updateEvent="set-edit-history-unit-{{ $yr }}"
                                                 position="up"
                                                 hideLabel="true" />
+                                        </div>
+                                    </div>
+                                    <div class="space-y-1.5 mt-2.5">
+                                        <label class="block text-xs font-semibold text-slate-600">Status Achievement</label>
+                                        <div class="flex items-center gap-1 bg-slate-100 rounded-lg p-1">
+                                            <label class="flex-1 cursor-pointer">
+                                                <input type="radio" id="edit_status_achieved_{{ $yr }}" name="history[{{ $yr }}][status_achievement]" value="Achieved" class="peer sr-only">
+                                                <div class="py-2 rounded-md flex items-center justify-center text-sm font-bold text-slate-400 hover:bg-white/50 hover:text-slate-600 transition-all peer-checked:bg-green-100 peer-checked:text-green-700 peer-checked:shadow-sm">
+                                                    <span>Achieve</span>
+                                                </div>
+                                            </label>
+                                            <label class="flex-1 cursor-pointer">
+                                                <input type="radio" id="edit_status_not_achieved_{{ $yr }}" name="history[{{ $yr }}][status_achievement]" value="Not Achieved" class="peer sr-only">
+                                                <div class="py-2 rounded-md flex items-center justify-center text-sm font-bold text-slate-400 hover:bg-white/50 hover:text-slate-600 transition-all peer-checked:bg-red-100 peer-checked:text-red-700 peer-checked:shadow-sm">
+                                                    <span>Not Achieve</span>
+                                                </div>
+                                            </label>
                                         </div>
                                     </div>
                                 </div>
@@ -620,6 +686,9 @@
         window.dispatchEvent(new CustomEvent('set-create-calculation-method-kpilist', {
             detail: { id: "", name: "" }
         }));
+        window.dispatchEvent(new CustomEvent('set-create-arrow-target-kpilist', {
+            detail: { id: "", name: "" }
+        }));
 
         // Reset inputs and values in history container
         const currentYear = new Date().getFullYear();
@@ -630,6 +699,8 @@
                 detail: { id: "", name: "" }
             }));
             $('#create_history_unit_' + yr).removeAttr('required');
+            $(`input[name="history[${yr}][status_achievement]"]`).prop('checked', false);
+            toggleHistoryStatus(yr, 'create', false);
         }
 
         $('#createModal').removeClass('hidden');
@@ -657,6 +728,7 @@
         const unit = btn.getAttribute('data-unit') || '';
         const operator_val = btn.getAttribute('data-operator') || '';
         const calculation_method = btn.getAttribute('data-calculation_method') || '';
+        const arrow_target = btn.getAttribute('data-arrow_target') || '';
 
         const parent_objective_name = btn.getAttribute('data-parent_objective_name') || "";
 
@@ -699,6 +771,9 @@
         window.dispatchEvent(new CustomEvent('set-edit-calculation-method-kpilist', {
             detail: { id: calculation_method || "", name: calculation_method || "" }
         }));
+        window.dispatchEvent(new CustomEvent('set-edit-arrow-target-kpilist', {
+            detail: { id: arrow_target || "", name: arrow_target || "" }
+        }));
 
         // Reset edit achievements and load data
         const currentYear = new Date().getFullYear();
@@ -709,6 +784,8 @@
                 detail: { id: "", name: "" }
             }));
             $('#edit_history_unit_' + yr).removeAttr('required');
+            $(`input[name="history[${yr}][status_achievement]"]`).prop('checked', false);
+            toggleHistoryStatus(yr, 'edit', false);
         }
 
         // Fetch history data and update input fields
@@ -719,7 +796,7 @@
                 const historyMap = response.history || {};
                 for (let i = 5; i >= 1; i--) {
                     const yr = currentYear - i;
-                    const record = historyMap[yr] || { achievement: '', unit: '' };
+                    const record = historyMap[yr] || { achievement: '', unit: '', status_achievement: '' };
                     const ach = record.achievement !== null && record.achievement !== '' ? record.achievement : '';
                     $('#edit_ach_' + yr).val(ach);
 
@@ -728,6 +805,15 @@
                     window.dispatchEvent(new CustomEvent(`set-edit-history-unit-${yr}`, {
                         detail: { id: unitVal, name: unitVal }
                     }));
+
+                    const statusAch = record.status_achievement || '';
+                    if (statusAch === 'Achieved') {
+                        $(`input[name="history[${yr}][status_achievement]"][value="Achieved"]`).prop('checked', true);
+                    } else if (statusAch === 'Not Achieved') {
+                        $(`input[name="history[${yr}][status_achievement]"][value="Not Achieved"]`).prop('checked', true);
+                    }
+
+                    toggleHistoryStatus(yr, 'edit', ach !== '');
                 }
             }
         });
@@ -798,9 +884,22 @@
         });
     }
 
+    function toggleHistoryStatus(yr, mode, hasValue) {
+        const radios = $(`input[name="history[${yr}][status_achievement]"]`);
+        if (hasValue) {
+            radios.prop('disabled', false);
+            radios.closest('.bg-slate-100').removeClass('opacity-50 pointer-events-none');
+        } else {
+            radios.prop('disabled', true).prop('checked', false);
+            radios.closest('.bg-slate-100').addClass('opacity-50 pointer-events-none');
+        }
+    }
+
     // When achievement is cleared, automatically clear the unit for that year
     function onHistoryAchievementInput(input, yr, mode) {
-        if (input.value.trim() === '') {
+        const hasValue = input.value.trim() !== '';
+        toggleHistoryStatus(yr, mode, hasValue);
+        if (!hasValue) {
             const event = `set-${mode}-history-unit-${yr}`;
             window.dispatchEvent(new CustomEvent(event, {
                 detail: { id: '', name: '' }

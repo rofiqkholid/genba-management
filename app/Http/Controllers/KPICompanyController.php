@@ -452,7 +452,7 @@ class KPICompanyController extends Controller
 
         $kpi = DB::table('KPICompany as child')
             ->leftJoin('KPIList as parent', 'child.kpi_list_id', '=', 'parent.id')
-            ->select('child.*', 'parent.objective', 'parent.pillar', 'parent.no_kpi', 'parent.target as target', 'parent.operator', 'parent.unit', 'parent.calculation_method')
+            ->select('child.*', 'parent.objective', 'parent.pillar', 'parent.no_kpi', 'parent.target as target', 'parent.operator', 'parent.unit', 'parent.calculation_method', 'parent.arrow_target')
             ->where('child.id', $dbId)
             ->first();
 

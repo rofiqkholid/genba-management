@@ -97,7 +97,7 @@
                     <!-- Target direction indicator (Left) -->
                     <div class="flex items-center gap-3 sm:gap-4 lg:h-32 w-full lg:w-auto justify-center lg:justify-start">
                         <div class="flex items-center gap-1.5 sm:gap-2 border border-green-500 rounded-lg sm:rounded-xl px-2.5 py-1 sm:px-4 sm:py-2 bg-green-50/30 shrink-0">
-                            @if(in_array($kpi->operator, ['<=', '<']))
+                            @if(strtolower($kpi->arrow_target ?? '') === 'down')
                                 <!-- Down Arrow -->
                                 <svg class="w-4 h-4 sm:w-6 sm:h-6 text-green-600 fill-current" viewBox="0 0 24 24">
                                     <path d="M20 12l-1.41-1.41L13 16.17V4h-2v12.17l-5.58-5.59L4 12l8 8 8-8z"/>

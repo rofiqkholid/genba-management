@@ -210,7 +210,7 @@
                                     <div class="grid grid-cols-[60%_40%] gap-2 items-end">
                                         <div>
                                             <label class="block text-[10px] font-semibold text-slate-500 mb-0.5">Achievement</label>
-                                            <input type="text" name="history[{{ $yr }}][achievement]" class="w-full px-2 py-[9px] border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-sm" placeholder="Achievement">
+                                            <input type="text" id="create_ach_{{ $yr }}" name="history[{{ $yr }}][achievement]" class="w-full px-2 py-[9px] border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-sm" placeholder="Achievement" oninput="onHistoryAchievementInput(this, '{{ $yr }}', 'create')">
                                         </div>
                                         <div>
                                             <label class="block text-[10px] font-semibold text-slate-500 mb-0.5">Unit</label>
@@ -720,10 +720,13 @@
                 for (let i = 5; i >= 1; i--) {
                     const yr = currentYear - i;
                     const record = historyMap[yr] || { achievement: '', unit: '' };
-                    $('#edit_ach_' + yr).val(record.achievement !== null ? record.achievement : '');
-                    
+                    const ach = record.achievement !== null && record.achievement !== '' ? record.achievement : '';
+                    $('#edit_ach_' + yr).val(ach);
+
+                    // Only set unit if achievement has a value
+                    const unitVal = ach !== '' ? (record.unit || '') : '';
                     window.dispatchEvent(new CustomEvent(`set-edit-history-unit-${yr}`, {
-                        detail: { id: record.unit || '', name: record.unit || '' }
+                        detail: { id: unitVal, name: unitVal }
                     }));
                 }
             }
@@ -794,6 +797,27 @@
             }
         });
     }
+
+    // When achievement is cleared, automatically clear the unit for that year
+    function onHistoryAchievementInput(input, yr, mode) {
+        if (input.value.trim() === '') {
+            const event = `set-${mode}-history-unit-${yr}`;
+            window.dispatchEvent(new CustomEvent(event, {
+                detail: { id: '', name: '' }
+            }));
+        }
+    }
+
+    // Wire up edit achievement inputs on document ready
+    $(document).ready(function() {
+        const currentYear = new Date().getFullYear();
+        for (let i = 5; i >= 1; i--) {
+            const yr = currentYear - i;
+            $('#edit_ach_' + yr).on('input', function() {
+                onHistoryAchievementInput(this, yr, 'edit');
+            });
+        }
+    });
 </script>
 @endpush
 @endsection

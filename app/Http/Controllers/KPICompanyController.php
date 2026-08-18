@@ -525,9 +525,9 @@ class KPICompanyController extends Controller
                 'act.created_at',
                 'act.updated_at',
                 'child.department_code',
-                DB::raw('child.operator as operator'),
-                DB::raw('child.unit as unit'),
-                DB::raw('child.periode as periode'),
+                'parent.operator as operator',
+                'parent.unit as unit',
+                'child.periode as periode',
                 'parent.objective',
                 'parent.target as master_target'
             )

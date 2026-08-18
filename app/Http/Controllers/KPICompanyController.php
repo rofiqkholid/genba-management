@@ -155,7 +155,7 @@ class KPICompanyController extends Controller
                 
                 $deleteBtn = '';
                 if ($canDelete) {
-                    $deleteBtn = ' <button type="button" title="Delete" class="w-10 h-10 flex items-center justify-center rounded-xl bg-red-50 text-red-500 hover:bg-red-100 hover:text-red-600 transition-all duration-200" 
+                    $deleteBtn = ' <button type="button" title="Delete" class="w-10 h-10 shrink-0 flex items-center justify-center rounded-xl bg-red-50 text-red-500 hover:bg-red-100 hover:text-red-600 transition-all duration-200" 
                                     id="btn_delete_' . ($start + $key + 1) . '" 
                                     onclick="handleDelete(' . $item->id . ',' . ($start + $key + 1) . ')">
                                     <span id="icon_delete_' . ($start + $key + 1) . '" class="flex items-center justify-center">
@@ -204,22 +204,22 @@ class KPICompanyController extends Controller
                     }
                 }
 
-                $row["action"] = '<div class="flex items-center justify-start gap-2">
-                                <button type="button" title="Detail" class="w-10 h-10 flex items-center justify-center rounded-xl bg-green-50 text-green-500 hover:bg-green-100 hover:text-green-600 transition-all duration-200"
+                $row["action"] = '<div class="flex items-center justify-start gap-2 whitespace-nowrap">
+                                <button type="button" title="Detail" class="w-10 h-10 shrink-0 flex items-center justify-center rounded-xl bg-green-50 text-green-500 hover:bg-green-100 hover:text-green-600 transition-all duration-200"
                                     onclick="handleDetail(\'' . self::encodeId($item->id) . '\')">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-green-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                                         <line x1="5" y1="12" x2="19" y2="12"></line>
                                         <polyline points="12 5 19 12 12 19"></polyline>
                                     </svg>
                                 </button>
-                                <button type="button" title="Edit" class="w-10 h-10 flex items-center justify-center rounded-xl bg-blue-50 text-blue-500 hover:bg-blue-100 hover:text-blue-600 transition-all duration-200"
+                                <button type="button" title="Edit" class="w-10 h-10 shrink-0 flex items-center justify-center rounded-xl bg-blue-50 text-blue-500 hover:bg-blue-100 hover:text-blue-600 transition-all duration-200"
                                     onclick="handleEdit(this)"
                                     data-id="' . $item->id . '"
                                     data-kpi_list_id="' . $item->kpi_list_id . '"
                                     data-department_code="' . htmlspecialchars($item->department_code) . '"
                                     data-target="' . htmlspecialchars($item->target ?? '') . '"
                                     data-periode="' . htmlspecialchars($item->periode ?? '') . '">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-blue-500" viewBox="0 0 24 24" fill="none">
                                     <path opacity="0.3" d="M10 4H21C21.6 4 22 4.4 22 5V7H10V4Z" fill="currentColor"></path>
                                     <path opacity="0.3" d="M10.3 15.3L11 14.6L8.70002 12.3C8.30002 11.9 7.7 11.9 7.3 12.3C6.9 12.7 6.9 13.3 7.3 13.7L10.3 16.7C9.9 16.3 9.9 15.7 10.3 15.3Z" fill="currentColor"></path><path d="M10.4 3.60001L12 6H21C21.6 6 22 6.4 22 7V19C22 19.6 21.6 20 21 20H3C2.4 20 2 19.6 2 19V4C2 3.4 2.4 3 3 3H9.20001C9.70001 3 10.2 3.20001 10.4 3.60001ZM11.7 16.7L16.7 11.7C17.1 11.3 17.1 10.7 16.7 10.3C16.3 9.89999 15.7 9.89999 15.3 10.3L11 14.6L8.70001 12.3C8.30001 11.9 7.69999 11.9 7.29999 12.3C6.89999 12.7 6.89999 13.3 7.29999 13.7L10.3 16.7C10.5 16.9 10.8 17 11 17C11.2 17 11.5 16.9 11.7 16.7Z" fill="currentColor"></path>
                                 </svg>
@@ -246,35 +246,65 @@ class KPICompanyController extends Controller
         ]);
 
         try {
-            $kpiCompanyId = DB::table('KPICompany')->insertGetId([
-                'kpi_list_id' => $request->kpi_list_id,
-                'department_code' => $request->department_code,
-                'periode' => $request->periode,
-                'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now()
-            ]);
+            // Department code bisa berupa string dengan pemisah koma (multi-select)
+            $departments = explode(',', $request->department_code);
+            $departments = array_filter(array_map('trim', $departments));
+
+            if (empty($departments)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Please select at least one department.'
+                ], 400);
+            }
+
+            DB::beginTransaction();
 
             $months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-            $activities = [];
-            foreach ($months as $m) {
-                $activities[] = [
-                    'kpi_company_id' => $kpiCompanyId,
-                    'tahun' => $request->periode,
-                    'bulan' => $m,
-                    'actual' => null,
-                    'status' => null,
-                    'problem_solve' => null,
+
+            foreach ($departments as $deptCode) {
+                // Cek jika record untuk kpi_list_id, department_code, dan periode tersebut sudah ada agar tidak duplikat
+                $exists = DB::table('KPICompany')
+                    ->where('kpi_list_id', $request->kpi_list_id)
+                    ->where('department_code', $deptCode)
+                    ->where('periode', $request->periode)
+                    ->exists();
+
+                if ($exists) {
+                    continue; // Skip jika sudah ada
+                }
+
+                $kpiCompanyId = DB::table('KPICompany')->insertGetId([
+                    'kpi_list_id' => $request->kpi_list_id,
+                    'department_code' => $deptCode,
+                    'periode' => $request->periode,
                     'created_at' => Carbon::now(),
                     'updated_at' => Carbon::now()
-                ];
+                ]);
+
+                $activities = [];
+                foreach ($months as $m) {
+                    $activities[] = [
+                        'kpi_company_id' => $kpiCompanyId,
+                        'tahun' => $request->periode,
+                        'bulan' => $m,
+                        'actual' => null,
+                        'status' => null,
+                        'problem_solve' => null,
+                        'created_at' => Carbon::now(),
+                        'updated_at' => Carbon::now()
+                    ];
+                }
+                DB::table('KPICompanyActivity')->insert($activities);
             }
-            DB::table('KPICompanyActivity')->insert($activities);
+
+            DB::commit();
 
             return response()->json([
                 'success' => true,
                 'message' => 'Company KPI added successfully.'
             ]);
         } catch (\Exception $e) {
+            DB::rollBack();
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage()

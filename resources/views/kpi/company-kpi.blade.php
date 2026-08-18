@@ -46,9 +46,9 @@
             <div class="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
                 <!-- Filter Section -->
                 <div class="p-6 border-b border-slate-200 bg-slate-50/50">
-                    <div class="flex flex-wrap items-center gap-3 w-full">
+                    <div class="grid grid-cols-2 md:flex md:flex-row md:flex-wrap md:items-center gap-3 w-full">
                         <!-- Search -->
-                        <div class="flex-1 min-w-[150px]">
+                        <div class="col-span-1 md:flex-1 md:min-w-[150px]">
                             <div class="relative">
                                 <input type="text" id="searchInput" placeholder="Search KPI..."
                                     class="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm outline-none bg-white">
@@ -57,7 +57,7 @@
                         </div>
 
                         <!-- Pillar Filter -->
-                        <div class="flex-1 min-w-[120px]">
+                        <div class="col-span-1 md:flex-1 md:min-w-[120px]">
                             <x-searchable-select
                                 name="filter_pillar"
                                 id="filter_pillar"
@@ -69,7 +69,7 @@
                         </div>
 
                         <!-- Objective Filter -->
-                        <div class="flex-1 min-w-[180px]">
+                        <div class="col-span-1 md:flex-1 md:min-w-[180px]">
                             <x-searchable-select
                                 name="filter_objective"
                                 id="filter_objective"
@@ -81,7 +81,7 @@
                         </div>
 
                         <!-- Period Filter -->
-                        <div class="flex-1 min-w-[110px]">
+                        <div class="col-span-1 md:flex-1 md:min-w-[110px]">
                             <x-searchable-select
                                 name="filter_periode"
                                 id="filter_periode"
@@ -93,7 +93,7 @@
                         </div>
 
                         <!-- Department Filter -->
-                        <div class="flex-1 min-w-[150px]">
+                        <div class="col-span-1 md:flex-1 md:min-w-[150px]">
                             <x-searchable-select
                                 name="filter_department"
                                 id="filter_department"
@@ -105,7 +105,7 @@
                         </div>
 
                         <!-- Reset Filters -->
-                        <div class="flex-none">
+                        <div class="col-span-1 md:w-auto md:flex-none">
                             <button type="button" id="resetFilters"
                                 class="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 text-sm font-base transition-colors whitespace-nowrap">
                                 <i class="fa-solid fa-rotate-right text-sm"></i>
@@ -114,7 +114,7 @@
                         </div>
 
                         <!-- Create Button -->
-                        <div class="flex-none">
+                        <div class="col-span-2 md:w-auto md:flex-none">
                             <button type="button" onclick="showCreateForm()"
                                 class="w-full inline-flex items-center justify-center gap-2 px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium transition-colors shadow-sm shadow-blue-200 whitespace-nowrap">
                                 <i class="fa-solid fa-plus text-sm"></i>
@@ -133,8 +133,8 @@
 @endphp
 
                 <!-- Table Section -->
-                <div class="p-6">
-                    <table id="companyKpiTable" class="qms-table w-full min-w-[1000px]">
+                <div class="p-6 overflow-x-auto">
+                    <table id="companyKpiTable" class="qms-table w-full" style="width: 100% !important; table-layout: auto !important;">
                         <thead>
                             <tr>
                                 <th class="w-[10%]">Department</th>
@@ -144,8 +144,8 @@
                                 @foreach($years as $yr)
                                     <th class="w-[6%]" style="font-size: 0.7rem !important; font-weight: 600 !important; color: #475569 !important; text-transform: uppercase !important; letter-spacing: 0.05em !important;">{{ $yr }}</th>
                                 @endforeach
-                                <th class="w-[15%]">Calculation Method</th>
-                                <th class="w-[10%] text-center">Actions</th>
+                                <th class="w-[15%]">Periode</th>
+                                <th class="w-[15%] min-w-[150px] text-center">Actions</th>
                             </tr>
                         </thead>
                         <tbody class="bg-white">
@@ -161,11 +161,11 @@
             <div class="mb-6">
                 <div class="flex items-center gap-3">
                     <button type="button" onclick="hideCreateForm()"
-                        class="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-blue-600 transition-all shadow-sm">
-                        <i class="fa-solid fa-arrow-left text-sm"></i>
+                        class="inline-flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-blue-600 transition-all">
+                        <i class="fa-solid fa-arrow-left text-[11px] sm:text-sm"></i>
                     </button>
                     <div>
-                        <h1 class="text-2xl font-bold text-slate-800">Add Company KPI</h1>
+                        <h1 class="text-lg sm:text-2xl font-bold text-slate-800">Add Company KPI</h1>
                         <p class="text-slate-500 text-sm">Define and assign new strategic goals for the organization</p>
                     </div>
                 </div>
@@ -246,48 +246,47 @@
                                      hideLabel="true" />
                              </div>
 
-                             <!-- Unit -->
-                             <div class="col-span-2 lg:col-span-1">
-                                 <label class="block text-sm font-medium text-slate-700 mb-1.5 tracking-wider">Unit <span class="text-red-500">*</span></label>
-                                 <x-searchable-select
-                                     name="unit"
-                                     id="create_unit"
-                                     label="Unit"
-                                     required="true"
-                                     disabled="true"
-                                     apiUrl="{{ route('master.kpi_unit.options') }}"
-                                     updateEvent="set-create-unit"
-                                     hideLabel="true" />
-                             </div>
+                              <!-- Unit (Hidden) -->
+                              <div class="hidden">
+                                  <x-searchable-select
+                                      name="unit"
+                                      id="create_unit"
+                                      label="Unit"
+                                      required="false"
+                                      disabled="true"
+                                      apiUrl="{{ route('master.kpi_unit.options') }}"
+                                      updateEvent="set-create-unit"
+                                      hideLabel="true" />
+                              </div>
 
-                             <!-- Periode -->
-                             <div class="col-span-2 lg:col-span-1">
-                                 <label class="block text-sm font-medium text-slate-700 mb-1.5 tracking-wider">Periode <span class="text-red-500">*</span></label>
-                                 <input type="text"
-                                     name="periode"
-                                     id="create_periode"
-                                     value="{{ date('Y') }}"
-                                     readonly
-                                     required
-                                     class="w-full px-4 py-2.5 border border-slate-200 rounded-lg bg-slate-50 text-slate-500 text-sm outline-none cursor-not-allowed focus:border-slate-200 focus:ring-0" />
-                             </div>
+                              <!-- Periode -->
+                              <div class="col-span-2">
+                                  <label class="block text-sm font-medium text-slate-700 mb-1.5 tracking-wider">Periode <span class="text-red-500">*</span></label>
+                                  <input type="text"
+                                      name="periode"
+                                      id="create_periode"
+                                      value="{{ date('Y') }}"
+                                      readonly
+                                      required
+                                      class="w-full px-4 py-2.5 border border-slate-200 rounded-lg bg-slate-50 text-slate-500 text-sm outline-none cursor-not-allowed focus:border-slate-200 focus:ring-0" />
+                              </div>
 
-                             <!-- Calculation Method -->
-                             <div class="col-span-2">
-                                 <label class="block text-sm font-medium text-slate-700 mb-1.5 tracking-wider">Calculation Method <span class="text-red-500">*</span></label>
-                                 <x-searchable-select
-                                     name="calculation_method"
-                                     id="create_calculation_method"
-                                     label="Calculation Method"
-                                     required="true"
-                                     disabled="true"
-                                     :initialOptions="[
-                                         ['id' => 'Direct Actual (Input Actual Data)', 'name' => 'Direct Actual (Input Actual Data)'],
-                                         ['id' => 'Custom (Using Formula Components)', 'name' => 'Custom (Using Formula Components)']
-                                     ]"
-                                     updateEvent="set-create-calculation-method"
-                                     hideLabel="true" />
-                             </div></div>
+                              <!-- Calculation Method -->
+                              <div class="col-span-2">
+                                  <label class="block text-sm font-medium text-slate-700 mb-1.5 tracking-wider">Calculation Method <span class="text-red-500">*</span></label>
+                                  <x-searchable-select
+                                      name="calculation_method"
+                                      id="create_calculation_method"
+                                      label="Calculation Method"
+                                      required="true"
+                                      disabled="true"
+                                      :initialOptions="[
+                                          ['id' => 'Direct Actual (Input Actual Data)', 'name' => 'Direct Actual (Input Actual Data)'],
+                                          ['id' => 'Custom (Using Formula Components)', 'name' => 'Custom (Using Formula Components)']
+                                      ]"
+                                      updateEvent="set-create-calculation-method"
+                                      hideLabel="true" />
+                              </div></div>
 
                         <!-- Action Buttons -->
                         <div class="flex justify-end gap-3 pt-8 mt-8 border-t border-slate-100">
@@ -311,11 +310,11 @@
             <div class="mb-6">
                 <div class="flex items-center gap-3">
                     <button type="button" onclick="hideEditForm()"
-                        class="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-blue-600 transition-all shadow-sm">
-                        <i class="fa-solid fa-arrow-left text-sm"></i>
+                        class="inline-flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-blue-600 transition-all">
+                        <i class="fa-solid fa-arrow-left text-[11px] sm:text-sm"></i>
                     </button>
                     <div>
-                        <h1 class="text-2xl font-bold text-slate-800">Edit Company KPI</h1>
+                        <h1 class="text-lg sm:text-2xl font-bold text-slate-800">Edit Company KPI</h1>
                         <p class="text-slate-500 text-sm">Modify strategic goals and target achievements for the organization</p>
                     </div>
                 </div>
@@ -387,14 +386,13 @@
                                      hideLabel="true" />
                              </div>
 
-                             <!-- Unit -->
-                             <div class="col-span-2 lg:col-span-1">
-                                 <label class="block text-sm font-medium text-slate-700 mb-1.5">Unit <span class="text-red-500">*</span></label>
+                              <!-- Unit (Hidden) -->
+                             <div class="hidden">
                                  <x-searchable-select
                                      name="unit"
                                      id="edit_unit"
                                      label="Unit"
-                                     required="true"
+                                     required="false"
                                      disabled="true"
                                      apiUrl="{{ route('master.kpi_unit.options') }}"
                                      updateEvent="set-edit-unit"
@@ -402,7 +400,7 @@
                              </div>
 
                              <!-- Periode -->
-                             <div class="col-span-2 lg:col-span-1">
+                             <div class="col-span-2">
                                  <label class="block text-sm font-medium text-slate-700 mb-1.5">Periode <span class="text-red-500">*</span></label>
                                  <input type="text"
                                      name="periode"
@@ -412,14 +410,13 @@
                                      class="w-full px-4 py-2.5 border border-slate-200 rounded-lg bg-slate-50 text-slate-500 text-sm outline-none cursor-not-allowed focus:border-slate-200 focus:ring-0" />
                              </div>
 
-                             <!-- Calculation Method -->
-                             <div class="col-span-2">
-                                 <label class="block text-sm font-medium text-slate-700 mb-1.5">Calculation Method <span class="text-red-500">*</span></label>
+                             <!-- Calculation Method (Hidden) -->
+                             <div class="hidden">
                                  <x-searchable-select
                                      name="calculation_method"
                                      id="edit_calculation_method"
                                      label="Calculation Method"
-                                     required="true"
+                                     required="false"
                                      disabled="true"
                                      :initialOptions="[
                                          ['id' => 'Direct Actual (Input Actual Data)', 'name' => 'Direct Actual (Input Actual Data)'],
@@ -551,6 +548,7 @@
         var table = $('#companyKpiTable').DataTable({
             processing: true,
             serverSide: true,
+            autoWidth: false,
             ajax: {
                 url: "{{ route('kpi.company.table') }}",
                 type: 'POST',
@@ -574,8 +572,8 @@
                 years.forEach(function(yr) {
                     cols.push({ data: 'year_' + yr, name: 'year_' + yr, orderable: false, searchable: false, className: 'text-slate-700 py-4' });
                 });
-                cols.push({ data: 'calculation_method', name: 'calculation_method', className: 'text-slate-700 py-4' });
-                cols.push({ data: 'action', name: 'action', orderable: false, searchable: false, className: 'text-left py-4' });
+                cols.push({ data: 'periode', name: 'periode', className: 'text-slate-700 py-4' });
+                cols.push({ data: 'action', name: 'action', orderable: false, searchable: false, className: 'text-left py-4 min-w-[150px]' });
                 return cols;
             }()),
             language: {
@@ -732,6 +730,11 @@
             window.dispatchEvent(new CustomEvent('set-create-unit', { detail: { id: "", name: "" } }));
             window.dispatchEvent(new CustomEvent('set-create-calculation-method', { detail: { id: "", name: "" } }));
             
+            // Trigger change manual agar visual tombol update ke Select All abu-abu
+            setTimeout(() => {
+                $('#create_department_code').trigger('change');
+            }, 10);
+            
             setTimeout(() => {
                 if (window.autoResizeTextarea) {
                     window.autoResizeTextarea(document.getElementById('create_calculation_method'));
@@ -765,6 +768,11 @@
         let objectiveName = kpiObjectives[kpi_list_id] || "";
         window.dispatchEvent(new CustomEvent('set-edit-kpi', {
             detail: { id: kpi_list_id, name: objectiveName }
+        }));
+
+        // Trigger edit-kpi-changed to auto-fill Operator, Unit, and Calculation Method
+        window.dispatchEvent(new CustomEvent('edit-kpi-changed', {
+            detail: { id: kpi_list_id }
         }));
 
         // Department selection

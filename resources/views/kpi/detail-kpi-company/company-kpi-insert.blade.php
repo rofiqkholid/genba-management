@@ -25,13 +25,13 @@
             }
         </style>
         <!-- Back Button & Page Title -->
-        <div class="mb-6 flex items-center gap-4">
-            <a href="javascript:history.back()" class="w-10 h-10 flex items-center justify-center bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors">
-                <i class="fa-solid fa-arrow-left text-slate-600"></i>
+        <div class="mb-6 flex items-center gap-3">
+            <a href="javascript:history.back()" class="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl shrink-0 flex items-center justify-center bg-white border border-slate-200 hover:bg-slate-50 transition-colors">
+                <i class="fa-solid fa-arrow-left text-[11px] sm:text-sm text-slate-600"></i>
             </a>
             <div>
-                <h1 class="text-2xl font-bold text-slate-800">{{ $isViewMode ? 'KPI Company Activity Details' : 'KPI Company Activity Input' }}</h1>
-                <p class="text-slate-500 mt-1">{{ $isViewMode ? 'View actual performance, status, and corrective action for this month.' : 'Insert actual performance, status, and corrective action for this month.' }}</p>
+                <h1 class="text-lg sm:text-2xl font-bold text-slate-800">{{ $isViewMode ? 'KPI Company Activity Details' : 'KPI Company Activity Input' }}</h1>
+                <p class="text-slate-500 text-sm">{{ $isViewMode ? 'View actual performance, status, and corrective action for this month.' : 'Insert actual performance, status, and corrective action for this month.' }}</p>
             </div>
         </div>
 

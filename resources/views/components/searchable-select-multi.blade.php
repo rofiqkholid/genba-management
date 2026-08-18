@@ -20,7 +20,7 @@
     @if(!$hideLabel)
     <label class="text-sm text-slate-600">{{ $label }} @if($required)<span class="text-red-500">*</span>@endif</label>
     @endif
-    <div class="@if(!$hideLabel) col-span-2 @else w-full @endif relative" x-data="{
+    <div class="@if(!$hideLabel) col-span-2 @else w-full @endif relative" @click.outside="open = false; validate()" x-data="{
         open: false,
         search: '',
         selectedName: '',
@@ -80,6 +80,11 @@
                     this.search = this.selectedName || '';
                     $('#{{ $id }}').val(this.selectedId || '');
                 }
+                
+                // Trigger change event agar JQuery change listener mendeteksi update nilai eksternal ini
+                this.$nextTick(() => {
+                    document.getElementById('{{ $id }}').dispatchEvent(new Event('change'));
+                });
             });
             @endif
 
@@ -296,8 +301,7 @@
             <input type="text" x-model="search" 
                 @input.debounce.300ms="onSearch" 
                 @click="toggle" 
-                @click.outside="open = false; validate()"
-                @keydown.enter.prevent="open = false; validate()"
+                @keydown.prevent.enter="open = false; validate()"
                 placeholder="Select {{ $label }}..."
                 @if($dependencyEvent)
                 :disabled="dependencyValue === ''"
@@ -338,12 +342,17 @@
             <template x-for="(item, index) in items" :key="item.id + '_' + index">
                 <div x-show="!search || item.name.toLowerCase().includes(search.toLowerCase())"
                     @click="select(item)"
-                    class="px-4 py-2.5 text-sm cursor-pointer transition-colors hover:bg-slate-50 flex items-center justify-between"
-                    :class="multiple ? (selectedItems.some(i => i.id === item.id) ? 'text-blue-600 bg-blue-50 font-semibold' : 'text-slate-700') : (selectedId === item.id ? 'text-blue-600 bg-blue-50' : 'text-slate-700')">
-                    <span x-text="item.name"></span>
-                    <template x-if="multiple && selectedItems.some(i => i.id === item.id)">
-                        <i class="fa-solid fa-check text-blue-500 text-xs"></i>
+                    class="px-4 py-2.5 text-sm cursor-pointer transition-colors hover:bg-slate-50 flex items-center gap-3"
+                    :class="multiple ? (selectedItems.some(i => i.id === item.id) ? 'text-blue-600 font-semibold' : 'text-slate-700') : (selectedId === item.id ? 'text-blue-600' : 'text-slate-700')">
+                    <template x-if="multiple">
+                        <div class="w-4 h-4 border rounded flex items-center justify-center shrink-0 transition-colors"
+                            :class="selectedItems.some(i => i.id === item.id) ? 'bg-blue-600 border-blue-600 text-white' : 'border-slate-300 bg-white'">
+                            <template x-if="selectedItems.some(i => i.id === item.id)">
+                                <i class="fa-solid fa-check text-[10px]"></i>
+                            </template>
+                        </div>
                     </template>
+                    <span x-text="item.name"></span>
                 </div>
             </template>
 

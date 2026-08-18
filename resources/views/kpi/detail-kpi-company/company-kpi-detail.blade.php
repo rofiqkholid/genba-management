@@ -24,13 +24,13 @@
     <!-- Page Content -->
     <main class="flex-1 p-6">
         <!-- Back Button & Page Title -->
-        <div class="mb-6 flex items-center gap-4">
-            <a href="{{ route('kpi.company') }}" class="w-10 h-10 flex items-center justify-center bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors">
-                <i class="fa-solid fa-arrow-left text-slate-600"></i>
+        <div class="mb-6 flex items-center gap-3">
+            <a href="{{ route('kpi.company') }}" class="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl shrink-0 flex items-center justify-center bg-white border border-slate-200 hover:bg-slate-50 transition-colors">
+                <i class="fa-solid fa-arrow-left text-[11px] sm:text-sm text-slate-600"></i>
             </a>
             <div>
-                <h1 class="text-2xl font-bold text-slate-800">Detail KPI Company</h1>
-                <p class="text-slate-500 mt-1">Detailed performance tracking, objective details and monthly actual trend.</p>
+                <h1 class="text-lg sm:text-2xl font-bold text-slate-800">Detail KPI Company</h1>
+                <p class="text-slate-500 text-sm">Detailed performance tracking, objective details and monthly actual trend.</p>
             </div>
         </div>
 
@@ -39,36 +39,45 @@
             <!-- Unified Detail Card -->
             <div class="bg-white rounded-2xl border border-slate-200 p-6 space-y-6">
                 <!-- Summary Info -->
-                <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 pb-6 border-b border-slate-200">
-                    <div class="lg:col-span-3">
-                        <span class="text-slate-500 text-[10px] sm:text-xs tracking-wider block mb-1">KPI Objective</span>
-                        <span class="text-sm font-semibold text-slate-700 block">{{ $kpi->no_kpi }} - {{ $kpi->objective }}</span>
-                    </div>
-                    <div class="lg:col-span-2">
-                        <span class="text-slate-500 text-[10px] sm:text-xs tracking-wider block mb-1">Pillar / Dept</span>
-                        <span class="text-sm font-semibold text-slate-700">{{ $kpi->pillar ?? '-' }} / {{ $kpi->department_code }}</span>
-                    </div>
-                    <div class="lg:col-span-2">
-                        <span class="text-slate-500 text-[10px] sm:text-xs tracking-wider block mb-1">Period / Target</span>
-                        <span class="text-sm font-semibold text-slate-700">{{ $kpi->periode }} / {{ $kpi->operator }} {{ $kpi->target }} {{ $kpi->unit }}</span>
-                    </div>
-                    <div class="lg:col-span-5 flex flex-wrap items-center justify-between gap-4">
-                        <div>
-                            <span class="text-slate-500 text-[10px] sm:text-xs tracking-wider block mb-1">Calculation Method</span>
-                            <span class="text-sm font-semibold text-slate-700">{{ $kpi->calculation_method }}</span>
+                <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 pb-6 border-b border-slate-200 w-full">
+                    <!-- Left side: Text blocks grouped together -->
+                    <div class="grid grid-cols-2 lg:flex lg:flex-row lg:items-center gap-4 lg:gap-16 w-full lg:w-auto">
+                        <div class="col-span-1 lg:flex-initial min-w-0">
+                            <span class="text-slate-500 text-[10px] sm:text-xs tracking-wider block mb-1">KPI Objective</span>
+                            <span class="text-sm font-semibold text-slate-700 block truncate" title="{{ $kpi->no_kpi }} - {{ $kpi->objective }}">{{ $kpi->no_kpi }} - {{ $kpi->objective }}</span>
                         </div>
-                        <div class="flex items-center gap-2">
-                            <!-- Print PDF Button -->
-                            <button type="button" class="inline-flex items-center justify-center gap-2 w-28 py-2 text-xs font-medium text-white bg-rose-600 rounded-xl hover:bg-rose-700 transition-colors shadow-sm">
-                                <i class="fa-solid fa-file-pdf text-sm"></i>
-                                Print
-                            </button>
-                            <button type="button" class="inline-flex items-center justify-center gap-2 w-28 py-2 text-xs font-medium text-white bg-emerald-600 rounded-xl hover:bg-emerald-700 transition-colors shadow-sm">
-                                <i class="fa-solid fa-file-excel text-sm"></i>
-                                Export Excel
-                            </button>
-                            <div class="w-px h-6 bg-slate-200 mx-1"></div>
-                            <button type="button" class="inline-flex items-center gap-2 px-3 py-2 text-xs font-medium text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-colors shadow-sm">
+                        <div class="col-span-1 lg:flex-initial">
+                            <span class="text-slate-500 text-[10px] sm:text-xs tracking-wider block mb-1">Pillar / Dept</span>
+                            <span class="text-sm font-semibold text-slate-700 block">{{ $kpi->pillar ?? '-' }} / {{ $kpi->department_code }}</span>
+                        </div>
+                        <div class="col-span-1 lg:flex-initial">
+                            <span class="text-slate-500 text-[10px] sm:text-xs tracking-wider block mb-1">Period / Target</span>
+                            <span class="text-sm font-semibold text-slate-700 block">{{ $kpi->periode }} / {{ $kpi->operator }} {{ $kpi->target }} {{ $kpi->unit }}</span>
+                        </div>
+                        <div class="col-span-1 lg:flex-initial">
+                            <span class="text-slate-500 text-[10px] sm:text-xs tracking-wider block mb-1">Calculation Method</span>
+                            <span class="text-sm font-semibold text-slate-700 block">{{ $kpi->calculation_method }}</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Right side: Buttons -->
+                    <div class="lg:flex-initial flex items-center lg:justify-end w-full lg:w-auto">
+                        <div class="flex flex-col sm:flex-row sm:items-center gap-2 w-full sm:w-auto">
+                            <div class="flex gap-2 w-full sm:w-auto">
+                                <!-- Print PDF Button -->
+                                <button type="button" class="inline-flex items-center justify-center gap-2 flex-1 sm:flex-none sm:w-28 py-2.5 sm:py-2 text-xs font-medium text-white bg-rose-600 rounded-xl hover:bg-rose-700 transition-colors shadow-sm">
+                                    <i class="fa-solid fa-file-pdf text-sm"></i>
+                                    Print
+                                </button>
+                                <!-- Export Excel Button -->
+                                <button type="button" class="inline-flex items-center justify-center gap-2 flex-1 sm:flex-none sm:w-28 py-2.5 sm:py-2 text-xs font-medium text-white bg-emerald-600 rounded-xl hover:bg-emerald-700 transition-colors shadow-sm">
+                                    <i class="fa-solid fa-file-excel text-sm"></i>
+                                    Export Excel
+                                </button>
+                            </div>
+                            <div class="hidden sm:block w-px h-6 bg-slate-200 mx-1"></div>
+                            <!-- Manage Activity Button -->
+                            <button type="button" class="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-4 py-2.5 sm:py-2 text-xs font-medium text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-colors shadow-sm whitespace-nowrap">
                                 <i class="fa-solid fa-list-check text-sm"></i>
                                 Manage Activity Plan
                             </button>
@@ -79,27 +88,46 @@
                 <!-- Chart & Table section -->
                 <div>
                 <!-- Title Header -->
-                <div class="mb-6">
-                    <h3 class="text-lg font-bold text-slate-700">12-Month Performance Summary</h3>
+                <div class="mb-6 text-center lg:text-left">
+                    <h3 class="text-sm sm:text-lg font-bold text-slate-700">12-Month Performance Summary</h3>
                 </div>
 
                 <!-- Flex container for indicator and chart -->
                 <div class="flex flex-col lg:flex-row items-center gap-6">
                     <!-- Target direction indicator (Left) -->
-                    <div class="flex items-center gap-3 border-r border-slate-200 pr-6 lg:h-32">
-                        <div class="flex items-center gap-2 border border-green-500 rounded-xl px-4 py-2 bg-green-50/30">
+                    <div class="flex items-center gap-3 sm:gap-4 lg:h-32 w-full lg:w-auto justify-center lg:justify-start">
+                        <div class="flex items-center gap-1.5 sm:gap-2 border border-green-500 rounded-lg sm:rounded-xl px-2.5 py-1 sm:px-4 sm:py-2 bg-green-50/30 shrink-0">
                             @if(in_array($kpi->operator, ['<=', '<']))
                                 <!-- Down Arrow -->
-                                <svg class="w-6 h-6 text-green-600 fill-current" viewBox="0 0 24 24">
+                                <svg class="w-4 h-4 sm:w-6 sm:h-6 text-green-600 fill-current" viewBox="0 0 24 24">
                                     <path d="M20 12l-1.41-1.41L13 16.17V4h-2v12.17l-5.58-5.59L4 12l8 8 8-8z"/>
                                 </svg>
+                                <span class="text-green-600 font-bold text-sm sm:text-lg">Good</span>
                             @else
                                 <!-- Up Arrow -->
-                                <svg class="w-6 h-6 text-green-600 fill-current" viewBox="0 0 24 24">
+                                <svg class="w-4 h-4 sm:w-6 sm:h-6 text-green-600 fill-current" viewBox="0 0 24 24">
                                     <path d="M4 12l1.41 1.41L11 7.83V20h2V7.83l5.58 5.59L20 12l-8-8-8 8z"/>
                                 </svg>
+                                <span class="text-green-600 font-bold text-sm sm:text-lg">Good</span>
                             @endif
-                            <span class="text-xl font-normal text-green-600">Good</span>
+                        </div>
+
+                        <!-- Explicit Separator Line -->
+                        <div class="w-px h-12 lg:h-32 bg-slate-200 shrink-0 mx-2 sm:mx-4"></div>
+
+                        <!-- Chart Pagination (Visible on Mobile only, positioned to the right of the separator) -->
+                        <div id="chartPagination" class="hidden items-center gap-1.5 shrink-0">
+                            <span id="chartPageIndicator" class="text-xs sm:text-sm text-slate-600 font-medium mr-1 text-nowrap">1/2</span>
+                            <button type="button" id="btnChartPrev" class="w-8 h-8 flex items-center justify-center border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 hover:text-blue-600 rounded-lg disabled:opacity-50 disabled:hover:text-slate-600 disabled:hover:bg-white transition-colors shadow-sm">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7" />
+                                </svg>
+                            </button>
+                            <button type="button" id="btnChartNext" class="w-8 h-8 flex items-center justify-center border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 hover:text-blue-600 rounded-lg disabled:opacity-50 disabled:hover:text-slate-600 disabled:hover:bg-white transition-colors shadow-sm">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" />
+                                </svg>
+                            </button>
                         </div>
                     </div>
 
@@ -455,6 +483,19 @@
 
 @push('scripts')
 <script>
+    let currentChartPage = 1;
+    let chartPageSize = 12;
+
+    function updatePageSize() {
+        const width = window.innerWidth;
+        if (width < 640) {
+            chartPageSize = 6;
+        } else {
+            chartPageSize = 12;
+            currentChartPage = 1;
+        }
+    }
+
     function renderKPIChart() {
         const canvas = document.getElementById('kpiPerformanceChart');
         if (!canvas) return;
@@ -465,8 +506,9 @@
         }
         
         try {
+            updatePageSize();
             const ctx = canvas.getContext('2d');
-            const actualData = JSON.parse(canvas.dataset.actual || '[]');
+            const fullActualData = JSON.parse(canvas.dataset.actual || '[]');
             const targetVal = parseFloat(canvas.dataset.target) || 0;
             const operator = canvas.dataset.operator || '';
             
@@ -475,8 +517,27 @@
             const targetColor = isNegativeTarget ? '#22c55e' : '#FF4560';
             const actualBgColor = isNegativeTarget ? 'rgba(255, 69, 96, 0.05)' : 'rgba(34, 197, 94, 0.05)';
 
-            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-            const targetData = new Array(12).fill(targetVal);
+            const fullMonths = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            const fullTargetData = new Array(12).fill(targetVal);
+
+            const totalItems = 12;
+            const totalPages = Math.ceil(totalItems / chartPageSize) || 1;
+            
+            if (chartPageSize < 12) {
+                $('#chartPagination').removeClass('hidden').addClass('flex');
+                $('#chartPageIndicator').text(`${currentChartPage}/${totalPages}`);
+                $('#btnChartPrev').prop('disabled', currentChartPage === 1);
+                $('#btnChartNext').prop('disabled', currentChartPage === totalPages);
+            } else {
+                $('#chartPagination').removeClass('flex').addClass('hidden');
+            }
+
+            const startIndex = (currentChartPage - 1) * chartPageSize;
+            const endIndex = startIndex + chartPageSize;
+
+            const months = fullMonths.slice(startIndex, endIndex);
+            const actualData = fullActualData.slice(startIndex, endIndex);
+            const targetData = fullTargetData.slice(startIndex, endIndex);
 
             if (window.kpiChart && typeof window.kpiChart.destroy === 'function') {
                 window.kpiChart.destroy();
@@ -580,6 +641,31 @@
 
     $(document).ready(function() {
         renderKPIChart();
+
+        // Pagination button handlers
+        $('#btnChartPrev').on('click', function() {
+            if (currentChartPage > 1) {
+                currentChartPage--;
+                renderKPIChart();
+            }
+        });
+
+        $('#btnChartNext').on('click', function() {
+            const totalPages = Math.ceil(12 / chartPageSize) || 1;
+            if (currentChartPage < totalPages) {
+                currentChartPage++;
+                renderKPIChart();
+            }
+        });
+
+        // Resize handler
+        $(window).on('resize.kpi', function() {
+            const oldPageSize = chartPageSize;
+            updatePageSize();
+            if (oldPageSize !== chartPageSize) {
+                renderKPIChart();
+            }
+        });
         
         // Scroll to activity section if URL has #activity-section anchor
         if (window.location.hash === '#activity-section') {

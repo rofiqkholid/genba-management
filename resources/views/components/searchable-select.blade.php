@@ -20,7 +20,7 @@
     @if(!$hideLabel)
     <label class="text-sm text-slate-600">{{ $label }} @if($required)<span class="text-red-500">*</span>@endif</label>
     @endif
-    <div class="@if(!$hideLabel) col-span-2 @else w-full @endif relative" x-data="{
+    <div class="@if(!$hideLabel) col-span-2 @else w-full @endif relative" @click.outside="open = false; validate()" x-data="{
         open: false,
         search: '',
         selectedName: '',
@@ -207,8 +207,7 @@
              <input type="text" x-model="search" 
                 @input.debounce.300ms="onSearch" 
                 @click="toggle" 
-                @click.outside="open = false; validate()"
-                @keydown.enter.prevent="open = false; validate()"
+                @keydown.prevent.enter="open = false; validate()"
                 placeholder="Select {{ $label }}..."
                 :disabled="{{ $disabled ? 'true' : 'false' }} || @if($dependencyEvent) dependencyValue === '' @else false @endif"
                 :class="({{ $disabled ? 'true' : 'false' }} || @if($dependencyEvent) dependencyValue === '' @else false @endif) ? 'bg-slate-100 text-slate-400 cursor-not-allowed border-slate-200' : ''"

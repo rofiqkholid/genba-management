@@ -182,7 +182,7 @@
                                     @php
                                         $act = $activities->firstWhere('bulan', $m);
                                     @endphp
-                                    @if($act && $act->actual !== null && !empty($act->status))
+                                    @if($act && $act->actual !== null && !empty($act->status) && !($act->status === 'Not Achieved' && !$act->problem))
                                         @php
                                             $val = (float) filter_var($act->actual, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
                                             $actualSum += $val;
@@ -282,7 +282,7 @@
 
                                     <!-- Actual -->
                                     <td class="p-3 text-slate-600">
-                                        {{ !empty($activity->status) ? $activity->actual : '' }}
+                                        {{ (!empty($activity->status) && !($activity->status === 'Not Achieved' && !$activity->problem)) ? $activity->actual : '' }}
                                     </td>
 
                                     <!-- Status -->
@@ -303,8 +303,10 @@
                                     <td class="p-3">
                                         @if($activity->status === 'Not Achieved' && $activity->problem)
                                             <a href="{{ route('kpi.company.activity.edit', $activity->hash_id) }}?mode=view"
-                                                class="w-10 h-10 flex items-center justify-center rounded-xl bg-blue-50 text-blue-500 hover:bg-blue-100 hover:text-blue-600 transition-all duration-200" title="Preview Problem Solving">
-                                                <i class="fa-solid fa-magnifying-glass text-sm"></i>
+                                                class="inline-flex w-10 h-10 items-center justify-center rounded-none bg-blue-100 text-blue-500 hover:bg-blue-200 hover:text-blue-600 transition-colors" title="Preview Problem Solving">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                                                    <path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1S9.6 1.84 9.18 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2zm-7-.25a.75.75 0 1 1 0 1.5.75.75 0 0 1 0-1.5zM10.25 17l-3.5-3.5 1.41-1.41 2.09 2.08 5.59-5.59 1.41 1.41-7 7z"/>
+                                                </svg>
                                             </a>
                                         @elseif($activity->status === 'Not Achieved' && !$activity->problem)
                                             <span class="inline-flex items-center px-2 py-0.5 rounded-none text-xs font-semibold bg-red-50 text-red-600 border border-red-200">

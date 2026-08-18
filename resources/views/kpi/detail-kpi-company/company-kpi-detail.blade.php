@@ -182,7 +182,7 @@
                                     @php
                                         $act = $activities->firstWhere('bulan', $m);
                                     @endphp
-                                    @if($act && $act->actual !== null)
+                                    @if($act && $act->actual !== null && !empty($act->status))
                                         @php
                                             $val = (float) filter_var($act->actual, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
                                             $actualSum += $val;
@@ -282,7 +282,7 @@
 
                                     <!-- Actual -->
                                     <td class="p-3 text-slate-600">
-                                        {{ $activity->actual ?? '' }}
+                                        {{ !empty($activity->status) ? $activity->actual : '' }}
                                     </td>
 
                                     <!-- Status -->

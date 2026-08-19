@@ -1241,8 +1241,7 @@ $approve = $approve ?? null;
                 autoGrow(this);
             });
         });
-        const analyzedBy = '{{ $action->analyzed_by ?? '
-        ' }}';
+        const analyzedBy = @json($action->analyzed_by ?? '');
         if (analyzedBy) {
             window.dispatchEvent(new CustomEvent('update-analyzed-by', {
                 detail: {
@@ -1612,7 +1611,20 @@ $approve = $approve ?? null;
             if (!currentFileUrl) return;
 
             if (currentFileType === 'pdf') {
-                window.open(currentFileUrl, '_blank');
+                if (currentFileUrl.startsWith('data:')) {
+                    // Convert data URI to Blob URL (browsers block data: URIs in new tabs)
+                    const byteString = atob(currentFileUrl.split(',')[1]);
+                    const mimeString = currentFileUrl.split(',')[0].split(':')[1].split(';')[0];
+                    const ab = new ArrayBuffer(byteString.length);
+                    const ia = new Uint8Array(ab);
+                    for (let i = 0; i < byteString.length; i++) {
+                        ia[i] = byteString.charCodeAt(i);
+                    }
+                    const blob = new Blob([ab], { type: mimeString });
+                    window.open(URL.createObjectURL(blob), '_blank');
+                } else {
+                    window.open(currentFileUrl, '_blank');
+                }
             } else {
                 const img = document.getElementById('actionFileImg');
                 if (img) {

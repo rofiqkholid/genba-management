@@ -965,6 +965,21 @@ class InternalAuditController extends Controller
                         'action_status' => 'verified',
                         'updated_at' => Carbon::now()
                     ]);
+
+                DB::table('CsAuditApprove')
+                    ->where('audit_car_id', $car->id)
+                    ->update([
+                        'qmr_approved_at' => null,
+                        'corrective_action_one_verif' => null,
+                        'corrective_action_two_verif' => null,
+                        'corrective_action_three_verif' => null,
+                        'preventive_action_one_verif' => null,
+                        'preventive_action_two_verif' => null,
+                        'preventive_action_three_verif' => null,
+                        'root_cause_verif' => null,
+                        'updated_at' => Carbon::now()
+                    ]);
+
                 $message = 'CAR Action Report has been rolled back to QMR verification successfully.';
             } else {
                 DB::table('CsAuditCar')

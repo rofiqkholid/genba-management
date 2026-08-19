@@ -303,13 +303,13 @@ class InternalAuditController extends Controller
                           }
                       }
                   } elseif ($effectiveRole === 'closed') {
-                      if (in_array($user->username, ['031114-001', '260422-001', '121020-002'])) {
+                      if (in_array($user->username, ['031114-001', '260422-001', '121020-002', '2025001'])) {
                           $canAction = true;
                       }
                   }
   
                   $isUserAuditor = false;
-                  if (in_array($user->username, ['031114-001', '260422-001', '121020-002'])) {
+                  if (in_array($user->username, ['031114-001', '260422-001', '121020-002', '2025001'])) {
                       $isUserAuditor = true;
                   } elseif (!empty($item->auditor)) {
                       $auditors = array_map('trim', explode(',', $item->auditor));
@@ -468,7 +468,7 @@ class InternalAuditController extends Controller
 
             if ($carStatus === 'Closed') {
                 // Verify that the user is the Auditor or QMR
-                $isAuditor = in_array($user->username, ['031114-001', '260422-001', '121020-002']);
+                $isAuditor = in_array($user->username, ['031114-001', '260422-001', '121020-002', '2025001']);
                 if (!$isAuditor && !empty($car->auditor)) {
                     $auditors = array_map('trim', explode(',', $car->auditor));
                     foreach ($auditors as $auditorName) {
@@ -486,7 +486,7 @@ class InternalAuditController extends Controller
                 DB::table('CsAuditCar')
                     ->where('id', $request->car_id)
                     ->update([
-                        'status' => 'Need Verification',
+                        'status' => 'Closed',
                         'qmr_nik' => null,
                         'qmr_approved_at' => null,
                         'updated_at' => Carbon::now()
@@ -495,7 +495,7 @@ class InternalAuditController extends Controller
                 DB::table('CsAuditAction')
                     ->where('audit_car_id', $request->car_id)
                     ->update([
-                        'action_status' => 'approve_superior',
+                        'action_status' => 'verified',
                         'updated_at' => Carbon::now()
                     ]);
 
@@ -586,7 +586,7 @@ class InternalAuditController extends Controller
                 }
             } elseif ($carStatus === 'Closed') {
                 // Reject by QMR
-                if (!in_array($user->username, ['031114-001', '260422-001', '121020-002'])) {
+                if (!in_array($user->username, ['031114-001', '260422-001', '121020-002', '2025001'])) {
                     return response()->json(['success' => false, 'message' => 'Only QMR is allowed to reject at this stage.']);
                 }
             } else {
@@ -896,7 +896,7 @@ class InternalAuditController extends Controller
             $carStatus = $car->status ?? '';
 
             if ($carStatus === 'Closed') {
-                $isAuditor = in_array($user->username, ['031114-001', '260422-001', '121020-002']);
+                $isAuditor = in_array($user->username, ['031114-001', '260422-001', '121020-002', '2025001']);
                 if (!$isAuditor && !empty($car->auditor)) {
                     $auditors = array_map('trim', explode(',', $car->auditor));
                     foreach ($auditors as $auditorName) {
@@ -953,7 +953,7 @@ class InternalAuditController extends Controller
                 DB::table('CsAuditCar')
                     ->where('id', $car->id)
                     ->update([
-                        'status' => 'Need Verification',
+                        'status' => 'Closed',
                         'qmr_nik' => null,
                         'qmr_approved_at' => null,
                         'updated_at' => Carbon::now()
@@ -962,10 +962,10 @@ class InternalAuditController extends Controller
                 DB::table('CsAuditAction')
                     ->where('audit_car_id', $car->id)
                     ->update([
-                        'action_status' => 'approve_superior',
+                        'action_status' => 'verified',
                         'updated_at' => Carbon::now()
                     ]);
-                $message = 'CAR Action Report has been rolled back to verification successfully.';
+                $message = 'CAR Action Report has been rolled back to QMR verification successfully.';
             } else {
                 DB::table('CsAuditCar')
                     ->where('id', $car->id)
@@ -2056,7 +2056,7 @@ class InternalAuditController extends Controller
                 }
             } elseif ($role === 'closed') {
                 // Verify the user is QMR
-                if (!in_array($user->username, ['031114-001', '260422-001', '121020-002'])) {
+                if (!in_array($user->username, ['031114-001', '260422-001', '121020-002', '2025001'])) {
                     return response()->json(['success' => false, 'message' => 'Only QMR is allowed to perform final verification.']);
                 }
             } else {

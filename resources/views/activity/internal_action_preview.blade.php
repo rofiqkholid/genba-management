@@ -19,7 +19,8 @@ $approve = $approve ?? null;
      data-prev-one="{{ json_encode(array_filter(explode(',', $action->preventive_path_one ?? ''))) }}"
      data-prev-two="{{ json_encode(array_filter(explode(',', $action->preventive_path_two ?? ''))) }}"
      data-prev-three="{{ json_encode(array_filter(explode(',', $action->preventive_path_three ?? ''))) }}"
-     data-root-cause="{{ json_encode(array_filter(explode(',', $action->root_cause_path ?? ''))) }}">
+     data-root-cause="{{ json_encode(array_filter(explode(',', $action->root_cause_path ?? ''))) }}"
+     data-analyzed-by="{{ $action->analyzed_by ?? '' }}">
 </div>
 
 <div class="lg:ml-20 min-h-screen flex flex-col bg-slate-50">
@@ -232,7 +233,7 @@ $approve = $approve ?? null;
             }
             }
 
-            $isQmr = in_array(Auth::user()->username, ['031114-001', '260422-001', '121020-002']);
+            $isQmr = in_array(Auth::user()->username, ['031114-001', '260422-001', '121020-002', '2025001']);
 
             $isReviewing = false;
             if ($isSuperiorUser && ($car->status ?? '') === 'Under Review') {
@@ -732,7 +733,7 @@ $approve = $approve ?? null;
                         }
                         }
                         }
-                        $isQmr = in_array(Auth::user()->username, ['031114-001', '260422-001', '121020-002']);
+                        $isQmr = in_array(Auth::user()->username, ['031114-001', '260422-001', '121020-002', '2025001']);
                         // Notes is editable only if:
                         // 1. Action is completed (i.e. status is no longer Draft)
                         // 2. CAR status is 'Need Verification' (meaning superior has already verified it) and user is Auditor
@@ -933,7 +934,7 @@ $approve = $approve ?? null;
                     }
                     }
                     }
-                    $isQmr = in_array(Auth::user()->username, ['031114-001', '260422-001', '121020-002']);
+                    $isQmr = in_array(Auth::user()->username, ['031114-001', '260422-001', '121020-002', '2025001']);
                     $isSuperior = isset($action) && strcasecmp(Auth::user()->full_name, $action->auditee_superior_name ?? '') === 0;
 
                     $showActionButtons = false;
@@ -1241,7 +1242,8 @@ $approve = $approve ?? null;
                 autoGrow(this);
             });
         });
-        const analyzedBy = @json($action->analyzed_by ?? '');
+        const configEl = document.getElementById('action-files-config');
+        const analyzedBy = configEl ? configEl.getAttribute('data-analyzed-by') : '';
         if (analyzedBy) {
             window.dispatchEvent(new CustomEvent('update-analyzed-by', {
                 detail: {

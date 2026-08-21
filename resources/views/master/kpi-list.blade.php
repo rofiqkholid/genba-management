@@ -50,7 +50,7 @@
                         <tr class="bg-slate-50 border-b border-slate-200">
                             <th class="w-[5%] text-center">No</th>
                             <th class="w-[10%]">No. KPI</th>
-                            <th class="w-[20%]">Objective</th>
+                            <th class="w-[20%]">KPI Name</th>
                             <th class="w-[30%]">Definition</th>
                             <th class="w-[10%]">Pillar</th>
                             <th class="w-[10%]">Category</th>

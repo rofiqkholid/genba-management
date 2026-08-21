@@ -739,7 +739,7 @@
                         if (data.code === 200) {
                             showToast(data.message, 'success');
                             setTimeout(() => {
-                                window.location.href = "{{ route('genba_management') }}";
+                                window.location.href = "{{ route('genba-management') }}";
                             }, 1500);
                         } else {
                             showToast(data.message, 'error');

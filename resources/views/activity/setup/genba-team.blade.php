@@ -36,7 +36,7 @@
 
                         <!-- Create & Room Buttons -->
                         <div class="flex items-center gap-3 w-full sm:w-auto">
-                            <a href="{{ route('room_team') }}"
+                            <a href="{{ route('room-team') }}"
                                 class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-4 py-2 bg-white text-slate-700 border border-slate-200 rounded-lg hover:bg-slate-50 text-sm font-medium transition-all">
                                 <i class="fa-solid fa-users text-sm"></i>
                                 Room Team

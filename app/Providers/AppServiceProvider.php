@@ -25,7 +25,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        View::composer(['dashboard', 'dashboard.genba_mng', 'dashboard.genba_biq', 'dashboard.genba_safety', 'dashboard.internal_audit', 'activity.findings_genba', 'activity.internal_action_report', 'approvals.verifikasi_genba', 'approvals.verifkasi_internal_audit', 'summary.summary_verif'], function ($view) {
+        View::composer(['dashboard', 'dashboard.genba-mng', 'dashboard.genba-biq', 'dashboard.genba-safety', 'dashboard.internal-audit', 'activity.findings-genba', 'activity.internal-action-report', 'approvals.verifikasi-genba', 'approvals.verifkasi-internal-audit', 'summary.summary-verif'], function ($view) {
             $depts = array_filter(GenbaManagement::get_all_departments(), function($dept) {
                 return $dept !== 'PE & TMC';
             });

@@ -24,7 +24,7 @@ class InternalAuditController extends Controller
                     'name' => $item->Desc
                 ];
             });
-        return view('activity.internal_audit', compact('departments'));
+        return view('activity.internal-audit', compact('departments'));
     }
 
     public function actionReport()
@@ -59,7 +59,7 @@ class InternalAuditController extends Controller
             ->where('judgment', 'OFI')
             ->count();
 
-        return view('activity.internal_action_report', compact('departments', 'carCount', 'okeCount', 'ofiCount'));
+        return view('activity.internal-action-report', compact('departments', 'carCount', 'okeCount', 'ofiCount'));
     }
 
     public function actionReportPreview($id)
@@ -159,7 +159,7 @@ class InternalAuditController extends Controller
                 $qmrUser = DB::table('users')->where('username', $car->qmr_nik)->first();
             }
 
-            return view('activity.internal_action_preview', compact('car', 'action', 'qmrUser', 'approve'));
+            return view('activity.internal-action-preview', compact('car', 'action', 'qmrUser', 'approve'));
         } catch (\Exception $e) {
             return redirect()->route('internal_audit.action_report')->with('error', $e->getMessage());
         }
@@ -191,7 +191,7 @@ class InternalAuditController extends Controller
             ->join('CsAuditAction as d', 'd.audit_car_id', '=', 'a.id')
             ->count();
 
-        return view('approvals.verifkasi_internal_audit', compact('departments', 'superiorCount', 'auditorCount', 'closedCount', 'allCount'));
+        return view('approvals.verifkasi-internal-audit', compact('departments', 'superiorCount', 'auditorCount', 'closedCount', 'allCount'));
     }
 
     public function verificationTable(Request $request)
@@ -1283,7 +1283,7 @@ class InternalAuditController extends Controller
             ->get()
             ->keyBy('checksheet_item_id');
 
-        return view('activity.form-checksheet-intr.activity_intr_form', compact('schedule', 'items', 'details'));
+        return view('activity.form-checksheet-intr.activity-intr-form', compact('schedule', 'items', 'details'));
     }
 
     public function getUsers(\Illuminate\Http\Request $request)
@@ -2383,7 +2383,7 @@ class InternalAuditController extends Controller
                 ];
             });
 
-        return view('activity.form-checksheet-intr.car_form', compact('schedule', 'item', 'detail', 'car', 'departments', 'requirements', 'clauseTitles'));
+        return view('activity.form-checksheet-intr.car-form', compact('schedule', 'item', 'detail', 'car', 'departments', 'requirements', 'clauseTitles'));
     }
 
     public function sendDraftCarForm(Request $request, $schedule_id, $item_id)

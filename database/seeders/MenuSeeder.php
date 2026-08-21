@@ -81,7 +81,7 @@ class MenuSeeder extends Seeder
                 'level_menu_id' => 4,
                 'group_id' => 5,
                 'sub_group_id' => 86,
-                'menu' => 'genba_management',
+                'menu' => 'genba-management',
                 'menu_name' => 'Genba Form',
                 'icon' => '<span></span>'
             ],
@@ -91,7 +91,7 @@ class MenuSeeder extends Seeder
                 'level_menu_id' => 4,
                 'group_id' => 5,
                 'sub_group_id' => 86,
-                'menu' => 'genba_mng_management',
+                'menu' => 'genba-mng-management',
                 'menu_name' => 'Findings Genba',
                 'icon' => '<span></span>'
             ],
@@ -121,7 +121,7 @@ class MenuSeeder extends Seeder
                 'level_menu_id' => 4,
                 'group_id' => 5,
                 'sub_group_id' => 87,
-                'menu' => 'verifikasi_genba',
+                'menu' => 'verifikasi-genba',
                 'menu_name' => 'Verifikasi Genba',
                 'icon' => '<span></span>'
             ],

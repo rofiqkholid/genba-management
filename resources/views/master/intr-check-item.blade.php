@@ -111,7 +111,7 @@
                     <i class="fa-solid fa-xmark text-xl"></i>
                 </button>
             </div>
-            <form id="createForm" action="{{ route('master.intr_check_item.store') }}" method="POST">
+            <form id="createForm" action="{{ route('master.intr-check-item.store') }}" method="POST">
                 @csrf
                 <div class="p-6 space-y-4 max-h-[60vh] overflow-y-auto">
                     <input type="hidden" name="is_active" value="1">
@@ -177,7 +177,7 @@
                     <i class="fa-solid fa-xmark text-xl"></i>
                 </button>
             </div>
-            <form id="editForm" action="{{ route('master.intr_check_item.update') }}" method="POST">
+            <form id="editForm" action="{{ route('master.intr-check-item.update') }}" method="POST">
                 @csrf
                 <input type="hidden" name="id" id="edit_id">
                 <input type="hidden" name="is_active" id="edit_is_active" value="1">
@@ -260,7 +260,7 @@
             processing: true,
             serverSide: true,
             ajax: {
-                url: "{{ route('master.intr_check_item.table') }}",
+                url: "{{ route('master.intr-check-item.table') }}",
                 type: 'POST',
                 data: function(d) {
                     d._token = "{{ csrf_token() }}";
@@ -499,7 +499,7 @@
         closeDeleteModal();
 
         $.ajax({
-            url: "{{ route('master.intr_check_item.delete') }}",
+            url: "{{ route('master.intr-check-item.delete') }}",
             type: "POST",
             data: {
                 _token: "{{ csrf_token() }}",

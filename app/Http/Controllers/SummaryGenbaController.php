@@ -10,7 +10,7 @@ class SummaryGenbaController extends Controller
 {
     public function index()
     {
-        return view('summary.summary_verif');
+        return view('summary.summary-verif');
     }
 
     public function table(Request $request)

@@ -14,7 +14,7 @@ class MasterController extends Controller
     {
         $this->middleware(function ($request, $next) {
             if (!Auth::check()) {
-                return response()->view('direct_403.direct_403');
+                return response()->view('direct-403.direct-403');
             }
             
             $menuId = 95;
@@ -28,7 +28,7 @@ class MasterController extends Controller
                 $menuId = 109;
             }
             if (!UserMenuPermission::canView($menuId)) {
-                return response()->view('direct_403.direct_403');
+                return response()->view('direct-403.direct-403');
             }
             return $next($request);
         });
@@ -36,7 +36,7 @@ class MasterController extends Controller
 
     public function line_checked()
     {
-        return view('master.line_checked');
+        return view('master.line-checked');
     }
 
     public function line_checked_table(Request $request)
@@ -128,7 +128,7 @@ class MasterController extends Controller
                 ]);
             }
 
-            return redirect()->route('master.line_checked')->with('success', 'Data added successfully.');
+            return redirect()->route('master.line-checked')->with('success', 'Data added successfully.');
         } catch (\Exception $e) {
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json([
@@ -163,7 +163,7 @@ class MasterController extends Controller
                 ]);
             }
 
-            return redirect()->route('master.line_checked')->with('success', 'Data updated successfully.');
+            return redirect()->route('master.line-checked')->with('success', 'Data updated successfully.');
         } catch (\Exception $e) {
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json([
@@ -671,7 +671,7 @@ class MasterController extends Controller
 
     public function user_auditor()
     {
-        return view('master.user_auditor');
+        return view('master.user-auditor');
     }
 
     public function user_auditor_table(Request $request)
@@ -919,7 +919,7 @@ class MasterController extends Controller
     public function check_item()
     {
         $categories = DB::table('GenbaCategory')->get();
-        return view('master.check_item', compact('categories'));
+        return view('master.check-item', compact('categories'));
     }
 
     public function check_item_table(Request $request)
@@ -1029,7 +1029,7 @@ class MasterController extends Controller
                 ]);
             }
 
-            return redirect()->route('master.check_item')->with('success', 'Data added successfully.');
+            return redirect()->route('master.check-item')->with('success', 'Data added successfully.');
         } catch (\Exception $e) {
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json([
@@ -1070,7 +1070,7 @@ class MasterController extends Controller
                 ]);
             }
 
-            return redirect()->route('master.check_item')->with('success', 'Data updated successfully.');
+            return redirect()->route('master.check-item')->with('success', 'Data updated successfully.');
         } catch (\Exception $e) {
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json([
@@ -1099,7 +1099,7 @@ class MasterController extends Controller
     public function intr_check_item()
     {
         $departments = DB::table('GenbaDept')->orderBy('Key1', 'asc')->get();
-        return view('master.intr_check_item', compact('departments'));
+        return view('master.intr-check-item', compact('departments'));
     }
 
     public function intr_check_item_table(Request $request)
@@ -1221,7 +1221,7 @@ class MasterController extends Controller
                 ]);
             }
 
-            return redirect()->route('master.intr_check_item')->with('success', 'Data added successfully.');
+            return redirect()->route('master.intr-check-item')->with('success', 'Data added successfully.');
         } catch (\Exception $e) {
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json([
@@ -1262,7 +1262,7 @@ class MasterController extends Controller
                 ]);
             }
 
-            return redirect()->route('master.intr_check_item')->with('success', 'Data updated successfully.');
+            return redirect()->route('master.intr-check-item')->with('success', 'Data updated successfully.');
         } catch (\Exception $e) {
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json([
@@ -1296,7 +1296,7 @@ class MasterController extends Controller
     public function user_management()
     {
         $hierarchy = Menu::getMenuHierarchyMaps();
-        return view('setting.user_management', compact('hierarchy'));
+        return view('setting.user-management', compact('hierarchy'));
     }
 
     public function user_management_table(Request $request)
@@ -1409,7 +1409,7 @@ class MasterController extends Controller
 
     public function menu_management()
     {
-        return view('setting.menu_management');
+        return view('setting.menu-management');
     }
 
     public function menu_management_table(Request $request)
@@ -1569,7 +1569,7 @@ class MasterController extends Controller
             ];
         })->toArray();
 
-        return view('setting.user_setting', compact('user', 'rolesList'));
+        return view('setting.user-setting', compact('user', 'rolesList'));
     }
 
     public function update_user_setting(Request $request)

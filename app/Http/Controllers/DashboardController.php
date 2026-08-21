@@ -19,7 +19,7 @@ class DashboardController extends Controller
     {
         $this->middleware(function ($request, $next) {
             if (!Auth::check()) {
-                return response()->view('direct_403.direct_403');
+                return response()->view('direct-403.direct-403');
             }
             
             $menuId = 101; // Genba Management Dashboard
@@ -40,7 +40,7 @@ class DashboardController extends Controller
                         return redirect($firstMenu->menu);
                     }
                 }
-                return response()->view('direct_403.direct_403');
+                return response()->view('direct-403.direct-403');
             }
             
             return $next($request);
@@ -71,12 +71,12 @@ class DashboardController extends Controller
 
     public function index()
     {
-        return view('dashboard.genba_mng');
+        return view('dashboard.genba-mng');
     }
 
     public function internal_audit_index()
     {
-        return view('dashboard.internal_audit');
+        return view('dashboard.internal-audit');
     }
 
     public function data_cards(Request $request, $category_id = 'NOT_BIQ')
@@ -525,7 +525,7 @@ class DashboardController extends Controller
 
     public function biq_index()
     {
-        return view('dashboard.genba_biq');
+        return view('dashboard.genba-biq');
     }
 
     public function biq_data_cards(Request $request)
@@ -545,7 +545,7 @@ class DashboardController extends Controller
 
     public function safety_index()
     {
-        return view('dashboard.genba_safety');
+        return view('dashboard.genba-safety');
     }
 
     public function safety_data_cards(Request $request)
@@ -1076,7 +1076,7 @@ class DashboardController extends Controller
             }
             
         } else {
-            $htmlString = view('export.xlxs_export', compact('records'))->render();
+            $htmlString = view('export.xlxs-export', compact('records'))->render();
             $reader = new \PhpOffice\PhpSpreadsheet\Reader\Html();
             $spreadsheet = $reader->loadFromString($htmlString);
             $sheet = $spreadsheet->getActiveSheet();
@@ -1162,7 +1162,7 @@ class DashboardController extends Controller
 
         $records = $query->orderBy('a.created_at', 'desc')->get();
 
-        return view('export.pdf_export', compact('records'));
+        return view('export.pdf-export', compact('records'));
     }
 
     public function genba_mng_export(Request $request, $category_id = 'NOT_BIQ')

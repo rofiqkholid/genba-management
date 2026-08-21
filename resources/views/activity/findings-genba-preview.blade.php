@@ -14,7 +14,7 @@ $isClosed = $genba->status === 'Close';
 
     <main class="flex-1 p-3 sm:p-6">
         <div class="mb-4 sm:mb-6 flex items-center gap-3 sm:gap-4">
-            <a href="{{ route('genba_mng_management') }}"
+            <a href="{{ route('genba-mng-management') }}"
                 class="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-blue-50 border border-blue-200 text-blue-600 hover:bg-blue-50 hover:text-blue-900 transition-all duration-200">
                 <i class="fa-solid fa-arrow-left"></i>
             </a>

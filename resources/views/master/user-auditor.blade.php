@@ -71,7 +71,7 @@
             serverSide: true,
             dom: 'r<"overflow-x-auto"t><"flex flex-col sm:flex-row items-center justify-between p-4 border-t border-slate-200 gap-4"ip>',
             ajax: {
-                url: "{{ route('master.user_auditor.table') }}",
+                url: "{{ route('master.user-auditor.table') }}",
                 type: 'POST',
                 data: function(d) {
                     d._token = "{{ csrf_token() }}";
@@ -129,7 +129,7 @@
         checkbox.disabled = true;
 
         $.ajax({
-            url: "{{ route('master.user_auditor.toggle') }}",
+            url: "{{ route('master.user-auditor.toggle') }}",
             type: 'POST',
             data: {
                 _token: "{{ csrf_token() }}",

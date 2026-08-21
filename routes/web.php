@@ -35,9 +35,9 @@ Route::middleware(['auth'])->group(function () {
     });
     Route::get('/dashboard-mng', [DashboardController::class, 'index'])->name('dashboard');
 
-    Route::get('/genba_management', function () {
-        return view('activity.genba_header_form');
-    })->name('genba_management');
+    Route::get('/genba-management', function () {
+        return view('activity.genba-header-form');
+    })->name('genba-management');
 
     Route::get('/internal-audit', [InternalAuditController::class, 'index'])->name('internal_audit');
     Route::get('/internal-action-report', [InternalAuditController::class, 'actionReport'])->name('internal_audit.action_report');
@@ -72,22 +72,22 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/internal-audit/detail/save-note', [InternalAuditController::class, 'saveDetailNote'])->name('internal_audit.detail.save_note');
 
     Route::get('/team', function () {
-        return view('activity.setup.genba_team');
-    })->name('genba_team');
+        return view('activity.setup.genba-team');
+    })->name('genba-team');
 
     Route::get('/room-team', function () {
-        return view('activity.setup.room_team');
-    })->name('room_team');
+        return view('activity.setup.room-team');
+    })->name('room-team');
 
-    Route::get('/genba_mng_management', function () {
-        return view('activity.findings_genba');
-    })->name('genba_mng_management');
+    Route::get('/genba-mng-management', function () {
+        return view('activity.findings-genba');
+    })->name('genba-mng-management');
 
-    Route::get('/verifikasi_genba', function () {
-        return view('approvals.verifikasi_genba');
-    })->name('verifikasi_genba');
+    Route::get('/verifikasi-genba', function () {
+        return view('approvals.verifikasi-genba');
+    })->name('verifikasi-genba');
 
-    Route::get('/spv_verification', [SummaryGenbaController::class, 'index'])->name('summary_verif');
+    Route::get('/spv-verification', [SummaryGenbaController::class, 'index'])->name('summary-verif');
     Route::get('/room-chat-agent', [AgentChatController::class, 'index'])->name('agent.chat');
     Route::post('/room-chat-agent/send', [AgentChatController::class, 'send'])->name('agent.chat.send');
 
@@ -111,29 +111,29 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard-safety/chart-data/{yearMonth}', [DashboardController::class, 'safety_chart_all_dept'])->name('dashboard.safety.chart_data');
 
     // Internal Audit Dashboard Routes
-    Route::get('/dashboard-internal-audit', [DashboardController::class, 'internal_audit_index'])->name('dashboard.internal_audit');
-    Route::get('/dashboard-internal-audit/data_cards', [DashboardController::class, 'internal_audit_data_cards'])->name('dashboard.internal_audit.data_cards');
-    Route::get('/dashboard-internal-audit/chart-data/{yearMonth}', [DashboardController::class, 'internal_audit_chart_all_dept'])->name('dashboard.internal_audit.chart_data');
-    Route::get('/dashboard-internal-audit/closed-chart-data/{yearMonth}', [DashboardController::class, 'internal_audit_chart_closed_dept'])->name('dashboard.internal_audit.closed_chart_data');
-    Route::get('/dashboard-internal-audit/clause-chart-data/{yearMonth}', [DashboardController::class, 'internal_audit_chart_clause_data'])->name('dashboard.internal_audit.clause_chart_data');
-    Route::get('/dashboard-internal-audit/export', [DashboardController::class, 'internal_audit_export'])->name('dashboard.internal_audit.export');
-    Route::get('/dashboard-internal-audit/print', [DashboardController::class, 'internal_audit_print'])->name('dashboard.internal_audit.print');
+    Route::get('/dashboard-internal-audit', [DashboardController::class, 'internal_audit_index'])->name('dashboard.internal-audit');
+    Route::get('/dashboard-internal-audit/data_cards', [DashboardController::class, 'internal_audit_data_cards'])->name('dashboard.internal-audit.data_cards');
+    Route::get('/dashboard-internal-audit/chart-data/{yearMonth}', [DashboardController::class, 'internal_audit_chart_all_dept'])->name('dashboard.internal-audit.chart_data');
+    Route::get('/dashboard-internal-audit/closed-chart-data/{yearMonth}', [DashboardController::class, 'internal_audit_chart_closed_dept'])->name('dashboard.internal-audit.closed_chart_data');
+    Route::get('/dashboard-internal-audit/clause-chart-data/{yearMonth}', [DashboardController::class, 'internal_audit_chart_clause_data'])->name('dashboard.internal-audit.clause_chart_data');
+    Route::get('/dashboard-internal-audit/export', [DashboardController::class, 'internal_audit_export'])->name('dashboard.internal-audit.export');
+    Route::get('/dashboard-internal-audit/print', [DashboardController::class, 'internal_audit_print'])->name('dashboard.internal-audit.print');
 
 
     // Genba Header Routes
-    Route::post('/genba_header/table', [GenbaManagementController::class, 'genbaHeaderTable'])->name('genba.header.table');
-    Route::post('/genba_header/delete', [GenbaManagementController::class, 'genbaHeaderDelete'])->name('genba.header.delete');
-    Route::post('/genba_header/activity', [GenbaManagementController::class, 'form_genba_header_activity'])->name('genba.header.activity');
-    Route::post('/genba_header/add', [GenbaManagementController::class, 'add_genba'])->name('genba.header.add');
-    Route::post('/genba_header/area', [GenbaManagementController::class, 'get_genba_area'])->name('genba.header.area');
-    Route::post('/genba_header/category', [GenbaManagementController::class, 'get_genba_category'])->name('genba.header.category');
+    Route::post('/genba-header/table', [GenbaManagementController::class, 'genbaHeaderTable'])->name('genba.header.table');
+    Route::post('/genba-header/delete', [GenbaManagementController::class, 'genbaHeaderDelete'])->name('genba.header.delete');
+    Route::post('/genba-header/activity', [GenbaManagementController::class, 'form_genba_header_activity'])->name('genba.header.activity');
+    Route::post('/genba-header/add', [GenbaManagementController::class, 'add_genba'])->name('genba.header.add');
+    Route::post('/genba-header/area', [GenbaManagementController::class, 'get_genba_area'])->name('genba.header.area');
+    Route::post('/genba-header/category', [GenbaManagementController::class, 'get_genba_category'])->name('genba.header.category');
     Route::post('/genba/get_section', [GenbaManagementController::class, 'get_section'])->name('genba.get_section');
     Route::post('/genba/get_user_data', [GenbaManagementController::class, 'get_user_data'])->name('genba.get_user_data');
     Route::post('/genba/post_form_spv', [GenbaManagementController::class, 'post_form_spv'])->name('genba.post_form_spv');
     Route::post('/genba/get_data_photo', [GenbaManagementController::class, 'get_data_photo'])->name('genba.get_data_photo');
     Route::post('/genba/post_photo_spv', [GenbaManagementController::class, 'post_photo_spv'])->name('genba.post_photo_spv');
     Route::post('/genba/submit_form_genba', [GenbaManagementController::class, 'submit_form_genba'])->name('genba.submit_form_genba');
-    Route::get('/genba_header/view/{id}', [GenbaManagementController::class, 'genbaHeaderView'])->name('genba.header.view');
+    Route::get('/genba-header/view/{id}', [GenbaManagementController::class, 'genbaHeaderView'])->name('genba.header.view');
 
     Route::post('/genba/table', [GenbaManagementController::class, 'front_mng_table'])->name('genba.table');
     Route::post('/genba/delete', [GenbaManagementController::class, 'delete'])->name('genba.delete');
@@ -146,18 +146,18 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/genba/get_stations', [GenbaManagementController::class, 'get_stations'])->name('genba.get_stations');
 
     // Execution Genba Routes
-    Route::post('/execution_genba/table', [ExecutionGenbaController::class, 'table'])->name('execution_genba.table');
-    Route::post('/spv_verification/table', [SummaryGenbaController::class, 'table'])->name('spv_verification.table');
-    Route::post('/execution_genba/approve', [ExecutionGenbaController::class, 'approve'])->name('execution_genba.approve');
-    Route::post('/execution_genba/rollback', [ExecutionGenbaController::class, 'rollback'])->name('execution_genba.rollback');
+    Route::post('/execution-genba/table', [ExecutionGenbaController::class, 'table'])->name('execution_genba.table');
+    Route::post('/spv-verification/table', [SummaryGenbaController::class, 'table'])->name('spv_verification.table');
+    Route::post('/execution-genba/approve', [ExecutionGenbaController::class, 'approve'])->name('execution_genba.approve');
+    Route::post('/execution-genba/rollback', [ExecutionGenbaController::class, 'rollback'])->name('execution_genba.rollback');
 
     // Data Master Routes
     Route::prefix('data-master')->group(function () {
-        Route::get('/line-checked', [MasterController::class, 'line_checked'])->name('master.line_checked');
-        Route::post('/line-checked/table', [MasterController::class, 'line_checked_table'])->name('master.line_checked.table');
-        Route::post('/line-checked/store', [MasterController::class, 'store_line_checked'])->name('master.line_checked.store');
-        Route::post('/line-checked/update', [MasterController::class, 'update_line_checked'])->name('master.line_checked.update');
-        Route::post('/line-checked/delete', [MasterController::class, 'delete_line_checked'])->name('master.line_checked.delete');
+        Route::get('/line-checked', [MasterController::class, 'line_checked'])->name('master.line-checked');
+        Route::post('/line-checked/table', [MasterController::class, 'line_checked_table'])->name('master.line-checked.table');
+        Route::post('/line-checked/store', [MasterController::class, 'store_line_checked'])->name('master.line-checked.store');
+        Route::post('/line-checked/update', [MasterController::class, 'update_line_checked'])->name('master.line-checked.update');
+        Route::post('/line-checked/delete', [MasterController::class, 'delete_line_checked'])->name('master.line-checked.delete');
 
         Route::get('/category', [MasterController::class, 'category'])->name('master.category');
         Route::post('/category/table', [MasterController::class, 'category_table'])->name('master.category.table');
@@ -177,26 +177,26 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/clauses/update', [MasterController::class, 'update_clauses'])->name('master.clauses.update');
         Route::post('/clauses/delete', [MasterController::class, 'delete_clauses'])->name('master.clauses.delete');
 
-        Route::get('/check-item', [MasterController::class, 'check_item'])->name('master.check_item');
-        Route::post('/check-item/table', [MasterController::class, 'check_item_table'])->name('master.check_item.table');
-        Route::post('/check-item/store', [MasterController::class, 'store_check_item'])->name('master.check_item.store');
-        Route::post('/check-item/update', [MasterController::class, 'update_check_item'])->name('master.check_item.update');
-        Route::post('/check-item/delete', [MasterController::class, 'delete_check_item'])->name('master.check_item.delete');
+        Route::get('/check-item', [MasterController::class, 'check_item'])->name('master.check-item');
+        Route::post('/check-item/table', [MasterController::class, 'check_item_table'])->name('master.check-item.table');
+        Route::post('/check-item/store', [MasterController::class, 'store_check_item'])->name('master.check-item.store');
+        Route::post('/check-item/update', [MasterController::class, 'update_check_item'])->name('master.check-item.update');
+        Route::post('/check-item/delete', [MasterController::class, 'delete_check_item'])->name('master.check-item.delete');
 
-        Route::get('/intr-check-item', [MasterController::class, 'intr_check_item'])->name('master.intr_check_item');
-        Route::post('/intr-check-item/table', [MasterController::class, 'intr_check_item_table'])->name('master.intr_check_item.table');
-        Route::post('/intr-check-item/store', [MasterController::class, 'store_intr_check_item'])->name('master.intr_check_item.store');
-        Route::post('/intr-check-item/update', [MasterController::class, 'update_intr_check_item'])->name('master.intr_check_item.update');
-        Route::post('/intr-check-item/delete', [MasterController::class, 'delete_intr_check_item'])->name('master.intr_check_item.delete');
+        Route::get('/intr-check-item', [MasterController::class, 'intr_check_item'])->name('master.intr-check-item');
+        Route::post('/intr-check-item/table', [MasterController::class, 'intr_check_item_table'])->name('master.intr-check-item.table');
+        Route::post('/intr-check-item/store', [MasterController::class, 'store_intr_check_item'])->name('master.intr-check-item.store');
+        Route::post('/intr-check-item/update', [MasterController::class, 'update_intr_check_item'])->name('master.intr-check-item.update');
+        Route::post('/intr-check-item/delete', [MasterController::class, 'delete_intr_check_item'])->name('master.intr-check-item.delete');
 
         Route::get('/roles', [MasterController::class, 'roles'])->name('master.roles');
         Route::post('/roles/table', [MasterController::class, 'roles_table'])->name('master.roles.table');
         Route::post('/roles/store', [MasterController::class, 'store_roles'])->name('master.roles.store');
         Route::post('/roles/update', [MasterController::class, 'update_roles'])->name('master.roles.update');
         Route::post('/roles/delete', [MasterController::class, 'delete_roles'])->name('master.roles.delete');
-        Route::get('/user-auditor', [MasterController::class, 'user_auditor'])->name('master.user_auditor');
-        Route::post('/user-auditor/table', [MasterController::class, 'user_auditor_table'])->name('master.user_auditor.table');
-        Route::post('/user-auditor/toggle', [MasterController::class, 'toggle_user_auditor'])->name('master.user_auditor.toggle');
+        Route::get('/user-auditor', [MasterController::class, 'user_auditor'])->name('master.user-auditor');
+        Route::post('/user-auditor/table', [MasterController::class, 'user_auditor_table'])->name('master.user-auditor.table');
+        Route::post('/user-auditor/toggle', [MasterController::class, 'toggle_user_auditor'])->name('master.user-auditor.toggle');
 
         Route::get('/kpi-list', [MasterController::class, 'kpi_list'])->name('master.kpi_list');
         Route::post('/kpi-list/table', [MasterController::class, 'kpi_list_table'])->name('master.kpi_list.table');
@@ -244,10 +244,10 @@ Route::middleware(['auth'])->group(function () {
         })->name('kpi.department');
         Route::get('/monthly-summary', function () {
             return view('errors.coming-soon');
-        })->name('kpi.monthly_summary');
+        })->name('kpi.monthly-summary');
         Route::get('/print-report', function () {
             return view('errors.coming-soon');
-        })->name('kpi.print_report');
+        })->name('kpi.print-report');
     });
 
     // Fallback for 404 inside auth middleware

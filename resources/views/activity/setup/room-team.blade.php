@@ -16,7 +16,7 @@
         <div id="listView">
             <!-- Page Title -->
             <div class="mb-6 flex items-center gap-4">
-                <a href="{{ route('genba_team') }}" 
+                <a href="{{ route('genba-team') }}" 
                     class="inline-flex items-center justify-center w-10 h-10 bg-white text-slate-600 border border-slate-200 rounded-xl hover:bg-slate-50 hover:text-blue-600 transition-all"
                     title="Back to My Genba">
                     <i class="fa-solid fa-arrow-left text-sm"></i>
@@ -151,7 +151,7 @@
         // Redirect or open checksheet logic from original qms
         // For now, assuming document_view is globally available or handled similarly
         // In this app, it usually calls loadGenbaActivity, but since we are in a simple list here:
-        window.location.href = "{{ url('genba_management') }}?id=" + id;
+        window.location.href = "{{ url('genba-management') }}?id=" + id;
     }
 
     function filterByStatus(statusId) {

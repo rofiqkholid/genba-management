@@ -16,7 +16,7 @@ class GenbaManagementController extends Controller
 {
     public function findingsGenba()
     {
-        return view('activity.findings_genba');
+        return view('activity.findings-genba');
     }
 
     public function front_mng_table(Request $request)
@@ -276,7 +276,7 @@ class GenbaManagementController extends Controller
 
             $canEditDept = UserMenuPermission::canView(95);
 
-            return view('activity.findings_genba_preview', compact('genba', 'departments', 'canEditDept'));
+            return view('activity.findings-genba-preview', compact('genba', 'departments', 'canEditDept'));
         } catch (\Exception $e) {
             abort(404, 'Data tidak valid: ' . $e->getMessage());
         }
@@ -797,7 +797,7 @@ class GenbaManagementController extends Controller
                     return ['id' => $t, 'name' => $t];
                 })->toArray();
                 // Double check view path for standard activity
-                return view('activity.form-checksheet.activity_form', $data); // Assuming standard path
+                return view('activity.form-checksheet.activity-form', $data); // Assuming standard path
             }
         } else {
             $data["code"] = 500;
@@ -880,9 +880,9 @@ class GenbaManagementController extends Controller
             return ['id' => $t, 'name' => $t];
         })->toArray();
 
-        $viewName = 'activity.no-checksheet.activity_etc';
+        $viewName = 'activity.no-checksheet.activity-etc';
         if ($category_id == 10) {
-            $viewName = 'activity.no-checksheet.activity_safety';
+            $viewName = 'activity.no-checksheet.activity-safety';
         }
 
         return view($viewName, [

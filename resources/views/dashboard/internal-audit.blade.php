@@ -571,7 +571,7 @@
 
     function loadDataCards(yearMonth) {
         $.ajax({
-            url: "{{ route('dashboard.internal_audit.data_cards') }}",
+            url: "{{ route('dashboard.internal-audit.data_cards') }}",
             data: {
                 yearMonth: yearMonth,
                 audit_type: selectedAuditType
@@ -623,7 +623,7 @@
 
     function loadDeptChart(yearMonth) {
         $.ajax({
-            url: "{{ route('dashboard.internal_audit.chart_data', ':yearMonth') }}".replace(':yearMonth', yearMonth),
+            url: "{{ route('dashboard.internal-audit.chart_data', ':yearMonth') }}".replace(':yearMonth', yearMonth),
             type: "GET",
             data: {
                 audit_type: selectedAuditType
@@ -917,7 +917,7 @@
  
     function loadClosedDeptChart(yearMonth) {
         $.ajax({
-            url: "{{ route('dashboard.internal_audit.closed_chart_data', ':yearMonth') }}".replace(':yearMonth', yearMonth),
+            url: "{{ route('dashboard.internal-audit.closed_chart_data', ':yearMonth') }}".replace(':yearMonth', yearMonth),
             type: "GET",
             data: {
                 audit_type: selectedAuditType
@@ -1299,7 +1299,7 @@
 
     function loadClauseChart(yearMonth) {
         $.ajax({
-            url: "{{ route('dashboard.internal_audit.clause_chart_data', ':yearMonth') }}".replace(':yearMonth', yearMonth),
+            url: "{{ route('dashboard.internal-audit.clause_chart_data', ':yearMonth') }}".replace(':yearMonth', yearMonth),
             type: "GET",
             data: {
                 audit_type: selectedAuditType
@@ -2048,7 +2048,7 @@
         const dept = $('#deptFilter').val() || '';
         const category = $('#categoryFilter').val() || '';
 
-        const url = new URL("{{ route('dashboard.internal_audit.export') }}");
+        const url = new URL("{{ route('dashboard.internal-audit.export') }}");
         if (search) url.searchParams.append('search', search);
         if (dateFrom) url.searchParams.append('date_from', dateFrom);
         if (dateTo) url.searchParams.append('date_to', dateTo);
@@ -2073,7 +2073,7 @@
         const dept = $('#deptFilter').val() || '';
         const category = $('#categoryFilter').val() || '';
 
-        const url = new URL("{{ route('dashboard.internal_audit.print') }}");
+        const url = new URL("{{ route('dashboard.internal-audit.print') }}");
         if (search) url.searchParams.append('search', search);
         if (dateFrom) url.searchParams.append('date_from', dateFrom);
         if (dateTo) url.searchParams.append('date_to', dateTo);

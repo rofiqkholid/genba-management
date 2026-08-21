@@ -303,8 +303,38 @@
     @include('layouts.footer')
 </div>
 
+@php
+    $initialDeptId = old('department', $car->department ?? '');
+    $initialDept = $initialDeptId ? $departments->firstWhere('Key1', $initialDeptId) : null;
+    $initialDeptName = $initialDept ? $initialDept->Desc : $initialDeptId;
+
+    $initialReq = old('requirement_no', $car->requirement_no ?? '');
+    $reqObj = $initialReq ? $requirements->firstWhere('id', $initialReq) : null;
+    $initialReqName = $reqObj ? $reqObj['name'] : '';
+
+    $initialClauseTitle = old('clause_title', $car->clause_title ?? '');
+    $clauseObj = $initialClauseTitle ? $clauseTitles->firstWhere('id', $initialClauseTitle) : null;
+    $initialClauseTitleName = $clauseObj ? $clauseObj['name'] : '';
+
+    $clauses = DB::table('CsKlausul')->select('clause_no', 'clause_title', 'clauses')->get()->toArray();
+    $existingPhotos = !empty($car->finding_file_path) ? explode(',', $car->finding_file_path) : [];
+@endphp
+<script id="car-form-config" type="application/json">
+{
+    "initialDeptId": "{{ $initialDeptId }}",
+    "initialDeptName": "{{ $initialDeptName }}",
+    "initialReq": "{{ $initialReq }}",
+    "initialReqName": "{{ $initialReqName }}",
+    "initialClauseTitle": "{{ $initialClauseTitle }}",
+    "initialClauseTitleName": "{{ $initialClauseTitleName }}",
+    "clauses": {!! json_encode($clauses) !!},
+    "existingPhotos": {!! json_encode($existingPhotos) !!},
+    "csrfToken": "{{ csrf_token() }}"
+}
+</script>
 <script>
     const baseUrl = "{{ asset('') }}";
+    const carConfig = JSON.parse(document.getElementById('car-form-config').textContent);
 
     function autoGrow(element) {
         element.style.height = "auto";
@@ -413,41 +443,26 @@
         toggleAuditSourceInputs();
 
         // Dispatch initial department values
-        @php
-            $initialDeptId = old('department', $car->department ?? '');
-            $initialDept = $initialDeptId ? $departments->firstWhere('Key1', $initialDeptId) : null;
-            $initialDeptName = $initialDept ? $initialDept->Desc : $initialDeptId;
-        @endphp
         window.dispatchEvent(new CustomEvent('update-car-department', {
             detail: {
-                id: "{{ $initialDeptId }}",
-                name: "{{ $initialDeptName }}"
+                id: carConfig.initialDeptId,
+                name: carConfig.initialDeptName
             }
         }));
 
         // Dispatch initial requirement values
-        @php
-            $initialReq = old('requirement_no', $car->requirement_no ?? '');
-            $reqObj = $initialReq ? $requirements->firstWhere('id', $initialReq) : null;
-            $initialReqName = $reqObj ? $reqObj['name'] : '';
-        @endphp
         window.dispatchEvent(new CustomEvent('update-car-requirement', {
             detail: {
-                id: "{{ $initialReq }}",
-                name: "{{ $initialReqName }}"
+                id: carConfig.initialReq,
+                name: carConfig.initialReqName
             }
         }));
 
         // Dispatch initial clause title values
-        @php
-            $initialClauseTitle = old('clause_title', $car->clause_title ?? '');
-            $clauseObj = $initialClauseTitle ? $clauseTitles->firstWhere('id', $initialClauseTitle) : null;
-            $initialClauseTitleName = $clauseObj ? $clauseObj['name'] : '';
-        @endphp
         window.dispatchEvent(new CustomEvent('update-car-clause-title', {
             detail: {
-                id: "{{ $initialClauseTitle }}",
-                name: "{{ $initialClauseTitleName }}"
+                id: carConfig.initialClauseTitle,
+                name: carConfig.initialClauseTitleName
             }
         }));
 
@@ -475,7 +490,7 @@
         window.addEventListener('car-clause-changed', function(e) {
             const clauseTitle = e.detail.id;
             const requirementNo = document.getElementById('car_requirement_no').value;
-            const clauses = {!! json_encode(DB::table('CsKlausul')->select('clause_no', 'clause_title', 'clauses')->get()->toArray()) !!};
+            const clauses = carConfig.clauses;
             const matchedClause = clauses.find(c => String(c.clause_title || '').trim() === String(clauseTitle || '').trim() && String(c.clause_no || '').trim() === String(requirementNo || '').trim());
             const clauseTextarea = document.querySelector('textarea[name="clause_text"]');
             if (clauseTextarea) {
@@ -495,7 +510,7 @@
                 method: 'POST',
                 headers: {
                     'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    'X-CSRF-TOKEN': carConfig.csrfToken
                 },
                 body: formData
             })
@@ -535,7 +550,7 @@
         });
 
         // Photo Upload Handlers & Preview
-        let existingPhotos = {!! json_encode(!empty($car->finding_file_path) ? explode(',', $car->finding_file_path) : []) !!};
+        let existingPhotos = carConfig.existingPhotos;
         let uploadedFiles = [];
         const cameraInput = document.getElementById('camera_input');
         const galleryInput = document.getElementById('gallery_input');

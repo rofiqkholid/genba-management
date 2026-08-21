@@ -28,7 +28,7 @@
                     <i class="fa-solid fa-arrow-left text-sm"></i>
                 </a>
                 <div>
-                    <h1 class="text-xl sm:text-2xl font-bold text-slate-800">Conduct Audit</h1>
+                    <h1 class="text-xl sm:text-2xl font-bold text-slate-800">gay</h1>
                     <p class="text-slate-500 text-xs sm:text-sm mt-0.5">Evaluate compliance clauses and submit findings</p>
                 </div>
             </div>
@@ -358,32 +358,56 @@
 <div id="sidebar-overlay" class="fixed inset-0 bg-slate-900/50 z-30 hidden lg:hidden"></div>
 
 @push('scripts')
+@php
+    $initialItems = [];
+    $idx = 1;
+    foreach ($items as $item) {
+        $detail = $details[$item->id] ?? null;
+        $initialItems[] = [
+            'id' => (int) $item->id,
+            'index' => $idx++,
+            'judgment' => $detail ? $detail->judgment : '',
+            'evidence' => $detail ? ($detail->note ?: ($detail->evidence ?? '')) : '',
+            'car_finding' => $detail ? ($detail->car_finding ?? '') : '',
+            'photo' => $detail && $detail->finding_photo_path ? asset($detail->finding_photo_path) : null,
+        ];
+    }
+@endphp
+<script id="audit-form-config" type="application/json">
+{
+    "status": "{{ $schedule->status }}",
+    "scheduleId": {{ (int) $schedule->id }},
+    "scheduleDate": "{{ $schedule->schedule_date }}",
+    "auditorNiks": "{{ $schedule->auditor_niks }}",
+    "auditeeDept": "{{ $schedule->auditee_dept }}",
+    "conductUrl": "{{ route('internal_audit.conduct', $schedule->hash_id) }}",
+    "saveJudgmentRoute": "{{ route('internal_audit.save_judgment') }}",
+    "submitRoute": "{{ route('internal_audit.submit') }}",
+    "items": {!! json_encode($initialItems) !!}
+}
+</script>
 <script>
     document.addEventListener('alpine:init', () => {
+        const config = JSON.parse(document.getElementById('audit-form-config').textContent);
+
         Alpine.data('genbaForm', () => ({
             isReadOnly: false,
-            status: '{{ $schedule->status }}',
+            status: config.status,
             isLoading: false,
             answers: {},
             activeModal: null,
             evidenceData: {},
+            itemsList: config.items,
 
             initForm() {
-                @foreach ($items as $item)
-                @php
-                    $detail = $details[$item->id] ?? null;
-                    $judgment = $detail ? $detail->judgment : '';
-                    $evidence = $detail ? ($detail->note ?: ($detail->evidence ?? '')) : '';
-                    $car_finding = $detail ? ($detail->car_finding ?? '') : '';
-                    $photo = $detail && $detail->finding_photo_path ? asset($detail->finding_photo_path) : null;
-                @endphp
-                this.answers[{{ $item->id }}] = '{{ $judgment }}';
-                this.evidenceData[{{ $item->id }}] = {
-                    evidence: {!! json_encode($evidence) !!},
-                    car_finding: {!! json_encode($car_finding) !!},
-                    photo: {!! json_encode($photo) !!}
-                };
-                @endforeach
+                this.itemsList.forEach(item => {
+                    this.answers[item.id] = item.judgment;
+                    this.evidenceData[item.id] = {
+                        evidence: item.evidence,
+                        car_finding: item.car_finding,
+                        photo: item.photo
+                    };
+                });
             },
 
             noteModalOpen: false,
@@ -427,7 +451,7 @@
 
                 if (!this.isReadOnly) {
                     const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-                    fetch("{{ route('internal_audit.save_judgment') }}", {
+                    fetch(config.saveJudgmentRoute, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -435,7 +459,7 @@
                         },
                         body: JSON.stringify({
                             _token: token,
-                            schedule_id: {{ $schedule->id }},
+                            schedule_id: config.scheduleId,
                             checksheet_item_id: itemId,
                             judgment: this.answers[itemId],
                             note: this.noteModalText
@@ -463,7 +487,7 @@
                 if (this.isReadOnly) return;
 
                 const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-                fetch("{{ route('internal_audit.save_judgment') }}", {
+                fetch(config.saveJudgmentRoute, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -471,7 +495,7 @@
                     },
                     body: JSON.stringify({
                         _token: token,
-                        schedule_id: {{ $schedule->id }},
+                        schedule_id: config.scheduleId,
                         checksheet_item_id: itemId,
                         judgment: val
                     })
@@ -559,30 +583,26 @@
             submitForm() {
                 let isValid = true;
                 let errorMsgs = [];
-                @php $globalIteration = 1; @endphp
-                @foreach ($items as $item)
-                {
-                    const itemId = {{ $item->id }};
+                this.itemsList.forEach(item => {
+                    const itemId = item.id;
                     const ans = this.answers[itemId];
                     if (!ans || ans === '') {
                         isValid = false;
-                        errorMsgs.push("Item {{ $globalIteration }} must be judged.");
+                        errorMsgs.push(`Item ${item.index} must be judged.`);
                     } else if (ans === 'OFI') {
                         const data = this.evidenceData[itemId];
                         if (!data || !data.evidence || data.evidence.trim() === '') {
                             isValid = false;
-                            errorMsgs.push("Item {{ $globalIteration }} requires finding comments.");
+                            errorMsgs.push(`Item ${item.index} requires finding comments.`);
                         }
                     } else if (ans === 'Minor' || ans === 'Mayor') {
                         const data = this.evidenceData[itemId];
                         if (!data || !data.car_finding || data.car_finding.trim() === '') {
                             isValid = false;
-                            errorMsgs.push("Item {{ $globalIteration }} requires finding comments.");
+                            errorMsgs.push(`Item ${item.index} requires finding comments.`);
                         }
                     }
-                }
-                @php $globalIteration++; @endphp
-                @endforeach
+                });
 
                 if (!isValid) {
                     showToast(errorMsgs.join(' '), 'error');
@@ -607,7 +627,7 @@
 
                 const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
-                fetch("{{ route('internal_audit.submit') }}", {
+                fetch(config.submitRoute, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -615,10 +635,10 @@
                     },
                     body: JSON.stringify({
                         _token: token,
-                        schedule_id: {{ $schedule->id }},
-                        audit_date: '{{ $schedule->schedule_date }}',
-                        auditor_names: '{{ $schedule->auditor_niks }}',
-                        auditee_dept: '{{ $schedule->auditee_dept }}',
+                        schedule_id: config.scheduleId,
+                        audit_date: config.scheduleDate,
+                        auditor_names: config.auditorNiks,
+                        auditee_dept: config.auditeeDept,
                         results: results
                     })
                 })
@@ -628,7 +648,7 @@
                     if (data.success) {
                         showToast(data.message, 'success');
                         setTimeout(() => {
-                            window.location.href = "{{ route('internal_audit.conduct', $schedule->hash_id) }}";
+                            window.location.href = config.conductUrl;
                         }, 1500);
                     } else {
                         showToast(data.message, 'error');

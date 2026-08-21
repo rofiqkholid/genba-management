@@ -3,7 +3,8 @@
 @section('title', 'Login GRACE')
 
 @section('content')
-<div class="relative min-h-screen flex items-center justify-end p-4 lg:p-16 bg-cover lg:bg-[length:100%_100%] bg-right bg-no-repeat" style="background-image: url('{{ asset('image/login-bg.png') }}');">
+<style>#login-bg{background-image:url("{{ asset('image/login-bg.png') }}")}</style>
+<div id="login-bg" class="relative min-h-screen flex items-center justify-end p-4 lg:p-16 bg-cover lg:bg-[length:100%_100%] bg-right bg-no-repeat">
     <!-- Premium overlay to soften background and enhance contrast -->
     <div class="absolute inset-0 bg-slate-900/20"></div>
 
@@ -82,7 +83,7 @@
                     <!-- Submit Button -->
                     <button
                         type="submit"
-                        class="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl -blue-500/30 hover:-blue-500/40 transition-all duration-200 flex items-center justify-center gap-2">
+                        class="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl shadow-blue-500/30 hover:shadow-blue-500/40 transition-all duration-200 flex items-center justify-center gap-2">
                         <i class="fa-solid fa-right-to-bracket"></i>
                         <span>Login</span>
                     </button>
@@ -91,7 +92,7 @@
         </div>
 
         <!-- Footer -->
-        <p class="text-center text-sm text-slate-300 mt-6 drop-">
+        <p class="text-center text-sm text-slate-300 mt-6 drop-shadow">
             &copy; {{ date('Y') }} ICT - SAI. All rights reserved.
         </p>
     </div>

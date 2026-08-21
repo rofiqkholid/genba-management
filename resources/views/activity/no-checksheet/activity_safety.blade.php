@@ -260,8 +260,20 @@
 <div id="sidebar-overlay" class="fixed inset-0 bg-slate-900/50 z-30 hidden lg:hidden"></div>
 
 @push('scripts')
+<script id="safety-form-config" type="application/json">
+{
+    "itemId": {{ (int) $itemId }},
+    "scopeId": {{ (int) $scopeId }},
+    "getDataPhotoRoute": "{{ route('genba.get_data_photo') }}",
+    "postPhotoSpvRoute": "{{ route('genba.post_photo_spv') }}",
+    "submitFormGenbaRoute": "{{ route('genba.submit_form_genba') }}",
+    "findingsPhotoAssetUrl": "{{ asset('findings-photo') }}"
+}
+</script>
 <script>
     document.addEventListener('alpine:init', () => {
+        const safetyConfig = JSON.parse(document.getElementById('safety-form-config').textContent);
+
         Alpine.data('genbaForm', () => ({
             isLoading: false,
             activeFindingIndex: 1,
@@ -269,7 +281,7 @@
 
             initForm() {
                 // Load existing evidence data
-                this.loadEvidence({{ $itemId }}, {{ $scopeId }}, 1);
+                this.loadEvidence(safetyConfig.itemId, safetyConfig.scopeId, 1);
             },
 
             loadEvidence(itemId, scopeId, findingIndex = 1) {
@@ -280,7 +292,7 @@
                 let activityId = document.getElementById('activity_id').value;
                 let token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
-                fetch("{{ route('genba.get_data_photo') }}", {
+                fetch(safetyConfig.getDataPhotoRoute, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -329,7 +341,7 @@
                                     const div = document.createElement('div');
                                     div.className="relative group rounded-lg overflow-hidden aspect-square h-full bg-slate-100 border border-slate-200";
                                     div.innerHTML = `
-                                    <img src="{{ asset('findings-photo') }}/${photoPath}" class="w-full h-full object-cover">
+                                    <img src="${safetyConfig.findingsPhotoAssetUrl}/${photoPath}" class="w-full h-full object-cover">
                                     <button onclick="this.parentElement.remove()" class="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                                         <i class="fas fa-times text-xs"></i>
                                     </button>
@@ -415,7 +427,7 @@
             },
 
             submitForm() {
-                const itemId = {{ $itemId }};
+                const itemId = safetyConfig.itemId;
                 const container = document.getElementById(`preview_container_${itemId}`);
                 const images = container.querySelectorAll('img');
                 const dataphoto = [];
@@ -476,7 +488,7 @@
                 this.isLoading = true;
 
                 // 1. Save finding details
-                fetch("{{ route('genba.post_photo_spv') }}", {
+                fetch(safetyConfig.postPhotoSpvRoute, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -515,7 +527,7 @@
                 })
                 .then(data => {
                     // 2. Submit the audit
-                    return fetch("{{ route('genba.submit_form_genba') }}", {
+                    return fetch(safetyConfig.submitFormGenbaRoute, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -621,8 +633,8 @@
             },
 
             nextFinding() {
-                const itemId = {{ $itemId }};
-                const scopeId = {{ $scopeId }};
+                const itemId = safetyConfig.itemId;
+                const scopeId = safetyConfig.scopeId;
                 this.activeFindingIndex++;
                 this.clearFormFields(itemId);
                 this.loadEvidence(itemId, scopeId, this.activeFindingIndex);
@@ -630,8 +642,8 @@
 
             prevFinding() {
                 if (this.activeFindingIndex <= 1) return;
-                const itemId = {{ $itemId }};
-                const scopeId = {{ $scopeId }};
+                const itemId = safetyConfig.itemId;
+                const scopeId = safetyConfig.scopeId;
                 this.activeFindingIndex--;
                 this.clearFormFields(itemId);
                 this.loadEvidence(itemId, scopeId, this.activeFindingIndex);

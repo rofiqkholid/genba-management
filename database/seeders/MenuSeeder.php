@@ -324,6 +324,26 @@ class MenuSeeder extends Seeder
                 'menu' => 'data-master/kpi-list',
                 'menu_name' => 'KPI List',
                 'icon' => '<span></span>'
+            ],
+            [
+                'id' => 122,
+                'sequence_id' => 10,
+                'level_menu_id' => 3,
+                'group_id' => 6,
+                'sub_group_id' => 95,
+                'menu' => 'data-master/kpi-unit',
+                'menu_name' => 'KPI Unit',
+                'icon' => '<span></span>'
+            ],
+            [
+                'id' => 123,
+                'sequence_id' => 11,
+                'level_menu_id' => 3,
+                'group_id' => 6,
+                'sub_group_id' => 95,
+                'menu' => 'data-master/kpi-formula',
+                'menu_name' => 'KPI Formula',
+                'icon' => '<span></span>'
             ]
         ];
 

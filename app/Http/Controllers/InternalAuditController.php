@@ -2745,58 +2745,18 @@ class InternalAuditController extends Controller
 
     private function encryptCarId($id)
     {
-        $s1 = str_pad(rand(0, 99999), 5, '0', STR_PAD_LEFT);
-        $s2 = str_pad(rand(0, 99999), 5, '0', STR_PAD_LEFT);
-        $mid = str_pad($id, 6, '0', STR_PAD_LEFT);
-        $plain = $s1 . $mid . $s2;
-        
-        $appKey = config('app.key', 'qms_secret_fallback_key_123');
-        $key = substr(md5($appKey), 0, 16);
-        
-        $encrypted = '';
-        for ($i = 0; $i < 16; $i++) {
-            $encrypted .= chr(ord($plain[$i]) ^ ord($key[$i]));
+        $hash = DB::table('CsAuditCar')->where('id', $id)->value('hash_id');
+        if (!$hash) {
+            $hash = strtolower(\Illuminate\Support\Str::random(3) . '-' . \Illuminate\Support\Str::random(3) . '-' . \Illuminate\Support\Str::random(3));
+            DB::table('CsAuditCar')->where('id', $id)->update(['hash_id' => $hash]);
         }
-        
-        $hex = bin2hex($encrypted);
-        
-        return sprintf('%s-%s-%s-%s-%s',
-            substr($hex, 0, 8),
-            substr($hex, 8, 4),
-            substr($hex, 12, 4),
-            substr($hex, 16, 4),
-            substr($hex, 20, 12)
-        );
+        return $hash;
     }
 
     private function decryptCarId($uuid)
     {
-        try {
-            $hex = str_replace('-', '', $uuid);
-            if (strlen($hex) !== 32) return null;
-            
-            $encrypted = @hex2bin($hex);
-            if ($encrypted === false) return null;
-            
-            $appKey = config('app.key', 'qms_secret_fallback_key_123');
-            $key = substr(md5($appKey), 0, 16);
-            
-            $plain = '';
-            for ($i = 0; $i < 16; $i++) {
-                $plain .= chr(ord($encrypted[$i]) ^ ord($key[$i]));
-            }
-            
-            $s1 = substr($plain, 0, 5);
-            $mid = substr($plain, 5, 6);
-            $s2 = substr($plain, 11, 5);
-            
-            if (is_numeric($s1) && is_numeric($mid) && is_numeric($s2)) {
-                return (int)$mid;
-            }
-        } catch (\Exception $e) {
-            return null;
-        }
-        return null;
+        $car = DB::table('CsAuditCar')->where('hash_id', $uuid)->first();
+        return $car ? $car->id : null;
     }
 
     private function generateCarReqNumber($department)

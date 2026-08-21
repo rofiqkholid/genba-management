@@ -28,7 +28,7 @@
                     <i class="fa-solid fa-arrow-left text-sm"></i>
                 </a>
                 <div>
-                    <h1 class="text-xl sm:text-2xl font-bold text-slate-800">gay</h1>
+                    <h1 class="text-xl sm:text-2xl font-bold text-slate-800">Checksheet Internal Audit</h1>
                     <p class="text-slate-500 text-xs sm:text-sm mt-0.5">Evaluate compliance clauses and submit findings</p>
                 </div>
             </div>

@@ -513,7 +513,7 @@ class KPICompanyController extends Controller
 
         $hasDeletePermission = UserMenuPermission::canDelete(117);
 
-        return view('kpi.detail-kpi-company.company-kpi-detail', compact('kpi', 'departments', 'activities', 'hasDeletePermission', 'components'));
+        return view('kpi.detail-kpi-company.company-kpi-detail', compact('kpi', 'departments', 'activities', 'hasDeletePermission', 'components', 'formula'));
     }
 
     public function editActivity(string $id)
@@ -839,6 +839,41 @@ class KPICompanyController extends Controller
             return redirect()
                 ->back()
                 ->with('error', 'Failed to cancel: ' . $e->getMessage());
+        }
+    }
+
+    public function saveCalcOperator(Request $request)
+    {
+        $request->validate([
+            'activity_id' => 'required|string',
+            'calc_operator' => 'nullable|string|max:50',
+        ]);
+
+        $dbId = self::decodeId($request->activity_id);
+        if (!$dbId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid Activity ID.'
+            ], 400);
+        }
+
+        try {
+            DB::table('KPICompanyActivity')
+                ->where('id', $dbId)
+                ->update([
+                    'calc_operator' => $request->calc_operator,
+                    'updated_at' => \Carbon\Carbon::now()
+                ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Calculation operator updated successfully.'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 500);
         }
     }
 }

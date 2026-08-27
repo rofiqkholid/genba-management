@@ -238,6 +238,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/company/activity/edit/{id}', [KPICompanyController::class, 'editActivity'])->name('kpi.company.activity.edit');
         Route::post('/company/activity/update/{id}', [KPICompanyController::class, 'updateActivity'])->name('kpi.company.activity.update');
         Route::get('/company/activity/cancel/{id}', [KPICompanyController::class, 'cancelActivity'])->name('kpi.company.activity.cancel');
+        Route::post('/company/formula/operator', [KPICompanyController::class, 'saveCalcOperator'])->name('kpi.company.formula.operator');
         Route::post('/company/table', [KPICompanyController::class, 'table'])->name('kpi.company.table');
         Route::post('/company/store', [KPICompanyController::class, 'store'])->name('kpi.company.store');
         Route::post('/company/update', [KPICompanyController::class, 'update'])->name('kpi.company.update');

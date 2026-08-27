@@ -25,5 +25,6 @@ class KPIFormula extends Model
         'comp_6', 'comp_7', 'comp_8', 'comp_9', 'comp_10',
         'comp_11', 'comp_12', 'comp_13', 'comp_14', 'comp_15',
         'comp_16', 'comp_17', 'comp_18', 'comp_19', 'comp_20',
+        'calc_operator',
     ];
 }

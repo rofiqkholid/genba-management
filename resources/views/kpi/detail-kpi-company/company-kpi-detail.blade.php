@@ -2,6 +2,51 @@
 
 @php
     $hideCentralToast = true;
+
+    $calculatedActuals = [];
+    $monthsList = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    foreach ($monthsList as $m) {
+        $act = $activities->firstWhere('bulan', $m);
+        $calculatedActual = null;
+
+        if (isset($formula) && $formula && !empty($components)) {
+            $op = $act ? $act->calc_operator : null;
+            if (!empty($op)) {
+                $vals = [];
+                for ($i = 1; $i <= 20; $i++) {
+                    $col = 'comp_' . $i;
+                    if (!empty($formula->$col)) {
+                        $compVal = ($act && $act->{'comp_' . $i} !== null) ? $act->{'comp_' . $i} : null;
+                        if ($compVal !== null) {
+                            $vals[] = (float) filter_var($compVal, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
+                        }
+                    }
+                }
+
+                if (!empty($vals)) {
+                    if ($op === '+') {
+                        $calculatedActual = array_sum($vals);
+                    } elseif ($op === '-') {
+                        $calculatedActual = array_reduce(array_slice($vals, 1), function($carry, $item) {
+                            return $carry - $item;
+                        }, $vals[0]);
+                    } elseif ($op === 'x' || $op === '*') {
+                        $calculatedActual = array_reduce($vals, function($carry, $item) {
+                            return $carry * $item;
+                        }, 1);
+                    } elseif ($op === '/') {
+                        $calculatedActual = array_reduce(array_slice($vals, 1), function($carry, $item) {
+                            return $item != 0 ? $carry / $item : 0;
+                        }, $vals[0]);
+                    } elseif ($op === 'Average') {
+                        $calculatedActual = array_sum($vals) / count($vals);
+                    }
+                }
+            }
+        }
+
+        $calculatedActuals[$m] = ($calculatedActual !== null) ? $calculatedActual : ($act ? $act->actual : null);
+    }
 @endphp
 
 @section('title', 'Detail KPI Company')
@@ -135,8 +180,7 @@
                         @php
                             $actualList = [];
                             foreach (['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'] as $m) {
-                                $act = $activities->firstWhere('bulan', $m);
-                                $actualList[] = ($act && $act->actual !== null) ? (float) filter_var($act->actual, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION) : null;
+                                $actualList[] = ($calculatedActuals[$m] !== null) ? (float) $calculatedActuals[$m] : null;
                             }
                         @endphp
                         <canvas id="kpiPerformanceChart" data-actual='{!! json_encode($actualList) !!}' data-target="{{ $kpi->target }}" data-operator="{!! $kpi->operator !!}" data-arrow-target="{{ strtolower($kpi->arrow_target ?? '') }}"></canvas>
@@ -149,7 +193,7 @@
                 <!-- Data Table -->
                 <div class="overflow-x-auto border border-slate-200 rounded-xl">
                     <table class="w-full text-sm text-left text-slate-700">
-                        <thead class="bg-slate-50 text-slate-700 font-semibold border-b border-slate-200">
+                        <thead class="bg-slate-100 text-slate-700 font-semibold border-b border-slate-200">
                             <tr>
                                 <th class="p-3 border-r border-slate-200 whitespace-nowrap">Bulan / Component</th>
                                 @foreach(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'] as $m)
@@ -159,8 +203,8 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr class="border-b border-slate-200">
-                                <td class="p-3 font-semibold border-r border-slate-200 whitespace-nowrap">Target ({{ $kpi->unit }})</td>
+                            <tr class="bg-slate-50 border-b border-slate-200 font-bold text-slate-800">
+                                <td class="p-3 border-r border-slate-200 whitespace-nowrap">Target ({{ $kpi->unit }})</td>
                                 @php
                                     $targetSum = 0;
                                 @endphp
@@ -170,7 +214,7 @@
                                     @endphp
                                     <td class="p-3 text-center border-r border-slate-200">{{ $kpi->target }}</td>
                                 @endforeach
-                                <td class="p-3 text-center font-bold">{{ $targetSum }}</td>
+                                <td class="p-3 text-center">{{ $targetSum }}</td>
                             </tr>
 
                             @if(!empty($components))
@@ -202,9 +246,8 @@
                                 @endforeach
                             @endif
 
-                            @if(empty($components))
-                            <tr class="border-b border-slate-200">
-                                <td class="p-3 font-semibold border-r border-slate-200 whitespace-nowrap">Actual ({{ $kpi->unit }})</td>
+                            <tr class="bg-slate-50 border-b border-slate-200 font-bold text-slate-800">
+                                <td class="p-3 border-r border-slate-200 whitespace-nowrap">Actual ({{ $kpi->unit }})</td>
                                 @php
                                     $actualSum = 0;
                                     $hasActual = false;
@@ -212,21 +255,19 @@
                                 @foreach(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'] as $m)
                                     @php
                                         $act = $activities->firstWhere('bulan', $m);
-                                    @endphp
-                                    @if($act && $act->actual !== null && !empty($act->status) && !($act->status === 'Not Achieved' && !$act->problem))
-                                        @php
-                                            $val = (float) filter_var($act->actual, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
+                                        $valVal = $calculatedActuals[$m];
+                                        if ($valVal !== null) {
+                                            $val = (float) filter_var($valVal, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
                                             $actualSum += $val;
                                             $hasActual = true;
-                                        @endphp
-                                        <td class="p-3 text-center border-r border-slate-200 font-semibold text-slate-800">{{ $act->actual }}</td>
-                                    @else
-                                        <td class="p-3 text-center text-slate-400 border-r border-slate-200">-</td>
-                                    @endif
+                                        }
+                                    @endphp
+                                    <td class="p-3 text-center border-r border-slate-200 {{ !empty($components) ? 'cursor-pointer hover:bg-slate-200/60 transition-all' : '' }}" {!! (!empty($components) && $act) ? 'onclick="openCalcOperatorModal(\'' . $act->hash_id . '\', \'' . ($act->calc_operator ?? '') . '\')"' : '' !!} title="{{ !empty($components) ? 'Click to select calculation method' : '' }}">
+                                        {{ $valVal !== null ? (is_numeric($valVal) ? round($valVal, 2) : $valVal) : (empty($components) ? '-' : '') }}
+                                    </td>
                                 @endforeach
-                                <td class="p-3 text-center font-bold">{{ $hasActual ? $actualSum : '-' }}</td>
+                                <td class="p-3 text-center">{{ $hasActual ? (is_numeric($actualSum) ? round($actualSum, 2) : $actualSum) : '-' }}</td>
                             </tr>
-                            @endif
                             @if(empty($components))
                             <tr>
                                 <td class="p-3 font-semibold border-r border-slate-200 whitespace-nowrap">Status</td>
@@ -796,6 +837,107 @@
     function closeProblemPreview() {
         document.getElementById('problemPreviewModal').classList.add('hidden');
     }
+
+    function openCalcOperatorModal(activityId, currentOperator) {
+        document.getElementById('modal_activity_id').value = activityId;
+        
+        const radios = document.getElementsByName('calc_operator');
+        let matched = false;
+        radios.forEach(radio => {
+            if (radio.value === currentOperator) {
+                radio.checked = true;
+                matched = true;
+            } else {
+                radio.checked = false;
+            }
+        });
+        if (!matched && radios.length > 0) {
+            // Check 'None' radio if no operator matches
+            radios[radios.length - 1].checked = true;
+        }
+
+        document.getElementById('calcOperatorModal').classList.remove('hidden');
+    }
+
+    function closeCalcOperatorModal() {
+        document.getElementById('calcOperatorModal').classList.add('hidden');
+    }
+
+    function submitCalcOperator(e) {
+        e.preventDefault();
+        const form = $('#calcOperatorForm');
+        
+        $.ajax({
+            url: "{{ route('kpi.company.formula.operator') }}",
+            type: "POST",
+            data: form.serialize(),
+            success: function(response) {
+                if (response.success) {
+                    location.reload();
+                } else {
+                    alert(response.message || 'Failed to update calculation method.');
+                }
+            },
+            error: function(xhr) {
+                alert(xhr.responseJSON?.message || 'Error occurred while saving calculation method.');
+            }
+        });
+    }
 </script>
+
+<!-- Calc Operator Modal -->
+<div id="calcOperatorModal" class="fixed inset-0 z-[999] hidden flex items-center justify-center bg-slate-900/40 transition-all duration-300">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 overflow-hidden border border-slate-100 flex flex-col max-h-[90vh]">
+        <!-- Header -->
+        <div class="flex items-center justify-between p-4 border-b border-slate-100 shrink-0">
+            <h3 class="text-base font-bold text-slate-800">Select Calculation Method</h3>
+            <button onclick="closeCalcOperatorModal()" class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-colors">
+                <i class="fa-solid fa-times"></i>
+            </button>
+        </div>
+        
+        <!-- Form -->
+        <form id="calcOperatorForm" onsubmit="submitCalcOperator(event)" class="p-6 space-y-4 flex-1 overflow-y-auto">
+            @csrf
+            <input type="hidden" name="activity_id" id="modal_activity_id" value="">
+            
+            <div class="space-y-3">
+                <label class="block text-sm font-semibold text-slate-700 mb-1">Select Mathematical Operator for Components</label>
+                <div class="grid grid-cols-1 gap-2">
+                    <label class="flex items-center p-3 border border-slate-200 rounded-xl hover:bg-slate-50 cursor-pointer transition-colors">
+                        <input type="radio" name="calc_operator" value="+" class="w-4 h-4 text-blue-600 border-slate-300 focus:ring-blue-500">
+                        <span class="ml-3 font-semibold text-slate-700 text-sm">+ (Addition / Sum)</span>
+                    </label>
+                    <label class="flex items-center p-3 border border-slate-200 rounded-xl hover:bg-slate-50 cursor-pointer transition-colors">
+                        <input type="radio" name="calc_operator" value="-" class="w-4 h-4 text-blue-600 border-slate-300 focus:ring-blue-500">
+                        <span class="ml-3 font-semibold text-slate-700 text-sm">- (Subtraction)</span>
+                    </label>
+                    <label class="flex items-center p-3 border border-slate-200 rounded-xl hover:bg-slate-50 cursor-pointer transition-colors">
+                        <input type="radio" name="calc_operator" value="x" class="w-4 h-4 text-blue-600 border-slate-300 focus:ring-blue-500">
+                        <span class="ml-3 font-semibold text-slate-700 text-sm">x (Multiplication)</span>
+                    </label>
+                    <label class="flex items-center p-3 border border-slate-200 rounded-xl hover:bg-slate-50 cursor-pointer transition-colors">
+                        <input type="radio" name="calc_operator" value="/" class="w-4 h-4 text-blue-600 border-slate-300 focus:ring-blue-500">
+                        <span class="ml-3 font-semibold text-slate-700 text-sm">/ (Division)</span>
+                    </label>
+                    <label class="flex items-center p-3 border border-slate-200 rounded-xl hover:bg-slate-50 cursor-pointer transition-colors">
+                        <input type="radio" name="calc_operator" value="Average" class="w-4 h-4 text-blue-600 border-slate-300 focus:ring-blue-500">
+                        <span class="ml-3 font-semibold text-slate-700 text-sm">Average</span>
+                    </label>
+                    <label class="flex items-center p-3 border border-slate-200 rounded-xl hover:bg-slate-50 cursor-pointer transition-colors">
+                        <input type="radio" name="calc_operator" value="" class="w-4 h-4 text-blue-600 border-slate-300 focus:ring-blue-500">
+                        <span class="ml-3 font-semibold text-slate-500 text-sm">None (Manual Actual)</span>
+                    </label>
+                </div>
+            </div>
+            
+            <!-- Action Buttons -->
+            <div class="flex justify-end gap-3 pt-4 border-t border-slate-100 shrink-0">
+                <button type="button" onclick="closeCalcOperatorModal()" class="px-5 py-2.5 border border-slate-200 text-slate-700 rounded-xl hover:bg-slate-50 transition-colors text-sm font-semibold">Cancel</button>
+                <button type="submit" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition-colors text-sm font-semibold shadow-sm shadow-blue-200">Save</button>
+            </div>
+        </form>
+    </div>
+</div>
 @endpush
 @endsection

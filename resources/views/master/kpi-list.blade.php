@@ -496,6 +496,49 @@
     </div>
 </div>
 
+<!-- Formula Modal -->
+<div id="formulaModal" class="fixed inset-0 z-50 hidden">
+    <div class="fixed inset-0 bg-slate-900/50 transition-opacity" onclick="closeFormulaModal()"></div>
+    <div class="fixed inset-0 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl w-full max-w-5xl flex flex-col transform transition-all overflow-hidden shadow-2xl">
+            <!-- Modal Header -->
+            <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-white shrink-0">
+                <h3 class="text-lg font-bold text-slate-800" id="formulaModalTitle">Manage Formula</h3>
+                <button onclick="closeFormulaModal()" class="text-slate-400 hover:text-slate-600">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+            <!-- Modal Body -->
+            <form id="formulaForm" action="{{ route('master.kpi_list.formula.save') }}" method="POST" class="p-6 space-y-4"
+                x-data="{
+                    vals: ['', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '']
+                }">
+                @csrf
+                <input type="hidden" name="kpi_list_id" id="formula_kpi_list_id">
+
+                <!-- 20 Varchar Input Fields -->
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1.5 font-semibold">Value Inputs (20 Columns)</label>
+                    <div class="grid grid-cols-5 gap-2 transition-all">
+                        @for($i = 1; $i <= 20; $i++)
+                            <div class="relative">
+                                <input type="text" name="comp_{{ $i }}" x-model="vals[{{ $i - 1 }}]" placeholder="Comp {{ $i }}" class="w-full px-3 py-3.5 border border-slate-200 rounded-xl text-center text-sm outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 font-medium">
+                            </div>
+                        @endfor
+                    </div>
+                </div>
+
+
+                <!-- Action Buttons -->
+                <div class="flex justify-end gap-3 pt-4 border-t border-slate-100 shrink-0">
+                    <button type="button" onclick="closeFormulaModal()" class="px-5 py-2.5 border border-slate-200 text-slate-700 rounded-xl hover:bg-slate-50 transition-colors text-sm font-semibold">Cancel</button>
+                    <button type="submit" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition-colors text-sm font-semibold shadow-sm shadow-blue-200">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 @push('scripts')
 <script>
     $(document).ready(function() {
@@ -659,6 +702,36 @@
                 },
                 error: function(xhr) {
                     showToast(xhr.responseJSON?.message || 'Failed to update data.', 'error');
+                },
+                complete: function() {
+                    submitBtn.prop('disabled', false).html(originalText);
+                }
+            });
+        });
+
+        // Submit Formula Form
+        $('#formulaForm').on('submit', function(e) {
+            e.preventDefault();
+            const form = this;
+            const submitBtn = $(form).find('button[type="submit"]');
+            const originalText = submitBtn.html();
+            
+            submitBtn.prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin mr-2"></i> Saving...');
+            
+            $.ajax({
+                url: form.action,
+                type: 'POST',
+                data: $(form).serialize(),
+                success: function(response) {
+                    if (response.success) {
+                        showToast('Formula saved successfully', 'success');
+                        closeFormulaModal();
+                    } else {
+                        showToast(response.message || 'Failed to save formula', 'error');
+                    }
+                },
+                error: function(xhr) {
+                    showToast(xhr.responseJSON?.message || 'Failed to save formula.', 'error');
                 },
                 complete: function() {
                     submitBtn.prop('disabled', false).html(originalText);
@@ -917,6 +990,46 @@
             });
         }
     });
+    function openFormulaModal() {
+        $('#formulaModal').removeClass('hidden');
+    }
+
+    function closeFormulaModal() {
+        $('#formulaModal').addClass('hidden');
+    }
+
+    function handleFormula(btn) {
+        const kpiId = btn.getAttribute('data-id');
+        const kpiName = btn.getAttribute('data-kpi_name');
+        // Set Title
+        $('#formulaModalTitle').text('Manage Formula - ' + kpiName);
+        $('#formula_kpi_list_id').val(kpiId);
+
+        // Fetch existing formula
+        $.ajax({
+            url: `{{ route('master.kpi_list.formula', '') }}/${kpiId}`,
+            type: 'GET',
+            success: function(response) {
+                const formula = response.formula || {};
+                
+                // Populate Alpine data
+                const formEl = document.getElementById('formulaForm');
+                if (formEl && window.Alpine) {
+                    const alpineData = window.Alpine.$data(formEl);
+                    if (alpineData) {
+                        for (let i = 1; i <= 20; i++) {
+                            alpineData.vals[i - 1] = formula['comp_' + i] !== null && formula['comp_' + i] !== undefined ? formula['comp_' + i] : '';
+                        }
+                    }
+                }
+                
+                openFormulaModal();
+            },
+            error: function() {
+                showToast('Failed to fetch formula data.', 'error');
+            }
+        });
+    }
 </script>
 @endpush
 @endsection

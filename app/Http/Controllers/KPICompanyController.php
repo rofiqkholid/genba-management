@@ -460,6 +460,18 @@ class KPICompanyController extends Controller
             abort(404);
         }
 
+        // Fetch formula components from KPIFormula
+        $formula = DB::table('KPIFormula')->where('kpi_list_id', $kpi->kpi_list_id)->first();
+        $components = [];
+        if ($formula) {
+            for ($i = 1; $i <= 20; $i++) {
+                $col = 'comp_' . $i;
+                if (!empty($formula->$col)) {
+                    $components[$i] = $formula->$col;
+                }
+            }
+        }
+
         $departments = DB::table('GenbaDept')->orderBy('Key1', 'asc')->get();
 
         $activities = DB::table('KPICompanyActivity')
@@ -501,7 +513,7 @@ class KPICompanyController extends Controller
 
         $hasDeletePermission = UserMenuPermission::canDelete(117);
 
-        return view('kpi.detail-kpi-company.company-kpi-detail', compact('kpi', 'departments', 'activities', 'hasDeletePermission'));
+        return view('kpi.detail-kpi-company.company-kpi-detail', compact('kpi', 'departments', 'activities', 'hasDeletePermission', 'components'));
     }
 
     public function editActivity(string $id)
@@ -524,7 +536,12 @@ class KPICompanyController extends Controller
                 'act.problem_solve',
                 'act.created_at',
                 'act.updated_at',
+                'act.comp_1', 'act.comp_2', 'act.comp_3', 'act.comp_4', 'act.comp_5',
+                'act.comp_6', 'act.comp_7', 'act.comp_8', 'act.comp_9', 'act.comp_10',
+                'act.comp_11', 'act.comp_12', 'act.comp_13', 'act.comp_14', 'act.comp_15',
+                'act.comp_16', 'act.comp_17', 'act.comp_18', 'act.comp_19', 'act.comp_20',
                 'child.department_code',
+                'child.kpi_list_id',
                 'parent.operator as operator',
                 'parent.unit as unit',
                 'child.periode as periode',
@@ -541,18 +558,26 @@ class KPICompanyController extends Controller
         $activity->hash_id = self::encodeId($activity->id);
         $activity->kpi_company_hash_id = self::encodeId($activity->kpi_company_id);
 
+        // Fetch formula components mapping from KPIFormula
+        $formula = DB::table('KPIFormula')->where('kpi_list_id', $activity->kpi_list_id)->first();
+        $components = [];
+        if ($formula) {
+            for ($i = 1; $i <= 20; $i++) {
+                $col = 'comp_' . $i;
+                if (!empty($formula->$col)) {
+                    $components[$i] = $formula->$col;
+                }
+            }
+        }
+
         $departments = DB::table('GenbaDept')->orderBy('Key1', 'asc')->get();
         $problem = DB::table('KPICompanyActivityProblem')->where('kpi_company_activity_id', $dbId)->first();
 
-        return view('kpi.detail-kpi-company.company-kpi-insert', compact('activity', 'departments', 'problem'));
+        return view('kpi.detail-kpi-company.company-kpi-insert', compact('activity', 'departments', 'problem', 'components'));
     }
 
     public function updateActivity(Request $request, string $id)
     {
-        $request->validate([
-            'actual' => 'required',
-        ]);
-
         $dbId = self::decodeId($id);
         if (!$dbId) {
             return redirect()->back()->with('error', 'Invalid Activity ID.');
@@ -565,6 +590,7 @@ class KPICompanyController extends Controller
                 ->select(
                     'act.id',
                     'act.kpi_company_id',
+                    'child.kpi_list_id',
                     'act.tahun',
                     'act.bulan',
                     'act.actual',
@@ -580,6 +606,21 @@ class KPICompanyController extends Controller
             if (!$activity) {
                 return redirect()->back()->with('error', 'Activity record not found.');
             }
+
+            // Dynamically validate based on components
+            $formula = DB::table('KPIFormula')->where('kpi_list_id', $activity->kpi_list_id)->first();
+            $rules = [];
+            if ($formula) {
+                for ($i = 1; $i <= 20; $i++) {
+                    $col = 'comp_' . $i;
+                    if (!empty($formula->$col)) {
+                        $rules['comp_' . $i] = 'required';
+                    }
+                }
+            } else {
+                $rules['actual'] = 'required';
+            }
+            $request->validate($rules);
 
             // Extract actual value
             $actualVal = (float) filter_var($request->actual, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
@@ -615,14 +656,21 @@ class KPICompanyController extends Controller
 
             DB::beginTransaction();
 
-            // Update the actual and status in KPICompanyActivity
+            // Update the actual, status, and components in KPICompanyActivity
+            $updateData = [
+                'actual' => $request->actual,
+                'status' => $status,
+                'updated_at' => Carbon::now()
+            ];
+            for ($i = 1; $i <= 20; $i++) {
+                if ($request->has('comp_' . $i)) {
+                    $updateData['comp_' . $i] = $request->input('comp_' . $i);
+                }
+            }
+
             DB::table('KPICompanyActivity')
                 ->where('id', $dbId)
-                ->update([
-                    'actual' => $request->actual,
-                    'status' => $status,
-                    'updated_at' => Carbon::now()
-                ]);
+                ->update($updateData);
 
             if ($actualVal > 0) {
                 // If the activity did not have actual > 0 previously, it means they just changed it to > 0.

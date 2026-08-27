@@ -172,6 +172,37 @@
                                 @endforeach
                                 <td class="p-3 text-center font-bold">{{ $targetSum }}</td>
                             </tr>
+
+                            @if(!empty($components))
+                                @foreach($components as $index => $name)
+                                    <tr class="border-b border-slate-200">
+                                        <td class="p-3 font-semibold border-r border-slate-200 whitespace-nowrap">{{ $name }}</td>
+                                        @php
+                                            $compSum = 0;
+                                            $hasComp = false;
+                                        @endphp
+                                        @foreach(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'] as $m)
+                                            @php
+                                                $act = $activities->firstWhere('bulan', $m);
+                                                $compVal = ($act && $act->{'comp_' . $index} !== null) ? $act->{'comp_' . $index} : null;
+                                            @endphp
+                                            @if($compVal !== null)
+                                                @php
+                                                    $val = (float) filter_var($compVal, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
+                                                    $compSum += $val;
+                                                    $hasComp = true;
+                                                @endphp
+                                                <td class="p-3 text-center border-r border-slate-200 font-semibold text-slate-800">{{ $compVal }}</td>
+                                            @else
+                                                <td class="p-3 text-center text-slate-400 border-r border-slate-200">-</td>
+                                            @endif
+                                        @endforeach
+                                        <td class="p-3 text-center font-bold">{{ $hasComp ? $compSum : '-' }}</td>
+                                    </tr>
+                                @endforeach
+                            @endif
+
+                            @if(empty($components))
                             <tr class="border-b border-slate-200">
                                 <td class="p-3 font-semibold border-r border-slate-200 whitespace-nowrap">Actual ({{ $kpi->unit }})</td>
                                 @php
@@ -195,6 +226,8 @@
                                 @endforeach
                                 <td class="p-3 text-center font-bold">{{ $hasActual ? $actualSum : '-' }}</td>
                             </tr>
+                            @endif
+                            @if(empty($components))
                             <tr>
                                 <td class="p-3 font-semibold border-r border-slate-200 whitespace-nowrap">Status</td>
                                 @foreach(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'] as $m)
@@ -219,6 +252,7 @@
                                 @endforeach
                                 <td class="p-3 text-center">-</td>
                             </tr>
+                            @endif
                         </tbody>
                     </table>
                 </div>

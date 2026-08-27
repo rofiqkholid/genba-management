@@ -21,20 +21,9 @@ class KPIFormula extends Model
      */
     protected $fillable = [
         'kpi_list_id',
-        'cell',
-        'result',
-        'formula_type',
-        'val_1', 'val_2', 'val_3', 'val_4', 'val_5',
-        'val_6', 'val_7', 'val_8', 'val_9', 'val_10',
-        'val_11', 'val_12', 'val_13', 'val_14', 'val_15',
-    ];
-
-    /**
-     * The attributes that should be cast.
-     *
-     * @var array
-     */
-    protected $casts = [
-        'cell' => 'array',
+        'comp_1', 'comp_2', 'comp_3', 'comp_4', 'comp_5',
+        'comp_6', 'comp_7', 'comp_8', 'comp_9', 'comp_10',
+        'comp_11', 'comp_12', 'comp_13', 'comp_14', 'comp_15',
+        'comp_16', 'comp_17', 'comp_18', 'comp_19', 'comp_20',
     ];
 }

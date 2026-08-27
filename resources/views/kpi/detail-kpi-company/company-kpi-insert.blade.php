@@ -78,11 +78,23 @@
                         <input type="text" value="{{ ($activity->operator ?? '') }} {{ ($activity->master_target ?? '') }} {{ ($activity->unit ?? '') }}" disabled class="w-full px-4 py-2.5 border border-slate-200 rounded-lg bg-slate-50 text-slate-500 text-sm outline-none cursor-not-allowed">
                     </div>
 
+                    <!-- Components Inputs -->
+                    @if(!empty($components))
+                        @foreach($components as $index => $name)
+                            <div class="col-span-1">
+                                <label class="block text-sm font-medium text-slate-700 mb-1.5"><span class="text-slate-400 font-normal">[Component {{ $index }}]</span> {{ $name }} <span class="text-red-500">*</span></label>
+                                <input type="text" name="comp_{{ $index }}" value="{{ old('comp_' . $index, $activity->{'comp_' . $index}) }}" required placeholder="Enter {{ $name }}" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm outline-none transition-all hover:border-blue-300" {{ $isViewMode ? 'disabled' : '' }}>
+                            </div>
+                        @endforeach
+                    @endif
+
+                    @if(empty($components))
                     <!-- Actual -->
                     <div class="md:col-span-2">
                         <label class="block text-sm font-medium text-slate-700 mb-1.5">Actual <span class="text-red-500">*</span></label>
-                        <input type="text" name="actual" value="{{ old('actual', $activity->actual) }}" required placeholder="Enter actual value" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm outline-none transition-all hover:border-blue-300" {{ $isViewMode ? 'disabled' : '' }}>
+                        <input type="text" name="actual" id="actual_input" value="{{ old('actual', $activity->actual) }}" required placeholder="Enter actual value" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm outline-none transition-all hover:border-blue-300" {{ $isViewMode ? 'disabled' : '' }}>
                     </div>
+                    @endif
                 </div>
 
                 @php
@@ -535,17 +547,63 @@
 
     document.addEventListener("DOMContentLoaded", function() {
         const problemSolvingSection = document.getElementById('problem-solving-section');
-        if (problemSolvingSection && !problemSolvingSection.classList.contains('hidden')) {
-            problemSolvingSection.querySelectorAll('.ps-required').forEach(el => {
-                el.setAttribute('required', 'required');
-            });
-            // Also set input type text in searchable selects to required so browser can focus them
-            problemSolvingSection.querySelectorAll('input[type="text"]').forEach(el => {
-                if (el.placeholder && el.placeholder.includes('Select')) {
-                    el.setAttribute('required', 'required');
+        const actualInput = document.getElementById('actual_input');
+
+        function updateProblemSolvingVisibility() {
+            if (!problemSolvingSection) return;
+            
+            let show = false;
+            if (actualInput) {
+                const val = parseFloat(actualInput.value) || 0;
+                if (val > 0) {
+                    show = true;
                 }
+            } else {
+                const compInputs = document.querySelectorAll('input[name^="comp_"]');
+                compInputs.forEach(input => {
+                    const val = parseFloat(input.value) || 0;
+                    if (val === 1) {
+                        show = true;
+                    }
+                });
+            }
+
+            if (show) {
+                problemSolvingSection.classList.remove('hidden');
+                problemSolvingSection.querySelectorAll('.ps-required').forEach(el => {
+                    el.setAttribute('required', 'required');
+                });
+                problemSolvingSection.querySelectorAll('input[type="text"]').forEach(el => {
+                    if (el.placeholder && el.placeholder.includes('Select')) {
+                        el.setAttribute('required', 'required');
+                    }
+                });
+            } else {
+                problemSolvingSection.classList.add('hidden');
+                problemSolvingSection.querySelectorAll('.ps-required').forEach(el => {
+                    el.removeAttribute('required');
+                });
+                problemSolvingSection.querySelectorAll('input[type="text"]').forEach(el => {
+                    if (el.placeholder && el.placeholder.includes('Select')) {
+                        el.removeAttribute('required');
+                    }
+                });
+            }
+        }
+
+        if (actualInput) {
+            actualInput.addEventListener('input', updateProblemSolvingVisibility);
+            actualInput.addEventListener('change', updateProblemSolvingVisibility);
+        } else {
+            const compInputs = document.querySelectorAll('input[name^="comp_"]');
+            compInputs.forEach(input => {
+                input.addEventListener('input', updateProblemSolvingVisibility);
+                input.addEventListener('change', updateProblemSolvingVisibility);
             });
         }
+
+        // Initialize state on page load
+        updateProblemSolvingVisibility();
 
         // Initialize searchable-select components values
         const selectsContainer = document.getElementById('initial-selects-data');

@@ -213,14 +213,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/kpi-unit/delete', [MasterController::class, 'delete_kpi_unit'])->name('master.kpi_unit.delete');
         Route::post('/kpi-unit/options', [MasterController::class, 'kpi_unit_options'])->name('master.kpi_unit.options');
 
-        Route::get('/kpi-formula', function () {
-            $kpiList = DB::table('KPIList')->select('id', 'no_kpi', 'objective')->get();
-            return view('master.kpi-formula', compact('kpiList'));
-        })->name('master.kpi-formula');
-        Route::post('/kpi-formula/table', [MasterController::class, 'kpi_formula_table'])->name('master.kpi-formula.table');
-        Route::post('/kpi-formula/store', [MasterController::class, 'store_kpi_formula'])->name('master.kpi-formula.store');
-        Route::post('/kpi-formula/update', [MasterController::class, 'update_kpi_formula'])->name('master.kpi-formula.update');
-        Route::post('/kpi-formula/delete', [MasterController::class, 'delete_kpi_formula'])->name('master.kpi-formula.delete');
+
     });
 
     Route::get('/user-management', [MasterController::class, 'user_management'])->name('master.user_management');

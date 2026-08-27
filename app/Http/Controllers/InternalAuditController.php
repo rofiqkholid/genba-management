@@ -303,13 +303,13 @@ class InternalAuditController extends Controller
                           }
                       }
                   } elseif ($effectiveRole === 'closed') {
-                      if (in_array($user->username, ['031114-001', '260422-001', '121020-002', '2025001'])) {
+                      if (in_array($user->username, ['031114-001', '260422-001', '121020-002', '2025-001'])) {
                           $canAction = true;
                       }
                   }
   
                   $isUserAuditor = false;
-                  if (in_array($user->username, ['031114-001', '260422-001', '121020-002', '2025001'])) {
+                  if (in_array($user->username, ['031114-001', '260422-001', '121020-002', '2025-001'])) {
                       $isUserAuditor = true;
                   } elseif (!empty($item->auditor)) {
                       $auditors = array_map('trim', explode(',', $item->auditor));
@@ -468,7 +468,7 @@ class InternalAuditController extends Controller
 
             if ($carStatus === 'Closed') {
                 // Verify that the user is the Auditor or QMR
-                $isAuditor = in_array($user->username, ['031114-001', '260422-001', '121020-002', '2025001']);
+                $isAuditor = in_array($user->username, ['031114-001', '260422-001', '121020-002', '2025-001']);
                 if (!$isAuditor && !empty($car->auditor)) {
                     $auditors = array_map('trim', explode(',', $car->auditor));
                     foreach ($auditors as $auditorName) {
@@ -586,7 +586,7 @@ class InternalAuditController extends Controller
                 }
             } elseif ($carStatus === 'Closed') {
                 // Reject by QMR
-                if (!in_array($user->username, ['031114-001', '260422-001', '121020-002', '2025001'])) {
+                if (!in_array($user->username, ['031114-001', '260422-001', '121020-002', '2025-001'])) {
                     return response()->json(['success' => false, 'message' => 'Only QMR is allowed to reject at this stage.']);
                 }
             } else {
@@ -896,7 +896,7 @@ class InternalAuditController extends Controller
             $carStatus = $car->status ?? '';
 
             if ($carStatus === 'Closed') {
-                $isAuditor = in_array($user->username, ['031114-001', '260422-001', '121020-002', '2025001']);
+                $isAuditor = in_array($user->username, ['031114-001', '260422-001', '121020-002', '2025-001']);
                 if (!$isAuditor && !empty($car->auditor)) {
                     $auditors = array_map('trim', explode(',', $car->auditor));
                     foreach ($auditors as $auditorName) {
@@ -2071,7 +2071,7 @@ class InternalAuditController extends Controller
                 }
             } elseif ($role === 'closed') {
                 // Verify the user is QMR
-                if (!in_array($user->username, ['031114-001', '260422-001', '121020-002', '2025001'])) {
+                if (!in_array($user->username, ['031114-001', '260422-001', '121020-002', '2025-001'])) {
                     return response()->json(['success' => false, 'message' => 'Only QMR is allowed to perform final verification.']);
                 }
             } else {

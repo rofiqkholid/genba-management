@@ -233,7 +233,7 @@ $approve = $approve ?? null;
             }
             }
 
-            $isQmr = in_array(Auth::user()->username, ['031114-001', '260422-001', '121020-002', '2025001']);
+            $isQmr = in_array(Auth::user()->username, ['031114-001', '260422-001', '121020-002', '2025-001']);
 
             $isReviewing = false;
             if ($isSuperiorUser && ($car->status ?? '') === 'Under Review') {
@@ -733,7 +733,7 @@ $approve = $approve ?? null;
                         }
                         }
                         }
-                        $isQmr = in_array(Auth::user()->username, ['031114-001', '260422-001', '121020-002', '2025001']);
+                        $isQmr = in_array(Auth::user()->username, ['031114-001', '260422-001', '121020-002', '2025-001']);
                         // Notes is editable only if:
                         // 1. Action is completed (i.e. status is no longer Draft)
                         // 2. CAR status is 'Need Verification' (meaning superior has already verified it) and user is Auditor
@@ -934,7 +934,7 @@ $approve = $approve ?? null;
                     }
                     }
                     }
-                    $isQmr = in_array(Auth::user()->username, ['031114-001', '260422-001', '121020-002', '2025001']);
+                    $isQmr = in_array(Auth::user()->username, ['031114-001', '260422-001', '121020-002', '2025-001']);
                     $isSuperior = isset($action) && strcasecmp(Auth::user()->full_name, $action->auditee_superior_name ?? '') === 0;
 
                     $showActionButtons = false;

@@ -139,7 +139,7 @@
                                 $actualList[] = ($act && $act->actual !== null) ? (float) filter_var($act->actual, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION) : null;
                             }
                         @endphp
-                        <canvas id="kpiPerformanceChart" data-actual='{!! json_encode($actualList) !!}' data-target="{{ $kpi->target }}" data-operator="{!! $kpi->operator !!}"></canvas>
+                        <canvas id="kpiPerformanceChart" data-actual='{!! json_encode($actualList) !!}' data-target="{{ $kpi->target }}" data-operator="{!! $kpi->operator !!}" data-arrow-target="{{ strtolower($kpi->arrow_target ?? '') }}"></canvas>
                     </div>
                 </div>
 
@@ -513,11 +513,10 @@
             const fullActualData = JSON.parse(canvas.dataset.actual || '[]');
             const targetVal = parseFloat(canvas.dataset.target) || 0;
             const operator = canvas.dataset.operator || '';
-            
-            const isNegativeTarget = ['<=', '<'].includes(operator);
-            const actualColor = isNegativeTarget ? '#FF4560' : '#22c55e';
-            const targetColor = isNegativeTarget ? '#22c55e' : '#FF4560';
-            const actualBgColor = isNegativeTarget ? 'rgba(255, 69, 96, 0.05)' : 'rgba(34, 197, 94, 0.05)';
+            const arrowTarget = canvas.dataset.arrowTarget || '';
+            const isUp = arrowTarget !== 'down';
+
+            const targetColor = isUp ? '#22c55e' : '#FF4560';
 
             const fullMonths = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
             const fullTargetData = new Array(12).fill(targetVal);
@@ -546,24 +545,45 @@
             }
 
             window.kpiChart = new window.Chart(ctx, {
-                type: 'line',
+                type: 'bar',
                 data: {
                     labels: months,
                     datasets: [
                         {
                             label: 'Actual',
                             data: actualData,
-                            borderColor: actualColor,
-                            backgroundColor: actualBgColor,
-                            borderWidth: 2,
-                            pointStyle: 'circle',
-                            pointRadius: 6,
-                            pointHoverRadius: 8,
-                            pointBackgroundColor: actualColor,
-                            spanGaps: true,
-                            fill: false
+                            backgroundColor: function(context) {
+                                const val = actualData[context.dataIndex];
+                                if (val === null || val === undefined) return 'rgba(0, 0, 0, 0)';
+                                if (isUp) {
+                                    if (val >= targetVal) {
+                                        return '#22c55e'; // Green if above/equal to target
+                                    }
+                                    return '#FF4560'; // Red if below target
+                                }
+                                if (val > targetVal) {
+                                    return '#FF4560'; // Red if exceeds target
+                                }
+                                return '#22c55e'; // Green if below target
+                            },
+                            borderColor: function(context) {
+                                const val = actualData[context.dataIndex];
+                                if (val === null || val === undefined) return 'rgba(0, 0, 0, 0)';
+                                if (isUp) {
+                                    if (val >= targetVal) {
+                                        return '#22c55e';
+                                    }
+                                    return '#FF4560';
+                                }
+                                if (val > targetVal) {
+                                    return '#FF4560';
+                                }
+                                return '#22c55e';
+                            },
+                            borderWidth: 1,
                         },
                         {
+                            type: 'line',
                             label: 'Target',
                             data: targetData,
                             borderColor: targetColor,
@@ -614,13 +634,17 @@
                                 color: '#f1f5f9'
                             },
                             ticks: {
-                                maxTicksLimit: 5,
+                                maxTicksLimit: 4,
                                 font: {
                                     family: 'Outfit, sans-serif',
                                     size: 11
                                 }
                             },
-                            suggestedMax: targetVal + 1
+                            suggestedMax: (() => {
+                                const validVals = fullActualData.filter(v => v !== null && v !== undefined);
+                                const maxVal = validVals.length > 0 ? Math.max(...validVals, targetVal) : targetVal;
+                                return maxVal + (maxVal * 0.15 || 1);
+                            })()
                         },
                         x: {
                             grid: {
@@ -634,7 +658,33 @@
                             }
                         }
                     }
-                }
+                },
+                plugins: [
+                    {
+                        id: 'barLabels',
+                        afterDatasetsDraw(chart) {
+                            const { ctx } = chart;
+                            ctx.save();
+                            ctx.font = 'bold 14px Outfit, sans-serif';
+                            ctx.fillStyle = '#475569';
+                            ctx.textAlign = 'center';
+                            ctx.textBaseline = 'bottom';
+
+                            chart.data.datasets.forEach((dataset, i) => {
+                                const meta = chart.getDatasetMeta(i);
+                                if (dataset.label === 'Actual') {
+                                    meta.data.forEach((bar, index) => {
+                                        const val = dataset.data[index];
+                                        if (val !== null && val !== undefined) {
+                                            ctx.fillText(val, bar.x, bar.y - 6);
+                                        }
+                                    });
+                                }
+                            });
+                            ctx.restore();
+                        }
+                    }
+                ]
             });
         } catch (e) {
             console.error("Error rendering chart:", e);

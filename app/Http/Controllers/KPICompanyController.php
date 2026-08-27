@@ -596,6 +596,7 @@ class KPICompanyController extends Controller
                     'act.actual',
                     'act.status',
                     'act.problem_solve',
+                    'act.calc_operator',
                     'parent.operator as operator',
                     'parent.unit as unit',
                     'parent.target as master_target'
@@ -623,7 +624,46 @@ class KPICompanyController extends Controller
             $request->validate($rules);
 
             // Extract actual value
-            $actualVal = (float) filter_var($request->actual, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
+            $actualValInput = $request->actual;
+            if ($formula) {
+                $vals = [];
+                for ($i = 1; $i <= 20; $i++) {
+                    $col = 'comp_' . $i;
+                    if (!empty($formula->$col)) {
+                        $compVal = $request->input('comp_' . $i);
+                        if ($compVal !== null) {
+                            $vals[] = (float) filter_var($compVal, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
+                        }
+                    }
+                }
+                
+                $op = $activity->calc_operator;
+                $calculatedActual = null;
+                if (!empty($op) && !empty($vals)) {
+                    if ($op === '+') {
+                        $calculatedActual = array_sum($vals);
+                    } elseif ($op === '-') {
+                        $calculatedActual = array_reduce(array_slice($vals, 1), function($carry, $item) {
+                            return $carry - $item;
+                        }, $vals[0]);
+                    } elseif ($op === 'x' || $op === '*') {
+                        $calculatedActual = array_reduce($vals, function($carry, $item) {
+                            return $carry * $item;
+                        }, 1);
+                    } elseif ($op === '/') {
+                        $calculatedActual = array_reduce(array_slice($vals, 1), function($carry, $item) {
+                            return $item != 0 ? $carry / $item : 0;
+                        }, $vals[0]);
+                    } elseif ($op === 'Average') {
+                        $calculatedActual = array_sum($vals) / count($vals);
+                    }
+                }
+                if ($calculatedActual !== null) {
+                    $actualValInput = $calculatedActual;
+                }
+            }
+
+            $actualVal = (float) filter_var($actualValInput, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
 
             // Automatically calculate status based on actual, master_target, and operator
             $operator = $activity->operator;
@@ -658,7 +698,7 @@ class KPICompanyController extends Controller
 
             // Update the actual, status, and components in KPICompanyActivity
             $updateData = [
-                'actual' => $request->actual,
+                'actual' => $actualValInput,
                 'status' => $status,
                 'updated_at' => Carbon::now()
             ];
@@ -673,15 +713,6 @@ class KPICompanyController extends Controller
                 ->update($updateData);
 
             if ($actualVal > 0) {
-                // If the activity did not have actual > 0 previously, it means they just changed it to > 0.
-                // We save actual and redirect back so they can see the form.
-                if (!$wasAlreadyProblem) {
-                    DB::commit();
-                    return redirect()
-                        ->route('kpi.company.activity.edit', self::encodeId($dbId))
-                        ->with('info', 'Actual value saved. Please complete the Prevention and Problem Solving Process below.');
-                }
-
                 // If they submitted, validate the problem solving fields
                 $request->validate([
                     'problem_description' => 'required',
@@ -865,6 +896,8 @@ class KPICompanyController extends Controller
                     'updated_at' => \Carbon\Carbon::now()
                 ]);
 
+            $this->recalculateActivityActualAndStatus($dbId, $request->calc_operator);
+
             return response()->json([
                 'success' => true,
                 'message' => 'Calculation operator updated successfully.'
@@ -874,6 +907,83 @@ class KPICompanyController extends Controller
                 'success' => false,
                 'message' => $e->getMessage()
             ], 500);
+        }
+    }
+
+    private function recalculateActivityActualAndStatus($activityId, $calcOperator = null)
+    {
+        $activity = DB::table('KPICompanyActivity as act')
+            ->join('KPICompany as child', 'act.kpi_company_id', '=', 'child.id')
+            ->leftJoin('KPIList as parent', 'child.kpi_list_id', '=', 'parent.id')
+            ->select('act.*', 'child.kpi_list_id', 'parent.operator', 'parent.target')
+            ->where('act.id', $activityId)
+            ->first();
+
+        if (!$activity) {
+            return;
+        }
+
+        $op = ($calcOperator !== null) ? $calcOperator : $activity->calc_operator;
+        
+        $formula = DB::table('KPIFormula')->where('kpi_list_id', $activity->kpi_list_id)->first();
+        if (!$formula) {
+            return;
+        }
+
+        $vals = [];
+        for ($i = 1; $i <= 20; $i++) {
+            $col = 'comp_' . $i;
+            if (!empty($formula->$col)) {
+                $compVal = $activity->{'comp_' . $i};
+                if ($compVal !== null) {
+                    $vals[] = (float) filter_var($compVal, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
+                }
+            }
+        }
+
+        $calculatedActual = null;
+        if (!empty($op) && !empty($vals)) {
+            if ($op === '+') {
+                $calculatedActual = array_sum($vals);
+            } elseif ($op === '-') {
+                $calculatedActual = array_reduce(array_slice($vals, 1), function($carry, $item) {
+                    return $carry - $item;
+                }, $vals[0]);
+            } elseif ($op === 'x' || $op === '*') {
+                $calculatedActual = array_reduce($vals, function($carry, $item) {
+                    return $carry * $item;
+                }, 1);
+            } elseif ($op === '/') {
+                $calculatedActual = array_reduce(array_slice($vals, 1), function($carry, $item) {
+                    return $item != 0 ? $carry / $item : 0;
+                }, $vals[0]);
+            } elseif ($op === 'Average') {
+                $calculatedActual = array_sum($vals) / count($vals);
+            }
+        }
+
+        if ($calculatedActual !== null) {
+            $targetVal = (float) filter_var($activity->target, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
+            $operator = $activity->operator;
+            
+            $isAchieved = false;
+            switch ($operator) {
+                case '>=': $isAchieved = ($calculatedActual >= $targetVal); break;
+                case '<=': $isAchieved = ($calculatedActual <= $targetVal); break;
+                case '>': $isAchieved = ($calculatedActual > $targetVal); break;
+                case '<': $isAchieved = ($calculatedActual < $targetVal); break;
+                case '=':
+                default: $isAchieved = ($calculatedActual == $targetVal); break;
+            }
+            $status = $isAchieved ? 'Achieved' : 'Not Achieved';
+
+            DB::table('KPICompanyActivity')
+                ->where('id', $activityId)
+                ->update([
+                    'actual' => $calculatedActual,
+                    'status' => $status,
+                    'updated_at' => \Carbon\Carbon::now()
+                ]);
         }
     }
 }

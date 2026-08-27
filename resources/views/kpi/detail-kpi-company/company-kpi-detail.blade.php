@@ -110,19 +110,19 @@
                         <div class="flex flex-col sm:flex-row sm:items-center gap-2 w-full sm:w-auto">
                             <div class="flex gap-2 w-full sm:w-auto">
                                 <!-- Print PDF Button -->
-                                <button type="button" class="inline-flex items-center justify-center gap-2 flex-1 sm:flex-none sm:w-28 py-2.5 sm:py-2 text-xs font-medium text-white bg-rose-600 rounded-xl hover:bg-rose-700 transition-colors shadow-sm">
+                                <button type="button" class="inline-flex items-center justify-center gap-2 flex-1 sm:flex-none sm:w-32 py-3 text-xs font-semibold text-white bg-rose-600 rounded-xl hover:bg-rose-700 transition-colors shadow-sm">
                                     <i class="fa-solid fa-file-pdf text-sm"></i>
                                     Print
                                 </button>
                                 <!-- Export Excel Button -->
-                                <button type="button" class="inline-flex items-center justify-center gap-2 flex-1 sm:flex-none sm:w-28 py-2.5 sm:py-2 text-xs font-medium text-white bg-emerald-600 rounded-xl hover:bg-emerald-700 transition-colors shadow-sm">
+                                <button type="button" class="inline-flex items-center justify-center gap-2 flex-1 sm:flex-none sm:w-36 py-3 text-xs font-semibold text-white bg-emerald-600 rounded-xl hover:bg-emerald-700 transition-colors shadow-sm">
                                     <i class="fa-solid fa-file-excel text-sm"></i>
                                     Export Excel
                                 </button>
                             </div>
                             <div class="hidden sm:block w-px h-6 bg-slate-200 mx-1"></div>
                             <!-- Manage Activity Button -->
-                            <button type="button" class="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-4 py-2.5 sm:py-2 text-xs font-medium text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-colors shadow-sm whitespace-nowrap">
+                            <button type="button" class="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-5 py-3 text-xs font-semibold text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-colors shadow-sm whitespace-nowrap">
                                 <i class="fa-solid fa-list-check text-sm"></i>
                                 Manage Activity Plan
                             </button>
@@ -298,21 +298,7 @@
                     </table>
                 </div>
 
-                <!-- Legend under Table -->
-                <div class="flex items-center justify-center gap-6 mt-4 text-xs font-medium text-slate-500">
-                    <div class="flex items-center gap-2">
-                        <div class="inline-flex w-6 h-6 rounded-md items-center justify-center bg-green-50 border border-slate-100 text-green-500">
-                            <i class="fas fa-circle text-[12px]"></i>
-                        </div>
-                        <span>Achieved</span>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <div class="inline-flex w-6 h-6 rounded-md items-center justify-center bg-red-50 border border-slate-100 text-red-500">
-                            <i class="fas fa-times text-xs"></i>
-                        </div>
-                        <span>Not Achieved</span>
-                    </div>
-                </div>
+
             </div>
             </div>
 
@@ -355,9 +341,11 @@
                                         {{ $kpi->operator }} {{ $kpi->target }} {{ $kpi->unit }}
                                     </td>
 
-                                    <!-- Actual -->
                                     <td class="p-3 text-slate-600">
-                                        {{ (!empty($activity->status) && !($activity->status === 'Not Achieved' && !$activity->problem)) ? $activity->actual : '' }}
+                                        @php
+                                            $dispAct = $calculatedActuals[$activity->bulan];
+                                        @endphp
+                                        {{ (!empty($activity->status) && !($activity->status === 'Not Achieved' && !$activity->problem)) ? ($dispAct !== null ? (is_numeric($dispAct) ? round($dispAct, 2) : $dispAct) : '') : '' }}
                                     </td>
 
                                     <!-- Status -->
@@ -838,6 +826,17 @@
         document.getElementById('problemPreviewModal').classList.add('hidden');
     }
 
+    function highlightSelectedOption() {
+        $('.option-label').each(function() {
+            const input = $(this).find('input[type="radio"]');
+            if (input.is(':checked')) {
+                $(this).addClass('border-blue-500 bg-blue-50/30').removeClass('border-slate-200');
+            } else {
+                $(this).removeClass('border-blue-500 bg-blue-50/30').addClass('border-slate-200');
+            }
+        });
+    }
+
     function openCalcOperatorModal(activityId, currentOperator) {
         document.getElementById('modal_activity_id').value = activityId;
         
@@ -856,11 +855,14 @@
             radios[radios.length - 1].checked = true;
         }
 
+        highlightSelectedOption();
         document.getElementById('calcOperatorModal').classList.remove('hidden');
+        document.body.classList.add('overflow-hidden');
     }
 
     function closeCalcOperatorModal() {
         document.getElementById('calcOperatorModal').classList.add('hidden');
+        document.body.classList.remove('overflow-hidden');
     }
 
     function submitCalcOperator(e) {
@@ -886,7 +888,7 @@
 </script>
 
 <!-- Calc Operator Modal -->
-<div id="calcOperatorModal" class="fixed inset-0 z-[999] hidden flex items-center justify-center bg-slate-900/40 transition-all duration-300">
+<div id="calcOperatorModal" onclick="if(event.target === this) closeCalcOperatorModal()" class="fixed inset-0 z-[999] hidden flex items-center justify-center bg-slate-900/40 transition-all duration-300">
     <div class="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 overflow-hidden border border-slate-100 flex flex-col max-h-[90vh]">
         <!-- Header -->
         <div class="flex items-center justify-between p-4 border-b border-slate-100 shrink-0">
@@ -903,30 +905,48 @@
             
             <div class="space-y-3">
                 <label class="block text-sm font-semibold text-slate-700 mb-1">Select Mathematical Operator for Components</label>
-                <div class="grid grid-cols-1 gap-2">
-                    <label class="flex items-center p-3 border border-slate-200 rounded-xl hover:bg-slate-50 cursor-pointer transition-colors">
-                        <input type="radio" name="calc_operator" value="+" class="w-4 h-4 text-blue-600 border-slate-300 focus:ring-blue-500">
-                        <span class="ml-3 font-semibold text-slate-700 text-sm">+ (Addition / Sum)</span>
+                <div class="grid grid-cols-1 gap-2.5" id="calcOperatorOptions">
+                    <label class="flex items-center justify-between p-4 border border-slate-200 rounded-xl hover:bg-slate-50 cursor-pointer transition-all duration-200 option-label">
+                        <input type="radio" name="calc_operator" value="+" class="peer hidden" onchange="highlightSelectedOption()">
+                        <span class="font-bold text-slate-700 text-[15px]">+ (Addition / Sum)</span>
+                        <div class="w-6 h-6 rounded-full border border-slate-300 flex items-center justify-center peer-checked:border-blue-600 peer-checked:bg-blue-600 peer-checked:text-white text-transparent transition-all">
+                            <i class="fa-solid fa-check text-xs"></i>
+                        </div>
                     </label>
-                    <label class="flex items-center p-3 border border-slate-200 rounded-xl hover:bg-slate-50 cursor-pointer transition-colors">
-                        <input type="radio" name="calc_operator" value="-" class="w-4 h-4 text-blue-600 border-slate-300 focus:ring-blue-500">
-                        <span class="ml-3 font-semibold text-slate-700 text-sm">- (Subtraction)</span>
+                    <label class="flex items-center justify-between p-4 border border-slate-200 rounded-xl hover:bg-slate-50 cursor-pointer transition-all duration-200 option-label">
+                        <input type="radio" name="calc_operator" value="-" class="peer hidden" onchange="highlightSelectedOption()">
+                        <span class="font-bold text-slate-700 text-[15px]">- (Subtraction)</span>
+                        <div class="w-6 h-6 rounded-full border border-slate-300 flex items-center justify-center peer-checked:border-blue-600 peer-checked:bg-blue-600 peer-checked:text-white text-transparent transition-all">
+                            <i class="fa-solid fa-check text-xs"></i>
+                        </div>
                     </label>
-                    <label class="flex items-center p-3 border border-slate-200 rounded-xl hover:bg-slate-50 cursor-pointer transition-colors">
-                        <input type="radio" name="calc_operator" value="x" class="w-4 h-4 text-blue-600 border-slate-300 focus:ring-blue-500">
-                        <span class="ml-3 font-semibold text-slate-700 text-sm">x (Multiplication)</span>
+                    <label class="flex items-center justify-between p-4 border border-slate-200 rounded-xl hover:bg-slate-50 cursor-pointer transition-all duration-200 option-label">
+                        <input type="radio" name="calc_operator" value="x" class="peer hidden" onchange="highlightSelectedOption()">
+                        <span class="font-bold text-slate-700 text-[15px]">x (Multiplication)</span>
+                        <div class="w-6 h-6 rounded-full border border-slate-300 flex items-center justify-center peer-checked:border-blue-600 peer-checked:bg-blue-600 peer-checked:text-white text-transparent transition-all">
+                            <i class="fa-solid fa-check text-xs"></i>
+                        </div>
                     </label>
-                    <label class="flex items-center p-3 border border-slate-200 rounded-xl hover:bg-slate-50 cursor-pointer transition-colors">
-                        <input type="radio" name="calc_operator" value="/" class="w-4 h-4 text-blue-600 border-slate-300 focus:ring-blue-500">
-                        <span class="ml-3 font-semibold text-slate-700 text-sm">/ (Division)</span>
+                    <label class="flex items-center justify-between p-4 border border-slate-200 rounded-xl hover:bg-slate-50 cursor-pointer transition-all duration-200 option-label">
+                        <input type="radio" name="calc_operator" value="/" class="peer hidden" onchange="highlightSelectedOption()">
+                        <span class="font-bold text-slate-700 text-[15px]">/ (Division)</span>
+                        <div class="w-6 h-6 rounded-full border border-slate-300 flex items-center justify-center peer-checked:border-blue-600 peer-checked:bg-blue-600 peer-checked:text-white text-transparent transition-all">
+                            <i class="fa-solid fa-check text-xs"></i>
+                        </div>
                     </label>
-                    <label class="flex items-center p-3 border border-slate-200 rounded-xl hover:bg-slate-50 cursor-pointer transition-colors">
-                        <input type="radio" name="calc_operator" value="Average" class="w-4 h-4 text-blue-600 border-slate-300 focus:ring-blue-500">
-                        <span class="ml-3 font-semibold text-slate-700 text-sm">Average</span>
+                    <label class="flex items-center justify-between p-4 border border-slate-200 rounded-xl hover:bg-slate-50 cursor-pointer transition-all duration-200 option-label">
+                        <input type="radio" name="calc_operator" value="Average" class="peer hidden" onchange="highlightSelectedOption()">
+                        <span class="font-bold text-slate-700 text-[15px]">Average</span>
+                        <div class="w-6 h-6 rounded-full border border-slate-300 flex items-center justify-center peer-checked:border-blue-600 peer-checked:bg-blue-600 peer-checked:text-white text-transparent transition-all">
+                            <i class="fa-solid fa-check text-xs"></i>
+                        </div>
                     </label>
-                    <label class="flex items-center p-3 border border-slate-200 rounded-xl hover:bg-slate-50 cursor-pointer transition-colors">
-                        <input type="radio" name="calc_operator" value="" class="w-4 h-4 text-blue-600 border-slate-300 focus:ring-blue-500">
-                        <span class="ml-3 font-semibold text-slate-500 text-sm">None (Manual Actual)</span>
+                    <label class="flex items-center justify-between p-4 border border-slate-200 rounded-xl hover:bg-slate-50 cursor-pointer transition-all duration-200 option-label">
+                        <input type="radio" name="calc_operator" value="" class="peer hidden" onchange="highlightSelectedOption()">
+                        <span class="font-bold text-slate-500 text-[15px]">None (Manual Actual)</span>
+                        <div class="w-6 h-6 rounded-full border border-slate-300 flex items-center justify-center peer-checked:border-blue-600 peer-checked:bg-blue-600 peer-checked:text-white text-transparent transition-all">
+                            <i class="fa-solid fa-check text-xs"></i>
+                        </div>
                     </label>
                 </div>
             </div>

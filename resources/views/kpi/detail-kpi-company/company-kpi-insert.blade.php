@@ -110,12 +110,12 @@
 
                     $picId = old('pic_dept', $problem->pic_dept ?? '');
                     $picObj = $picId ? $departments->firstWhere('Key1', $picId) : null;
-                    $picName = $picObj ? ($picObj->Key1 . ' - ' . $picObj->Desc) : $picId;
+                    $picName = $picObj ? $picObj->Key1 : $picId;
                     $picData = $picId ? ['id' => $picId, 'name' => $picName] : null;
 
                     $fupId = old('follow_up_by', $problem->follow_up_by ?? '');
                     $fupObj = $fupId ? $departments->firstWhere('Key1', $fupId) : null;
-                    $fupName = $fupObj ? ($fupObj->Key1 . ' - ' . $fupObj->Desc) : $fupId;
+                    $fupName = $fupObj ? $fupObj->Key1 : $fupId;
                     $fupData = $fupId ? ['id' => $fupId, 'name' => $fupName] : null;
 
                     $initialSelects = [
@@ -357,7 +357,7 @@
                             <div class="relative z-20">
                                 <label class="block text-sm font-medium text-slate-700 mb-1.5">PIC Dept <span class="text-red-500">*</span></label>
                                 @php
-                                    $deptOptions = $departments->map(fn($d) => ['id' => $d->Key1, 'name' => $d->Key1 . ' - ' . $d->Desc])->toArray();
+                                    $deptOptions = $departments->map(fn($d) => ['id' => $d->Key1, 'name' => $d->Key1])->toArray();
                                 @endphp
                                 <x-searchable-select
                                     name="pic_dept"

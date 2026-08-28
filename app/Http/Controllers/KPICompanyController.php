@@ -806,6 +806,8 @@ class KPICompanyController extends Controller
                 }
             }
 
+            $this->recalculateAllMonths($activity->kpi_company_id);
+
             DB::commit();
 
             return redirect()
@@ -835,14 +837,20 @@ class KPICompanyController extends Controller
                 return redirect()->back()->with('error', 'Activity record not found.');
             }
 
-            // Reset actual and status
+            // Reset actual, status, calc_operator and all component values (comp_1 to comp_20)
+            $updateData = [
+                'calc_operator' => null,
+                'actual' => null,
+                'status' => null,
+                'updated_at' => Carbon::now()
+            ];
+            for ($i = 1; $i <= 20; $i++) {
+                $updateData['comp_' . $i] = null;
+            }
+
             DB::table('KPICompanyActivity')
                 ->where('id', $dbId)
-                ->update([
-                    'actual' => null,
-                    'status' => null,
-                    'updated_at' => Carbon::now()
-                ]);
+                ->update($updateData);
 
             // Delete associated problem record if any
             $problem = DB::table('KPICompanyActivityProblem')
@@ -877,7 +885,7 @@ class KPICompanyController extends Controller
     {
         $request->validate([
             'activity_id' => 'required|string',
-            'calc_operator' => 'nullable|string|max:50',
+            'calc_operator' => 'nullable|string|max:500',
         ]);
 
         $dbId = self::decodeId($request->activity_id);
@@ -889,14 +897,33 @@ class KPICompanyController extends Controller
         }
 
         try {
-            DB::table('KPICompanyActivity')
-                ->where('id', $dbId)
-                ->update([
-                    'calc_operator' => $request->calc_operator,
-                    'updated_at' => \Carbon\Carbon::now()
-                ]);
+            $activity = DB::table('KPICompanyActivity')->where('id', $dbId)->first();
+            if (!$activity) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Activity not found.'
+                ], 404);
+            }
 
-            $this->recalculateActivityActualAndStatus($dbId, $request->calc_operator);
+            if (empty($request->calc_operator)) {
+                DB::table('KPICompanyActivity')
+                    ->where('id', $dbId)
+                    ->update([
+                        'calc_operator' => null,
+                        'actual' => null,
+                        'status' => null,
+                        'updated_at' => \Carbon\Carbon::now()
+                    ]);
+            } else {
+                DB::table('KPICompanyActivity')
+                    ->where('id', $dbId)
+                    ->update([
+                        'calc_operator' => $request->calc_operator,
+                        'updated_at' => \Carbon\Carbon::now()
+                    ]);
+            }
+
+            $this->recalculateAllMonths($activity->kpi_company_id);
 
             return response()->json([
                 'success' => true,
@@ -910,80 +937,72 @@ class KPICompanyController extends Controller
         }
     }
 
-    private function recalculateActivityActualAndStatus($activityId, $calcOperator = null)
+    public function recalculateAllMonths($kpiCompanyId)
     {
-        $activity = DB::table('KPICompanyActivity as act')
-            ->join('KPICompany as child', 'act.kpi_company_id', '=', 'child.id')
+        $activities = DB::table('KPICompanyActivity')
+            ->where('kpi_company_id', $kpiCompanyId)
+            ->orderBy('id', 'asc')
+            ->get();
+
+        $kpi = DB::table('KPICompany as child')
             ->leftJoin('KPIList as parent', 'child.kpi_list_id', '=', 'parent.id')
-            ->select('act.*', 'child.kpi_list_id', 'parent.operator', 'parent.target')
-            ->where('act.id', $activityId)
+            ->select('child.*', 'parent.operator', 'parent.target')
+            ->where('child.id', $kpiCompanyId)
             ->first();
 
-        if (!$activity) {
-            return;
-        }
+        if (!$kpi) return;
 
-        $op = ($calcOperator !== null) ? $calcOperator : $activity->calc_operator;
-        
-        $formula = DB::table('KPIFormula')->where('kpi_list_id', $activity->kpi_list_id)->first();
-        if (!$formula) {
-            return;
-        }
+        $formula = DB::table('KPIFormula')->where('kpi_list_id', $kpi->kpi_list_id)->first();
+        if (!$formula) return;
 
-        $vals = [];
-        for ($i = 1; $i <= 20; $i++) {
-            $col = 'comp_' . $i;
-            if (!empty($formula->$col)) {
-                $compVal = $activity->{'comp_' . $i};
-                if ($compVal !== null) {
-                    $vals[] = (float) filter_var($compVal, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
+        $targetVal = (float) filter_var($kpi->target, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
+        $operator = $kpi->operator;
+
+        foreach ($activities as $activity) {
+            $op = $activity->calc_operator;
+            if (empty($op)) continue;
+
+            $calculatedActual = null;
+            $expr = $op;
+            preg_match_all('/\[([A-Za-z]{3})\.(comp_\d+)\]/', $op, $matches, PREG_SET_ORDER);
+            foreach ($matches as $match) {
+                $mName = $match[1];
+                $cCol = $match[2];
+                $actForMonth = $activities->firstWhere('bulan', $mName);
+                $compVal = ($actForMonth && $actForMonth->$cCol !== null) ? $actForMonth->$cCol : 0;
+                $val = (float) filter_var($compVal, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
+                $expr = str_replace($match[0], $val, $expr);
+            }
+            $expr = str_replace(['x', 'X'], '*', $expr);
+            $exprClean = preg_replace('/[^0-9\+\-\*\/\(\)\.\s]/', '', $expr);
+            if (!empty($exprClean)) {
+                try {
+                    $calculatedActual = @eval("return ({$exprClean});");
+                } catch (\Throwable $t) {
+                    $calculatedActual = null;
                 }
             }
-        }
 
-        $calculatedActual = null;
-        if (!empty($op) && !empty($vals)) {
-            if ($op === '+') {
-                $calculatedActual = array_sum($vals);
-            } elseif ($op === '-') {
-                $calculatedActual = array_reduce(array_slice($vals, 1), function($carry, $item) {
-                    return $carry - $item;
-                }, $vals[0]);
-            } elseif ($op === 'x' || $op === '*') {
-                $calculatedActual = array_reduce($vals, function($carry, $item) {
-                    return $carry * $item;
-                }, 1);
-            } elseif ($op === '/') {
-                $calculatedActual = array_reduce(array_slice($vals, 1), function($carry, $item) {
-                    return $item != 0 ? $carry / $item : 0;
-                }, $vals[0]);
-            } elseif ($op === 'Average') {
-                $calculatedActual = array_sum($vals) / count($vals);
+            if ($calculatedActual !== null) {
+                $isAchieved = false;
+                switch ($operator) {
+                    case '>=': $isAchieved = ($calculatedActual >= $targetVal); break;
+                    case '<=': $isAchieved = ($calculatedActual <= $targetVal); break;
+                    case '>': $isAchieved = ($calculatedActual > $targetVal); break;
+                    case '<': $isAchieved = ($calculatedActual < $targetVal); break;
+                    case '=':
+                    default: $isAchieved = ($calculatedActual == $targetVal); break;
+                }
+                $status = $isAchieved ? 'Achieved' : 'Not Achieved';
+
+                DB::table('KPICompanyActivity')
+                    ->where('id', $activity->id)
+                    ->update([
+                        'actual' => $calculatedActual,
+                        'status' => $status,
+                        'updated_at' => \Carbon\Carbon::now()
+                    ]);
             }
-        }
-
-        if ($calculatedActual !== null) {
-            $targetVal = (float) filter_var($activity->target, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
-            $operator = $activity->operator;
-            
-            $isAchieved = false;
-            switch ($operator) {
-                case '>=': $isAchieved = ($calculatedActual >= $targetVal); break;
-                case '<=': $isAchieved = ($calculatedActual <= $targetVal); break;
-                case '>': $isAchieved = ($calculatedActual > $targetVal); break;
-                case '<': $isAchieved = ($calculatedActual < $targetVal); break;
-                case '=':
-                default: $isAchieved = ($calculatedActual == $targetVal); break;
-            }
-            $status = $isAchieved ? 'Achieved' : 'Not Achieved';
-
-            DB::table('KPICompanyActivity')
-                ->where('id', $activityId)
-                ->update([
-                    'actual' => $calculatedActual,
-                    'status' => $status,
-                    'updated_at' => \Carbon\Carbon::now()
-                ]);
         }
     }
 }

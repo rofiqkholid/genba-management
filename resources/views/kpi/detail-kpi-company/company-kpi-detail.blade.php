@@ -12,34 +12,56 @@
         if (isset($formula) && $formula && !empty($components)) {
             $op = $act ? $act->calc_operator : null;
             if (!empty($op)) {
-                $vals = [];
-                for ($i = 1; $i <= 20; $i++) {
-                    $col = 'comp_' . $i;
-                    if (!empty($formula->$col)) {
-                        $compVal = ($act && $act->{'comp_' . $i} !== null) ? $act->{'comp_' . $i} : null;
-                        if ($compVal !== null) {
-                            $vals[] = (float) filter_var($compVal, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
+                if (strpos($op, '[') !== false) {
+                    $expr = $op;
+                    preg_match_all('/\[([A-Za-z]{3})\.(comp_\d+)\]/', $op, $matches, PREG_SET_ORDER);
+                    foreach ($matches as $match) {
+                        $mName = $match[1];
+                        $cCol = $match[2];
+                        $actForMonth = $activities->firstWhere('bulan', $mName);
+                        $compVal = ($actForMonth && $actForMonth->$cCol !== null) ? $actForMonth->$cCol : 0;
+                        $val = (float) filter_var($compVal, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
+                        $expr = str_replace($match[0], $val, $expr);
+                    }
+                    $expr = str_replace(['x', 'X'], '*', $expr);
+                    $exprClean = preg_replace('/[^0-9\+\-\*\/\(\)\.\s]/', '', $expr);
+                    if (!empty($exprClean)) {
+                        try {
+                            $calculatedActual = @eval("return ({$exprClean});");
+                        } catch (\Throwable $t) {
+                            $calculatedActual = null;
                         }
                     }
-                }
+                } else {
+                    $vals = [];
+                    for ($i = 1; $i <= 20; $i++) {
+                        $col = 'comp_' . $i;
+                        if (!empty($formula->$col)) {
+                            $compVal = ($act && $act->{'comp_' . $i} !== null) ? $act->{'comp_' . $i} : null;
+                            if ($compVal !== null) {
+                                $vals[] = (float) filter_var($compVal, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
+                            }
+                        }
+                    }
 
-                if (!empty($vals)) {
-                    if ($op === '+') {
-                        $calculatedActual = array_sum($vals);
-                    } elseif ($op === '-') {
-                        $calculatedActual = array_reduce(array_slice($vals, 1), function($carry, $item) {
-                            return $carry - $item;
-                        }, $vals[0]);
-                    } elseif ($op === 'x' || $op === '*') {
-                        $calculatedActual = array_reduce($vals, function($carry, $item) {
-                            return $carry * $item;
-                        }, 1);
-                    } elseif ($op === '/') {
-                        $calculatedActual = array_reduce(array_slice($vals, 1), function($carry, $item) {
-                            return $item != 0 ? $carry / $item : 0;
-                        }, $vals[0]);
-                    } elseif ($op === 'Average') {
-                        $calculatedActual = array_sum($vals) / count($vals);
+                    if (!empty($vals)) {
+                        if ($op === '+') {
+                            $calculatedActual = array_sum($vals);
+                        } elseif ($op === '-') {
+                            $calculatedActual = array_reduce(array_slice($vals, 1), function($carry, $item) {
+                                return $carry - $item;
+                            }, $vals[0]);
+                        } elseif ($op === 'x' || $op === '*') {
+                            $calculatedActual = array_reduce($vals, function($carry, $item) {
+                                return $carry * $item;
+                            }, 1);
+                        } elseif ($op === '/') {
+                            $calculatedActual = array_reduce(array_slice($vals, 1), function($carry, $item) {
+                                return $item != 0 ? $carry / $item : 0;
+                            }, $vals[0]);
+                        } elseif ($op === 'Average') {
+                            $calculatedActual = array_sum($vals) / count($vals);
+                        }
                     }
                 }
             }
@@ -220,7 +242,7 @@
                             @if(!empty($components))
                                 @foreach($components as $index => $name)
                                     <tr class="border-b border-slate-200">
-                                        <td class="p-3 font-semibold border-r border-slate-200 whitespace-nowrap">{{ $name }}</td>
+                                        <td class="p-3 font-normal text-slate-700 border-r border-slate-200 whitespace-nowrap">{{ $name }}</td>
                                         @php
                                             $compSum = 0;
                                             $hasComp = false;
@@ -228,7 +250,7 @@
                                         @foreach(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'] as $m)
                                             @php
                                                 $act = $activities->firstWhere('bulan', $m);
-                                                $compVal = ($act && $act->{'comp_' . $index} !== null) ? $act->{'comp_' . $index} : null;
+                                                $compVal = ($act && $act->{'comp_' . $index} !== null && $act->{'comp_' . $index} !== '') ? $act->{'comp_' . $index} : null;
                                             @endphp
                                             @if($compVal !== null)
                                                 @php
@@ -236,12 +258,12 @@
                                                     $compSum += $val;
                                                     $hasComp = true;
                                                 @endphp
-                                                <td class="p-3 text-center border-r border-slate-200 font-semibold text-slate-800">{{ $compVal }}</td>
+                                                <td class="p-3 text-center border-r border-slate-200 font-normal text-slate-700">{{ $compVal }}</td>
                                             @else
-                                                <td class="p-3 text-center text-slate-400 border-r border-slate-200">-</td>
+                                                <td class="p-3 text-center border-r border-slate-200 text-slate-300 select-none"></td>
                                             @endif
                                         @endforeach
-                                        <td class="p-3 text-center font-bold">{{ $hasComp ? $compSum : '-' }}</td>
+                                        <td class="p-3 text-center font-semibold text-slate-700">{{ $hasComp ? $compSum : '' }}</td>
                                     </tr>
                                 @endforeach
                             @endif
@@ -345,7 +367,7 @@
                                         @php
                                             $dispAct = $calculatedActuals[$activity->bulan];
                                         @endphp
-                                        {{ (!empty($activity->status) && !($activity->status === 'Not Achieved' && !$activity->problem)) ? ($dispAct !== null ? (is_numeric($dispAct) ? round($dispAct, 2) : $dispAct) : '') : '' }}
+                                        {{ $dispAct !== null ? (is_numeric($dispAct) ? round($dispAct, 2) : $dispAct) : '' }}
                                     </td>
 
                                     <!-- Status -->
@@ -359,6 +381,27 @@
                                                 Not achieved
                                             </span>
                                         @else
+                                            @php
+                                                $hasInputData = false;
+                                                if (!empty($components)) {
+                                                    for ($i = 1; $i <= 20; $i++) {
+                                                        $colName = 'comp_' . $i;
+                                                        if (isset($activity->$colName) && $activity->$colName !== null && $activity->$colName !== '') {
+                                                            $hasInputData = true;
+                                                            break;
+                                                        }
+                                                    }
+                                                } else {
+                                                    if ($activity->actual !== null && $activity->actual !== '') {
+                                                        $hasInputData = true;
+                                                    }
+                                                }
+                                            @endphp
+                                            @if($hasInputData)
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded-none text-xs font-semibold bg-slate-50 text-slate-500 border border-slate-200">
+                                                    Belum diisi
+                                                </span>
+                                            @endif
                                         @endif
                                     </td>
 
@@ -424,7 +467,7 @@
 </div>
 
 <!-- Delete Confirmation Modal -->
-<div id="deleteModal" class="fixed inset-0 z-50 hidden">
+<div id="deleteModal" class="fixed inset-0 z-[1000] hidden">
     <div class="fixed inset-0 bg-slate-900/50 transition-opacity" onclick="closeDeleteModal()"></div>
     <div class="fixed inset-0 flex items-center justify-center p-4">
         <div class="bg-white rounded-xl w-full max-w-sm transform transition-all shadow-xl">
@@ -796,20 +839,37 @@
     // Execute immediately in case DOMContentLoaded or document ready has already fired
     renderKPIChart();
     let deleteUrl = null;
+    let deleteCallback = null;
 
-    function openDeleteModal(el) {
-        deleteUrl = el.dataset.route;
+    function openDeleteModal(el, callback = null, customText = null) {
+        if (customText) {
+            document.querySelector('#deleteModal p').textContent = customText;
+        } else {
+            document.querySelector('#deleteModal p').textContent = 'Apakah Anda yakin ingin menghapus/mereset data actual dan status bulan ini? Tindakan ini tidak dapat dibatalkan.';
+        }
+
+        if (callback) {
+            deleteCallback = callback;
+            deleteUrl = null;
+        } else {
+            deleteUrl = el.dataset.route;
+            deleteCallback = null;
+        }
         document.getElementById('deleteModal').classList.remove('hidden');
     }
 
     function closeDeleteModal() {
         deleteUrl = null;
+        deleteCallback = null;
         document.getElementById('deleteModal').classList.add('hidden');
     }
 
     function executeDelete() {
         if (deleteUrl) {
             window.location.href = deleteUrl;
+        } else if (deleteCallback) {
+            deleteCallback();
+            closeDeleteModal();
         }
     }
 
@@ -826,36 +886,42 @@
         document.getElementById('problemPreviewModal').classList.add('hidden');
     }
 
-    function highlightSelectedOption() {
-        $('.option-label').each(function() {
-            const input = $(this).find('input[type="radio"]');
-            if (input.is(':checked')) {
-                $(this).addClass('border-blue-500 bg-blue-50/30').removeClass('border-slate-200');
-            } else {
-                $(this).removeClass('border-blue-500 bg-blue-50/30').addClass('border-slate-200');
-            }
-        });
+    function insertAtCursor(myField, myValue) {
+        if (myField.selectionStart || myField.selectionStart == '0') {
+            var startPos = myField.selectionStart;
+            var endPos = myField.selectionEnd;
+            myField.value = myField.value.substring(0, startPos)
+                + myValue
+                + myField.value.substring(endPos, myField.value.length);
+            myField.selectionStart = startPos + myValue.length;
+            myField.selectionEnd = startPos + myValue.length;
+        } else {
+            myField.value += myValue;
+        }
+        myField.focus();
+    }
+
+    function insertCellToken(month, comp) {
+        const input = document.getElementById('custom_formula_input');
+        insertAtCursor(input, `[${month}.${comp}] `);
+    }
+
+    function insertFormulaToken(token) {
+        const input = document.getElementById('custom_formula_input');
+        insertAtCursor(input, `${token} `);
+    }
+
+    function clearFormula() {
+        document.getElementById('custom_formula_input').value = '';
+        document.getElementById('custom_formula_input').focus();
     }
 
     function openCalcOperatorModal(activityId, currentOperator) {
         document.getElementById('modal_activity_id').value = activityId;
         
-        const radios = document.getElementsByName('calc_operator');
-        let matched = false;
-        radios.forEach(radio => {
-            if (radio.value === currentOperator) {
-                radio.checked = true;
-                matched = true;
-            } else {
-                radio.checked = false;
-            }
-        });
-        if (!matched && radios.length > 0) {
-            // Check 'None' radio if no operator matches
-            radios[radios.length - 1].checked = true;
-        }
-
-        highlightSelectedOption();
+        // Populate custom formula input directly
+        document.getElementById('custom_formula_input').value = currentOperator || '';
+        
         document.getElementById('calcOperatorModal').classList.remove('hidden');
         document.body.classList.add('overflow-hidden');
     }
@@ -867,12 +933,19 @@
 
     function submitCalcOperator(e) {
         e.preventDefault();
-        const form = $('#calcOperatorForm');
+        
+        const operatorValue = document.getElementById('custom_formula_input').value.trim();
+        
+        const formSerialized = {
+            _token: $('input[name="_token"]').val(),
+            activity_id: document.getElementById('modal_activity_id').value,
+            calc_operator: operatorValue
+        };
         
         $.ajax({
             url: "{{ route('kpi.company.formula.operator') }}",
             type: "POST",
-            data: form.serialize(),
+            data: formSerialized,
             success: function(response) {
                 if (response.success) {
                     location.reload();
@@ -885,76 +958,128 @@
             }
         });
     }
+
+    function deleteCalculation() {
+        openDeleteModal(null, function() {
+            const formSerialized = {
+                _token: $('input[name="_token"]').val(),
+                activity_id: document.getElementById('modal_activity_id').value,
+                calc_operator: ''
+            };
+            
+            $.ajax({
+                url: "{{ route('kpi.company.formula.operator') }}",
+                type: "POST",
+                data: formSerialized,
+                success: function(response) {
+                    if (response.success) {
+                        location.reload();
+                    } else {
+                        alert(response.message || 'Failed to reset calculation.');
+                    }
+                },
+                error: function(xhr) {
+                    alert(xhr.responseJSON?.message || 'Error occurred while resetting calculation.');
+                }
+            });
+        }, 'Apakah Anda yakin ingin menghapus formula dan mereset data actual bulan ini? Tindakan ini tidak dapat dibatalkan.');
+    }
 </script>
 
 <!-- Calc Operator Modal -->
 <div id="calcOperatorModal" onclick="if(event.target === this) closeCalcOperatorModal()" class="fixed inset-0 z-[999] hidden flex items-center justify-center bg-slate-900/40 transition-all duration-300">
-    <div class="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 overflow-hidden border border-slate-100 flex flex-col max-h-[90vh]">
+    <div class="bg-white rounded-2xl w-full max-w-[85vw] mx-4 overflow-hidden border border-slate-100 flex flex-col max-h-[90vh]">
         <!-- Header -->
         <div class="flex items-center justify-between p-4 border-b border-slate-100 shrink-0">
-            <h3 class="text-base font-bold text-slate-800">Select Calculation Method</h3>
+            <h3 class="text-2xl font-bold text-slate-800">Formula Calculation Builder</h3>
             <button onclick="closeCalcOperatorModal()" class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-colors">
                 <i class="fa-solid fa-times"></i>
             </button>
         </div>
         
         <!-- Form -->
-        <form id="calcOperatorForm" onsubmit="submitCalcOperator(event)" class="p-6 space-y-4 flex-1 overflow-y-auto">
+        <form id="calcOperatorForm" onsubmit="submitCalcOperator(event)" class="flex-1 flex flex-col overflow-hidden">
             @csrf
             <input type="hidden" name="activity_id" id="modal_activity_id" value="">
             
-            <div class="space-y-3">
-                <label class="block text-sm font-semibold text-slate-700 mb-1">Select Mathematical Operator for Components</label>
-                <div class="grid grid-cols-1 gap-2.5" id="calcOperatorOptions">
-                    <label class="flex items-center justify-between p-4 border border-slate-200 rounded-xl hover:bg-slate-50 cursor-pointer transition-all duration-200 option-label">
-                        <input type="radio" name="calc_operator" value="+" class="peer hidden" onchange="highlightSelectedOption()">
-                        <span class="font-bold text-slate-700 text-[15px]">+ (Addition / Sum)</span>
-                        <div class="w-6 h-6 rounded-full border border-slate-300 flex items-center justify-center peer-checked:border-blue-600 peer-checked:bg-blue-600 peer-checked:text-white text-transparent transition-all">
-                            <i class="fa-solid fa-check text-xs"></i>
+            <!-- Scrollable Body -->
+            <div class="p-8 space-y-6 flex-1 overflow-y-auto">
+                <!-- Custom Formula Builder Section -->
+                <div class="space-y-4">
+                    <div class="bg-slate-50 p-6 rounded-2xl border border-slate-200 space-y-4">
+                        <div>
+                            <label class="block text-base font-semibold text-slate-700 mb-2">Formula Editor</label>
+                            <div class="flex gap-3 items-stretch">
+                                <textarea id="custom_formula_input" name="custom_formula" rows="2" class="flex-1 rounded-xl border border-slate-200 p-3 text-sm focus:outline-none bg-white" placeholder="Build formula like [Jan.comp_1] - [Feb.comp_2]. Leave empty for manual entry."></textarea>
+                                <button type="button" onclick="clearFormula()" class="px-5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 rounded-xl text-sm font-semibold transition-colors shrink-0 flex items-center justify-center">Clear</button>
+                            </div>
                         </div>
-                    </label>
-                    <label class="flex items-center justify-between p-4 border border-slate-200 rounded-xl hover:bg-slate-50 cursor-pointer transition-all duration-200 option-label">
-                        <input type="radio" name="calc_operator" value="-" class="peer hidden" onchange="highlightSelectedOption()">
-                        <span class="font-bold text-slate-700 text-[15px]">- (Subtraction)</span>
-                        <div class="w-6 h-6 rounded-full border border-slate-300 flex items-center justify-center peer-checked:border-blue-600 peer-checked:bg-blue-600 peer-checked:text-white text-transparent transition-all">
-                            <i class="fa-solid fa-check text-xs"></i>
+
+                        <!-- Calculator buttons -->
+                        <div class="flex flex-wrap gap-2 items-center">
+                            <button type="button" onclick="insertFormulaToken('+')" class="w-10 h-10 flex items-center justify-center bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 rounded-xl text-base font-bold">+</button>
+                            <button type="button" onclick="insertFormulaToken('-')" class="w-10 h-10 flex items-center justify-center bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 rounded-xl text-base font-bold">-</button>
+                            <button type="button" onclick="insertFormulaToken('*')" class="w-10 h-10 flex items-center justify-center bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 rounded-xl text-base font-bold">*</button>
+                            <button type="button" onclick="insertFormulaToken('/')" class="w-10 h-10 flex items-center justify-center bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 rounded-xl text-base font-bold shadow-none">/</button>
+                            <button type="button" onclick="insertFormulaToken('(')" class="w-10 h-10 flex items-center justify-center bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 rounded-xl text-base font-bold shadow-none">(</button>
+                            <button type="button" onclick="insertFormulaToken(')')" class="w-10 h-10 flex items-center justify-center bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 rounded-xl text-base font-bold shadow-none">)</button>
                         </div>
-                    </label>
-                    <label class="flex items-center justify-between p-4 border border-slate-200 rounded-xl hover:bg-slate-50 cursor-pointer transition-all duration-200 option-label">
-                        <input type="radio" name="calc_operator" value="x" class="peer hidden" onchange="highlightSelectedOption()">
-                        <span class="font-bold text-slate-700 text-[15px]">x (Multiplication)</span>
-                        <div class="w-6 h-6 rounded-full border border-slate-300 flex items-center justify-center peer-checked:border-blue-600 peer-checked:bg-blue-600 peer-checked:text-white text-transparent transition-all">
-                            <i class="fa-solid fa-check text-xs"></i>
+
+                        <div>
+                            <label class="block text-base font-semibold text-slate-700 mb-2">Cell Data Grid Selector (Click a value to insert cell)</label>
+                            <div class="border border-slate-200 rounded-xl overflow-hidden overflow-x-auto bg-white">
+                                <table class="w-full text-sm text-left text-slate-600 border-collapse min-w-[700px]">
+                                    <thead class="bg-slate-50 border-b border-slate-200">
+                                        <tr>
+                                            <th class="p-3 border-r border-slate-200 bg-slate-100 font-semibold text-slate-700 sticky left-0 z-10">Component Name</th>
+                                            @foreach(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'] as $m)
+                                                <th class="p-3 text-center border-r border-slate-200 font-semibold text-slate-700">{{ $m }}</th>
+                                            @endforeach
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @if(!empty($components))
+                                            @foreach($components as $index => $name)
+                                                <tr class="border-b border-slate-100 last:border-0 hover:bg-slate-50/50">
+                                                    <td class="p-3 font-normal text-slate-700 border-r border-slate-200 whitespace-nowrap bg-slate-50 sticky left-0 z-10" title="{{ $name }}">{{ Str::limit($name, 22) }}</td>
+                                                    @foreach(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'] as $m)
+                                                        @php
+                                                            $act = $activities->firstWhere('bulan', $m);
+                                                            $compVal = ($act && $act->{'comp_' . $index} !== null && $act->{'comp_' . $index} !== '') ? $act->{'comp_' . $index} : null;
+                                                        @endphp
+                                                        @if($compVal !== null)
+                                                            <td class="p-3 text-center border-r border-slate-100 cursor-pointer font-normal text-slate-700 hover:bg-slate-100 transition-colors"
+                                                                onclick="insertCellToken('{{ $m }}', 'comp_{{ $index }}')"
+                                                                title="Click to insert value from '{{ $name }}' in {{ $m }}">
+                                                                {{ $compVal }}
+                                                            </td>
+                                                        @else
+                                                            <td class="p-3 text-center border-r border-slate-100 text-slate-300 select-none">
+                                                                <!-- Empty cell -->
+                                                            </td>
+                                                        @endif
+                                                    @endforeach
+                                                </tr>
+                                            @endforeach
+                                        @else
+                                            <tr>
+                                                <td colspan="13" class="p-4 text-center text-slate-400">No components defined for this KPI.</td>
+                                            </tr>
+                                        @endif
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
-                    </label>
-                    <label class="flex items-center justify-between p-4 border border-slate-200 rounded-xl hover:bg-slate-50 cursor-pointer transition-all duration-200 option-label">
-                        <input type="radio" name="calc_operator" value="/" class="peer hidden" onchange="highlightSelectedOption()">
-                        <span class="font-bold text-slate-700 text-[15px]">/ (Division)</span>
-                        <div class="w-6 h-6 rounded-full border border-slate-300 flex items-center justify-center peer-checked:border-blue-600 peer-checked:bg-blue-600 peer-checked:text-white text-transparent transition-all">
-                            <i class="fa-solid fa-check text-xs"></i>
-                        </div>
-                    </label>
-                    <label class="flex items-center justify-between p-4 border border-slate-200 rounded-xl hover:bg-slate-50 cursor-pointer transition-all duration-200 option-label">
-                        <input type="radio" name="calc_operator" value="Average" class="peer hidden" onchange="highlightSelectedOption()">
-                        <span class="font-bold text-slate-700 text-[15px]">Average</span>
-                        <div class="w-6 h-6 rounded-full border border-slate-300 flex items-center justify-center peer-checked:border-blue-600 peer-checked:bg-blue-600 peer-checked:text-white text-transparent transition-all">
-                            <i class="fa-solid fa-check text-xs"></i>
-                        </div>
-                    </label>
-                    <label class="flex items-center justify-between p-4 border border-slate-200 rounded-xl hover:bg-slate-50 cursor-pointer transition-all duration-200 option-label">
-                        <input type="radio" name="calc_operator" value="" class="peer hidden" onchange="highlightSelectedOption()">
-                        <span class="font-bold text-slate-500 text-[15px]">None (Manual Actual)</span>
-                        <div class="w-6 h-6 rounded-full border border-slate-300 flex items-center justify-center peer-checked:border-blue-600 peer-checked:bg-blue-600 peer-checked:text-white text-transparent transition-all">
-                            <i class="fa-solid fa-check text-xs"></i>
-                        </div>
-                    </label>
+                    </div>
                 </div>
             </div>
             
-            <!-- Action Buttons -->
-            <div class="flex justify-end gap-3 pt-4 border-t border-slate-100 shrink-0">
+            <!-- Action Buttons Footer (Sticky) -->
+            <div class="flex justify-end items-center p-4 border-t border-slate-100 bg-white shrink-0 gap-3">
+                <button type="button" onclick="deleteCalculation()" class="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl transition-colors text-sm font-semibold">Delete / Reset Formula</button>
+                <div class="w-px h-6 bg-slate-200 mx-1"></div> <!-- Vertical Separator | -->
                 <button type="button" onclick="closeCalcOperatorModal()" class="px-5 py-2.5 border border-slate-200 text-slate-700 rounded-xl hover:bg-slate-50 transition-colors text-sm font-semibold">Cancel</button>
-                <button type="submit" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition-colors text-sm font-semibold shadow-sm shadow-blue-200">Save</button>
+                <button type="submit" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition-colors text-sm font-semibold">Save</button>
             </div>
         </form>
     </div>

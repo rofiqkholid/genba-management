@@ -474,6 +474,15 @@ class KPICompanyController extends Controller
 
         $departments = DB::table('GenbaDept')->orderBy('Key1', 'asc')->get();
 
+        // Reset status to null if actual is null to clean up corrupted data
+        DB::table('KPICompanyActivity')
+            ->where('kpi_company_id', $dbId)
+            ->whereNull('actual')
+            ->update(['status' => null]);
+
+        // Recalculate all months to automatically update statuses and correct historical data on refresh
+        $this->recalculateAllMonths($dbId);
+
         $activities = DB::table('KPICompanyActivity')
             ->where('kpi_company_id', $dbId)
             ->orderBy('id', 'asc')
@@ -534,6 +543,7 @@ class KPICompanyController extends Controller
                 'act.actual',
                 'act.status',
                 'act.problem_solve',
+                'act.calc_operator',
                 'act.created_at',
                 'act.updated_at',
                 'act.comp_1', 'act.comp_2', 'act.comp_3', 'act.comp_4', 'act.comp_5',
@@ -640,65 +650,95 @@ class KPICompanyController extends Controller
                 $op = $activity->calc_operator;
                 $calculatedActual = null;
                 if (!empty($op) && !empty($vals)) {
-                    if ($op === '+') {
-                        $calculatedActual = array_sum($vals);
-                    } elseif ($op === '-') {
-                        $calculatedActual = array_reduce(array_slice($vals, 1), function($carry, $item) {
-                            return $carry - $item;
-                        }, $vals[0]);
-                    } elseif ($op === 'x' || $op === '*') {
-                        $calculatedActual = array_reduce($vals, function($carry, $item) {
-                            return $carry * $item;
-                        }, 1);
-                    } elseif ($op === '/') {
-                        $calculatedActual = array_reduce(array_slice($vals, 1), function($carry, $item) {
-                            return $item != 0 ? $carry / $item : 0;
-                        }, $vals[0]);
-                    } elseif ($op === 'Average') {
-                        $calculatedActual = array_sum($vals) / count($vals);
+                    if (strpos($op, '[') !== false) {
+                        $expr = $op;
+                        preg_match_all('/\[([A-Za-z]{3})\.(comp_\d+)\]/', $op, $matches, PREG_SET_ORDER);
+                        foreach ($matches as $match) {
+                            $mName = $match[1];
+                            $cCol = $match[2];
+                            // Since we are updating, we can fetch month values from DB, but for current month we use current request values
+                            if ($mName === $activity->bulan) {
+                                $compVal = $request->input($cCol);
+                            } else {
+                                $actForMonth = DB::table('KPICompanyActivity')
+                                    ->where('kpi_company_id', $activity->kpi_company_id)
+                                    ->where('bulan', $mName)
+                                    ->first();
+                                $compVal = ($actForMonth && $actForMonth->$cCol !== null) ? $actForMonth->$cCol : 0;
+                            }
+                            $val = (float) filter_var($compVal, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
+                            $expr = str_replace($match[0], $val, $expr);
+                        }
+                        $expr = str_replace(['x', 'X'], '*', $expr);
+                        $exprClean = preg_replace('/[^0-9\+\-\*\/\(\)\.\s]/', '', $expr);
+                        if (!empty($exprClean)) {
+                            try {
+                                $calculatedActual = @eval("return ({$exprClean});");
+                            } catch (\Throwable $t) {
+                                $calculatedActual = null;
+                            }
+                        }
+                    } else {
+                        if ($op === '+') {
+                            $calculatedActual = array_sum($vals);
+                        } elseif ($op === '-') {
+                            $calculatedActual = array_reduce(array_slice($vals, 1), function($carry, $item) {
+                                return $carry - $item;
+                            }, $vals[0]);
+                        } elseif ($op === 'x' || $op === '*') {
+                            $calculatedActual = array_reduce($vals, function($carry, $item) {
+                                return $carry * $item;
+                            }, 1);
+                        } elseif ($op === '/') {
+                            $calculatedActual = array_reduce(array_slice($vals, 1), function($carry, $item) {
+                                return $item != 0 ? $carry / $item : 0;
+                            }, $vals[0]);
+                        } elseif ($op === 'Average') {
+                            $calculatedActual = array_sum($vals) / count($vals);
+                        }
                     }
+                } elseif (!empty($vals)) {
+                    // Fallback: if no custom formula is set, but components are entered, default to sum!
+                    $calculatedActual = array_sum($vals);
                 }
                 if ($calculatedActual !== null) {
                     $actualValInput = $calculatedActual;
                 }
             }
 
-            $actualVal = (float) filter_var($actualValInput, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
+            $actualVal = null;
+            $status = null;
 
-            // Automatically calculate status based on actual, master_target, and operator
-            $operator = $activity->operator;
-            $targetStr = $activity->master_target;
-            $targetVal = (float) filter_var($targetStr, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
+            if ($actualValInput !== null && $actualValInput !== '') {
+                $actualVal = (float) filter_var($actualValInput, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
+                
+                // Automatically calculate status based on actual, master_target, and operator
+                $operator = trim(htmlspecialchars_decode($activity->operator));
+                $targetStr = $activity->master_target;
+                $targetVal = (float) filter_var($targetStr, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
 
-            $isAchieved = false;
-            switch ($operator) {
-                case '>=':
-                    $isAchieved = ($actualVal >= $targetVal);
-                    break;
-                case '<=':
-                    $isAchieved = ($actualVal <= $targetVal);
-                    break;
-                case '>':
-                    $isAchieved = ($actualVal > $targetVal);
-                    break;
-                case '<':
-                    $isAchieved = ($actualVal < $targetVal);
-                    break;
-                case '=':
-                default:
-                    $isAchieved = ($actualVal == $targetVal);
-                    break;
+                $isAchieved = false;
+                switch ($operator) {
+                    case '>=': $isAchieved = ($actualVal >= $targetVal); break;
+                    case '<=': $isAchieved = ($actualVal <= $targetVal); break;
+                    case '>':  $isAchieved = ($actualVal > $targetVal); break;
+                    case '<':  $isAchieved = ($actualVal < $targetVal); break;
+                    case '=':
+                    default:   $isAchieved = ($actualVal == $targetVal); break;
+                }
+                $status = $isAchieved ? 'Achieved' : 'Not Achieved';
             }
 
-            $status = $isAchieved ? 'Achieved' : 'Not Achieved';
-
-            $wasAlreadyProblem = ((float)filter_var($activity->actual, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION) > 0);
+            $wasAlreadyProblem = false;
+            if ($activity->actual !== null) {
+                $wasAlreadyProblem = ((float)filter_var($activity->actual, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION) > 0);
+            }
 
             DB::beginTransaction();
 
             // Update the actual, status, and components in KPICompanyActivity
             $updateData = [
-                'actual' => $actualValInput,
+                'actual' => ($actualVal !== null) ? $actualVal : null,
                 'status' => $status,
                 'updated_at' => Carbon::now()
             ];
@@ -712,7 +752,7 @@ class KPICompanyController extends Controller
                 ->where('id', $dbId)
                 ->update($updateData);
 
-            if ($actualVal > 0) {
+            if ($status === 'Not Achieved' || $request->filled('problem_description')) {
                 // If they submitted, validate the problem solving fields
                 $request->validate([
                     'problem_description' => 'required',
@@ -956,31 +996,49 @@ class KPICompanyController extends Controller
         if (!$formula) return;
 
         $targetVal = (float) filter_var($kpi->target, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
-        $operator = $kpi->operator;
+        $operator = trim(htmlspecialchars_decode($kpi->operator));
 
         foreach ($activities as $activity) {
             $op = $activity->calc_operator;
-            if (empty($op)) continue;
+            
+            $vals = [];
+            $hasSomeComponentValue = false;
+            for ($i = 1; $i <= 20; $i++) {
+                $col = 'comp_' . $i;
+                if ($formula && !empty($formula->$col)) {
+                    $compVal = $activity->$col;
+                    if ($compVal !== null && $compVal !== '') {
+                        $vals[] = (float) filter_var($compVal, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
+                        $hasSomeComponentValue = true;
+                    }
+                }
+            }
 
             $calculatedActual = null;
-            $expr = $op;
-            preg_match_all('/\[([A-Za-z]{3})\.(comp_\d+)\]/', $op, $matches, PREG_SET_ORDER);
-            foreach ($matches as $match) {
-                $mName = $match[1];
-                $cCol = $match[2];
-                $actForMonth = $activities->firstWhere('bulan', $mName);
-                $compVal = ($actForMonth && $actForMonth->$cCol !== null) ? $actForMonth->$cCol : 0;
-                $val = (float) filter_var($compVal, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
-                $expr = str_replace($match[0], $val, $expr);
-            }
-            $expr = str_replace(['x', 'X'], '*', $expr);
-            $exprClean = preg_replace('/[^0-9\+\-\*\/\(\)\.\s]/', '', $expr);
-            if (!empty($exprClean)) {
-                try {
-                    $calculatedActual = @eval("return ({$exprClean});");
-                } catch (\Throwable $t) {
-                    $calculatedActual = null;
+
+            if (!empty($op)) {
+                $expr = $op;
+                preg_match_all('/\[([A-Za-z]{3})\.(comp_\d+)\]/', $op, $matches, PREG_SET_ORDER);
+                foreach ($matches as $match) {
+                    $mName = $match[1];
+                    $cCol = $match[2];
+                    $actForMonth = $activities->firstWhere('bulan', $mName);
+                    $compVal = ($actForMonth && $actForMonth->$cCol !== null) ? $actForMonth->$cCol : 0;
+                    $val = (float) filter_var($compVal, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
+                    $expr = str_replace($match[0], $val, $expr);
                 }
+                $expr = str_replace(['x', 'X'], '*', $expr);
+                $exprClean = preg_replace('/[^0-9\+\-\*\/\(\)\.\s]/', '', $expr);
+                if (!empty($exprClean)) {
+                    try {
+                        $calculatedActual = @eval("return ({$exprClean});");
+                    } catch (\Throwable $t) {
+                        $calculatedActual = null;
+                    }
+                }
+            } elseif ($hasSomeComponentValue) {
+                // Fallback: default to sum if no formula is set but values exist
+                $calculatedActual = array_sum($vals);
             }
 
             if ($calculatedActual !== null) {
@@ -988,10 +1046,10 @@ class KPICompanyController extends Controller
                 switch ($operator) {
                     case '>=': $isAchieved = ($calculatedActual >= $targetVal); break;
                     case '<=': $isAchieved = ($calculatedActual <= $targetVal); break;
-                    case '>': $isAchieved = ($calculatedActual > $targetVal); break;
-                    case '<': $isAchieved = ($calculatedActual < $targetVal); break;
+                    case '>':  $isAchieved = ($calculatedActual > $targetVal); break;
+                    case '<':  $isAchieved = ($calculatedActual < $targetVal); break;
                     case '=':
-                    default: $isAchieved = ($calculatedActual == $targetVal); break;
+                    default:   $isAchieved = ($calculatedActual == $targetVal); break;
                 }
                 $status = $isAchieved ? 'Achieved' : 'Not Achieved';
 

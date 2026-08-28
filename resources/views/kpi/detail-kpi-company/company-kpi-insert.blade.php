@@ -98,7 +98,7 @@
                 </div>
 
                 @php
-                    $showProblemSolving = (float)filter_var($activity->actual, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION) > 0;
+                    $showProblemSolving = ($activity->status === 'Not Achieved');
                     
                     $unitData = (old('unit') || ($problem && isset($problem->unit))) 
                         ? ['id' => old('unit', $problem->unit ?? ''), 'name' => old('unit', $problem->unit ?? '')]
@@ -552,21 +552,82 @@
         function updateProblemSolvingVisibility() {
             if (!problemSolvingSection) return;
             
-            let show = false;
+            const operator = '{{ $activity->operator }}';
+            const targetVal = parseFloat('{{ filter_var($activity->master_target, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION) }}') || 0;
+            const calcOperator = '{{ $activity->calc_operator }}';
+            const bulan = '{{ $activity->bulan }}';
+
+            let actualVal = 0;
+            let hasActual = false;
+
             if (actualInput) {
-                const val = parseFloat(actualInput.value) || 0;
-                if (val > 0) {
-                    show = true;
+                const valStr = actualInput.value.trim();
+                if (valStr !== '') {
+                    actualVal = parseFloat(valStr) || 0;
+                    hasActual = true;
                 }
-            } else {
+            } else if (calcOperator) {
+                let expr = calcOperator;
+                const regex = /\[([A-Za-z]{3})\.(comp_\d+)\]/g;
+                let match;
+                let missingComponent = false;
+
+                const tempExpr = calcOperator;
+                while ((match = regex.exec(tempExpr)) !== null) {
+                    const mName = match[1];
+                    const cCol = match[2];
+                    
+                    if (mName === bulan) {
+                        const inputEl = document.querySelector(`input[name="${cCol}"]`);
+                        const valStr = inputEl ? inputEl.value.trim() : '';
+                        if (valStr !== '') {
+                            const val = parseFloat(valStr);
+                            expr = expr.replace(match[0], isNaN(val) ? 0 : val);
+                        } else {
+                            missingComponent = true;
+                        }
+                    } else {
+                        expr = expr.replace(match[0], 0);
+                    }
+                }
+                
+                if (!missingComponent) {
+                    expr = expr.replace(/x/gi, '*');
+                    const exprClean = expr.replace(/[^0-9\+\-\*\/\(\)\.\s]/g, '');
+                    try {
+                        actualVal = eval(exprClean);
+                        hasActual = true;
+                    } catch (e) {
+                        hasActual = false;
+                    }
+                }
+            }
+
+            let isAchieved = false;
+            if (hasActual) {
+                switch (operator) {
+                    case '>=': isAchieved = (actualVal >= targetVal); break;
+                    case '<=': isAchieved = (actualVal <= targetVal); break;
+                    case '>':  isAchieved = (actualVal > targetVal); break;
+                    case '<':  isAchieved = (actualVal < targetVal); break;
+                    case '=':
+                    default:   isAchieved = (actualVal == targetVal); break;
+                }
+            }
+
+            // Check if any component input has a value > 0
+            let anyComponentHasValue = false;
+            if (!actualInput) {
                 const compInputs = document.querySelectorAll('input[name^="comp_"]');
                 compInputs.forEach(input => {
                     const val = parseFloat(input.value) || 0;
-                    if (val === 1) {
-                        show = true;
+                    if (val > 0) {
+                        anyComponentHasValue = true;
                     }
                 });
             }
+
+            const show = (hasActual && !isAchieved) || anyComponentHasValue;
 
             if (show) {
                 problemSolvingSection.classList.remove('hidden');

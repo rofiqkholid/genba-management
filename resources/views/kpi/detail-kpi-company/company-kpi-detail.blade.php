@@ -64,6 +64,22 @@
                         }
                     }
                 }
+            } else {
+                $vals = [];
+                $hasSomeComponentValue = false;
+                for ($i = 1; $i <= 20; $i++) {
+                    $col = 'comp_' . $i;
+                    if (!empty($formula->$col)) {
+                        $compVal = ($act && $act->$col !== null && $act->$col !== '') ? $act->$col : null;
+                        if ($compVal !== null) {
+                            $vals[] = (float) filter_var($compVal, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
+                            $hasSomeComponentValue = true;
+                        }
+                    }
+                }
+                if ($hasSomeComponentValue) {
+                    $calculatedActual = array_sum($vals);
+                }
             }
         }
 
@@ -399,7 +415,7 @@
                                             @endphp
                                             @if($hasInputData)
                                                 <span class="inline-flex items-center px-2 py-0.5 rounded-none text-xs font-semibold bg-slate-50 text-slate-500 border border-slate-200">
-                                                    Belum diisi
+                                                    Not filled
                                                 </span>
                                             @endif
                                         @endif
@@ -622,7 +638,13 @@
             const arrowTarget = canvas.dataset.arrowTarget || '';
             const isUp = arrowTarget !== 'down';
 
-            const targetColor = isUp ? '#22c55e' : '#FF4560';
+            // Decode operator for accurate JS evaluation
+            const decodedOperator = (operator === '&gt;=' || operator === '>=') ? '>=' :
+                                    (operator === '&lt;=' || operator === '<=') ? '<=' :
+                                    (operator === '&gt;' || operator === '>') ? '>' :
+                                    (operator === '&lt;' || operator === '<') ? '<' : '=';
+
+            const targetColor = (decodedOperator === '<=' || decodedOperator === '<') ? '#FF4560' : '#22c55e'; // target line is red for upper limits, green otherwise
 
             const fullMonths = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
             const fullTargetData = new Array(12).fill(targetVal);
@@ -659,32 +681,48 @@
                             label: 'Actual',
                             data: actualData,
                             backgroundColor: function(context) {
+                                if (context.dataIndex === undefined) {
+                                    return '#3b82f6'; // Default blue color for legend
+                                }
                                 const val = actualData[context.dataIndex];
                                 if (val === null || val === undefined) return 'rgba(0, 0, 0, 0)';
-                                if (isUp) {
-                                    if (val >= targetVal) {
-                                        return '#22c55e'; // Green if above/equal to target
-                                    }
-                                    return '#FF4560'; // Red if below target
+                                
+                                let isAchieved = false;
+                                if (decodedOperator === '>=') {
+                                    isAchieved = (val >= targetVal);
+                                } else if (decodedOperator === '<=') {
+                                    isAchieved = (val <= targetVal);
+                                } else if (decodedOperator === '>') {
+                                    isAchieved = (val > targetVal);
+                                } else if (decodedOperator === '<') {
+                                    isAchieved = (val < targetVal);
+                                } else {
+                                    isAchieved = (val == targetVal);
                                 }
-                                if (val > targetVal) {
-                                    return '#FF4560'; // Red if exceeds target
-                                }
-                                return '#22c55e'; // Green if below target
+                                
+                                return isAchieved ? '#22c55e' : '#FF4560';
                             },
                             borderColor: function(context) {
+                                if (context.dataIndex === undefined) {
+                                    return '#3b82f6';
+                                }
                                 const val = actualData[context.dataIndex];
                                 if (val === null || val === undefined) return 'rgba(0, 0, 0, 0)';
-                                if (isUp) {
-                                    if (val >= targetVal) {
-                                        return '#22c55e';
-                                    }
-                                    return '#FF4560';
+                                
+                                let isAchieved = false;
+                                if (decodedOperator === '>=') {
+                                    isAchieved = (val >= targetVal);
+                                } else if (decodedOperator === '<=') {
+                                    isAchieved = (val <= targetVal);
+                                } else if (decodedOperator === '>') {
+                                    isAchieved = (val > targetVal);
+                                } else if (decodedOperator === '<') {
+                                    isAchieved = (val < targetVal);
+                                } else {
+                                    isAchieved = (val == targetVal);
                                 }
-                                if (val > targetVal) {
-                                    return '#FF4560';
-                                }
-                                return '#22c55e';
+                                
+                                return isAchieved ? '#22c55e' : '#FF4560';
                             },
                             borderWidth: 1,
                         },
@@ -730,7 +768,43 @@
                                     family: 'Outfit, sans-serif',
                                     size: 12
                                 },
-                                color: '#475569'
+                                color: '#475569',
+                                generateLabels: function(chart) {
+                                    const datasets = chart.data.datasets;
+                                    return datasets.map((dataset, i) => {
+                                        let color = dataset.borderColor;
+                                        if (dataset.label === 'Actual') {
+                                            color = '#22c55e'; // Default green
+                                            for (let idx = 0; idx < actualData.length; idx++) {
+                                                const val = actualData[idx];
+                                                if (val !== null && val !== undefined) {
+                                                    let isAchieved = false;
+                                                    if (decodedOperator === '>=') {
+                                                        isAchieved = (val >= targetVal);
+                                                    } else if (decodedOperator === '<=') {
+                                                        isAchieved = (val <= targetVal);
+                                                    } else if (decodedOperator === '>') {
+                                                        isAchieved = (val > targetVal);
+                                                    } else if (decodedOperator === '<') {
+                                                        isAchieved = (val < targetVal);
+                                                    } else {
+                                                        isAchieved = (val == targetVal);
+                                                    }
+                                                    color = isAchieved ? '#22c55e' : '#FF4560';
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                        return {
+                                            text: dataset.label,
+                                            fillStyle: color,
+                                            strokeStyle: color,
+                                            lineWidth: dataset.borderWidth || 1,
+                                            hidden: !chart.isDatasetVisible(i),
+                                            index: i
+                                        };
+                                    });
+                                }
                             }
                         }
                     },

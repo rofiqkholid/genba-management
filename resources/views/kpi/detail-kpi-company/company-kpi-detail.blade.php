@@ -10,26 +10,36 @@
         $calculatedActual = null;
 
         if (isset($formula) && $formula && !empty($components)) {
-            $op = $act ? $act->calc_operator : null;
+            $op = ($act && $act->calc_operator !== null && $act->calc_operator !== '') ? $act->calc_operator : (($formula && !empty($formula->calc_operator)) ? $formula->calc_operator : null);
             if (!empty($op)) {
                 if (strpos($op, '[') !== false) {
                     $expr = $op;
-                    preg_match_all('/\[([A-Za-z]{3})\.(comp_\d+)\]/', $op, $matches, PREG_SET_ORDER);
+                    // Auto-prefix master style [comp_X] with current month name
+                    $expr = preg_replace('/\[(comp_\d+)\]/', '[' . $m . '.$1]', $expr);
+                    preg_match_all('/\[([A-Za-z]{3})\.(comp_\d+)\]/', $expr, $matches, PREG_SET_ORDER);
+                    
+                    $hasAnyFormulaComponentValue = false;
                     foreach ($matches as $match) {
                         $mName = $match[1];
                         $cCol = $match[2];
                         $actForMonth = $activities->firstWhere('bulan', $mName);
-                        $compVal = ($actForMonth && $actForMonth->$cCol !== null) ? $actForMonth->$cCol : 0;
+                        $rawVal = $actForMonth ? $actForMonth->$cCol : null;
+                        if ($rawVal !== null && $rawVal !== '') {
+                            $hasAnyFormulaComponentValue = true;
+                        }
+                        $compVal = ($actForMonth && $actForMonth->$cCol !== null && $actForMonth->$cCol !== '') ? $actForMonth->$cCol : 0;
                         $val = (float) filter_var($compVal, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
                         $expr = str_replace($match[0], $val, $expr);
                     }
-                    $expr = str_replace(['x', 'X'], '*', $expr);
-                    $exprClean = preg_replace('/[^0-9\+\-\*\/\(\)\.\s]/', '', $expr);
-                    if (!empty($exprClean)) {
-                        try {
-                            $calculatedActual = @eval("return ({$exprClean});");
-                        } catch (\Throwable $t) {
-                            $calculatedActual = null;
+                    if ($hasAnyFormulaComponentValue) {
+                        $expr = str_replace(['x', 'X'], '*', $expr);
+                        $exprClean = preg_replace('/[^0-9\+\-\*\/\(\)\.\s]/', '', $expr);
+                        if (!empty($exprClean)) {
+                            try {
+                                $calculatedActual = @eval("return ({$exprClean});");
+                            } catch (\Throwable $t) {
+                                $calculatedActual = null;
+                            }
                         }
                     }
                 } else {
@@ -83,7 +93,11 @@
             }
         }
 
-        $calculatedActuals[$m] = ($calculatedActual !== null) ? $calculatedActual : ($act ? $act->actual : null);
+        if ($calculatedActual !== null && is_numeric($calculatedActual)) {
+            $calculatedActual = round((float) $calculatedActual, 2);
+        }
+
+        $calculatedActuals[$m] = ($calculatedActual !== null) ? $calculatedActual : ($act ? ($act->actual !== null && is_numeric($act->actual) ? round((float) $act->actual, 2) : $act->actual) : null);
     }
 @endphp
 
@@ -237,7 +251,7 @@
                                 @foreach(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'] as $m)
                                     <th class="p-3 text-center border-r border-slate-200">{{ $m }}</th>
                                 @endforeach
-                                <th class="p-3 text-center font-bold">Total</th>
+                                <th class="p-3 text-center font-bold">{{ ($kpi->result === 'Average') ? 'Average' : 'Total' }}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -250,9 +264,16 @@
                                     @php
                                         $targetSum += (float) filter_var($kpi->target, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
                                     @endphp
-                                    <td class="p-3 text-center border-r border-slate-200">{{ $kpi->target }}</td>
+                                    <td class="p-3 text-center border-r border-slate-200">
+                                        {{ is_numeric($kpi->target) ? (floor($kpi->target) == $kpi->target ? number_format($kpi->target, 0, ',', '.') : number_format($kpi->target, 2, ',', '.')) : $kpi->target }}
+                                    </td>
                                 @endforeach
-                                <td class="p-3 text-center">{{ $targetSum }}</td>
+                                @php
+                                    $targetFinal = ($kpi->result === 'Average') ? ((float) filter_var($kpi->target, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION)) : $targetSum;
+                                @endphp
+                                <td class="p-3 text-center">
+                                    {{ is_numeric($targetFinal) ? (floor($targetFinal) == $targetFinal ? number_format($targetFinal, 0, ',', '.') : number_format($targetFinal, 2, ',', '.')) : $targetFinal }}
+                                </td>
                             </tr>
 
                             @if(!empty($components))
@@ -262,6 +283,7 @@
                                         @php
                                             $compSum = 0;
                                             $hasComp = false;
+                                            $compCount = 0;
                                         @endphp
                                         @foreach(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'] as $m)
                                             @php
@@ -273,13 +295,21 @@
                                                     $val = (float) filter_var($compVal, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
                                                     $compSum += $val;
                                                     $hasComp = true;
+                                                    $compCount++;
                                                 @endphp
-                                                <td class="p-3 text-center border-r border-slate-200 font-normal text-slate-700">{{ $compVal }}</td>
+                                                <td class="p-3 text-center border-r border-slate-200 font-normal text-slate-700">
+                                                    {{ is_numeric($compVal) ? (floor($compVal) == $compVal ? number_format($compVal, 0, ',', '.') : number_format($compVal, 2, ',', '.')) : $compVal }}
+                                                </td>
                                             @else
                                                 <td class="p-3 text-center border-r border-slate-200 text-slate-300 select-none"></td>
                                             @endif
                                         @endforeach
-                                        <td class="p-3 text-center font-semibold text-slate-700">{{ $hasComp ? $compSum : '' }}</td>
+                                        @php
+                                            $compFinal = $hasComp ? (($kpi->result === 'Average') ? ($compCount > 0 ? ($compSum / $compCount) : 0) : $compSum) : '';
+                                        @endphp
+                                        <td class="p-3 text-center font-semibold text-slate-700">
+                                            {{ is_numeric($compFinal) ? (floor($compFinal) == $compFinal ? number_format($compFinal, 0, ',', '.') : number_format($compFinal, 2, ',', '.')) : $compFinal }}
+                                        </td>
                                     </tr>
                                 @endforeach
                             @endif
@@ -289,6 +319,7 @@
                                 @php
                                     $actualSum = 0;
                                     $hasActual = false;
+                                    $actualCount = 0;
                                 @endphp
                                 @foreach(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'] as $m)
                                     @php
@@ -298,13 +329,19 @@
                                             $val = (float) filter_var($valVal, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
                                             $actualSum += $val;
                                             $hasActual = true;
+                                            $actualCount++;
                                         }
                                     @endphp
-                                    <td class="p-3 text-center border-r border-slate-200 {{ !empty($components) ? 'cursor-pointer hover:bg-slate-200/60 transition-all' : '' }}" {!! (!empty($components) && $act) ? 'onclick="openCalcOperatorModal(\'' . $act->hash_id . '\', \'' . ($act->calc_operator ?? '') . '\')"' : '' !!} title="{{ !empty($components) ? 'Click to select calculation method' : '' }}">
-                                        {{ $valVal !== null ? (is_numeric($valVal) ? round($valVal, 2) : $valVal) : (empty($components) ? '-' : '') }}
+                                    <td class="p-3 text-center border-r border-slate-200">
+                                        {{ $valVal !== null ? (is_numeric($valVal) ? (floor($valVal) == $valVal ? number_format($valVal, 0, ',', '.') : number_format($valVal, 2, ',', '.')) : $valVal) : (empty($components) ? '-' : '') }}
                                     </td>
                                 @endforeach
-                                <td class="p-3 text-center">{{ $hasActual ? (is_numeric($actualSum) ? round($actualSum, 2) : $actualSum) : '-' }}</td>
+                                @php
+                                    $actualFinal = $hasActual ? (($kpi->result === 'Average') ? ($actualCount > 0 ? ($actualSum / $actualCount) : 0) : $actualSum) : '-';
+                                @endphp
+                                <td class="p-3 text-center">
+                                    {{ is_numeric($actualFinal) ? (floor($actualFinal) == $actualFinal ? number_format($actualFinal, 0, ',', '.') : number_format($actualFinal, 2, ',', '.')) : $actualFinal }}
+                                </td>
                             </tr>
                             @if(empty($components))
                             <tr>
@@ -445,10 +482,6 @@
                                     <!-- Actions -->
                                     <td class="p-3 text-right pr-6">
                                         <div class="flex items-center justify-end gap-2">
-                                            <!-- Send Button -->
-                                            <button type="button" class="w-10 h-10 flex items-center justify-center rounded-xl bg-green-50 text-green-500 hover:bg-green-100 hover:text-green-600 transition-all duration-200" title="Send">
-                                                <i class="fa-solid fa-paper-plane text-sm"></i>
-                                            </button>
                                             <!-- Edit Button -->
                                             <a href="{{ route('kpi.company.activity.edit', $activity->hash_id) }}" class="w-10 h-10 flex items-center justify-center rounded-xl bg-blue-50 text-blue-500 hover:bg-blue-100 hover:text-blue-600 transition-all duration-200" title="Edit">
                                                 <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-blue-500" viewBox="0 0 24 24" fill="none">
@@ -644,7 +677,7 @@
                                     (operator === '&gt;' || operator === '>') ? '>' :
                                     (operator === '&lt;' || operator === '<') ? '<' : '=';
 
-            const targetColor = (decodedOperator === '<=' || decodedOperator === '<') ? '#FF4560' : '#22c55e'; // target line is red for upper limits, green otherwise
+            const targetColor = isUp ? '#000000' : ((decodedOperator === '<=' || decodedOperator === '<') ? '#FF4560' : '#22c55e'); // target line is red for upper limits, green otherwise
 
             const fullMonths = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
             const fullTargetData = new Array(12).fill(targetVal);
@@ -839,32 +872,7 @@
                         }
                     }
                 },
-                plugins: [
-                    {
-                        id: 'barLabels',
-                        afterDatasetsDraw(chart) {
-                            const { ctx } = chart;
-                            ctx.save();
-                            ctx.font = 'bold 14px Outfit, sans-serif';
-                            ctx.fillStyle = '#475569';
-                            ctx.textAlign = 'center';
-                            ctx.textBaseline = 'bottom';
-
-                            chart.data.datasets.forEach((dataset, i) => {
-                                const meta = chart.getDatasetMeta(i);
-                                if (dataset.label === 'Actual') {
-                                    meta.data.forEach((bar, index) => {
-                                        const val = dataset.data[index];
-                                        if (val !== null && val !== undefined) {
-                                            ctx.fillText(val, bar.x, bar.y - 6);
-                                        }
-                                    });
-                                }
-                            });
-                            ctx.restore();
-                        }
-                    }
-                ]
+                plugins: []
             });
         } catch (e) {
             console.error("Error rendering chart:", e);
@@ -960,203 +968,6 @@
         document.getElementById('problemPreviewModal').classList.add('hidden');
     }
 
-    function insertAtCursor(myField, myValue) {
-        if (myField.selectionStart || myField.selectionStart == '0') {
-            var startPos = myField.selectionStart;
-            var endPos = myField.selectionEnd;
-            myField.value = myField.value.substring(0, startPos)
-                + myValue
-                + myField.value.substring(endPos, myField.value.length);
-            myField.selectionStart = startPos + myValue.length;
-            myField.selectionEnd = startPos + myValue.length;
-        } else {
-            myField.value += myValue;
-        }
-        myField.focus();
-    }
-
-    function insertCellToken(month, comp) {
-        const input = document.getElementById('custom_formula_input');
-        insertAtCursor(input, `[${month}.${comp}] `);
-    }
-
-    function insertFormulaToken(token) {
-        const input = document.getElementById('custom_formula_input');
-        insertAtCursor(input, `${token} `);
-    }
-
-    function clearFormula() {
-        document.getElementById('custom_formula_input').value = '';
-        document.getElementById('custom_formula_input').focus();
-    }
-
-    function openCalcOperatorModal(activityId, currentOperator) {
-        document.getElementById('modal_activity_id').value = activityId;
-        
-        // Populate custom formula input directly
-        document.getElementById('custom_formula_input').value = currentOperator || '';
-        
-        document.getElementById('calcOperatorModal').classList.remove('hidden');
-        document.body.classList.add('overflow-hidden');
-    }
-
-    function closeCalcOperatorModal() {
-        document.getElementById('calcOperatorModal').classList.add('hidden');
-        document.body.classList.remove('overflow-hidden');
-    }
-
-    function submitCalcOperator(e) {
-        e.preventDefault();
-        
-        const operatorValue = document.getElementById('custom_formula_input').value.trim();
-        
-        const formSerialized = {
-            _token: $('input[name="_token"]').val(),
-            activity_id: document.getElementById('modal_activity_id').value,
-            calc_operator: operatorValue
-        };
-        
-        $.ajax({
-            url: "{{ route('kpi.company.formula.operator') }}",
-            type: "POST",
-            data: formSerialized,
-            success: function(response) {
-                if (response.success) {
-                    location.reload();
-                } else {
-                    alert(response.message || 'Failed to update calculation method.');
-                }
-            },
-            error: function(xhr) {
-                alert(xhr.responseJSON?.message || 'Error occurred while saving calculation method.');
-            }
-        });
-    }
-
-    function deleteCalculation() {
-        openDeleteModal(null, function() {
-            const formSerialized = {
-                _token: $('input[name="_token"]').val(),
-                activity_id: document.getElementById('modal_activity_id').value,
-                calc_operator: ''
-            };
-            
-            $.ajax({
-                url: "{{ route('kpi.company.formula.operator') }}",
-                type: "POST",
-                data: formSerialized,
-                success: function(response) {
-                    if (response.success) {
-                        location.reload();
-                    } else {
-                        alert(response.message || 'Failed to reset calculation.');
-                    }
-                },
-                error: function(xhr) {
-                    alert(xhr.responseJSON?.message || 'Error occurred while resetting calculation.');
-                }
-            });
-        }, 'Apakah Anda yakin ingin menghapus formula dan mereset data actual bulan ini? Tindakan ini tidak dapat dibatalkan.');
-    }
 </script>
-
-<!-- Calc Operator Modal -->
-<div id="calcOperatorModal" onclick="if(event.target === this) closeCalcOperatorModal()" class="fixed inset-0 z-[999] hidden flex items-center justify-center bg-slate-900/40 transition-all duration-300">
-    <div class="bg-white rounded-2xl w-full max-w-[85vw] mx-4 overflow-hidden border border-slate-100 flex flex-col max-h-[90vh]">
-        <!-- Header -->
-        <div class="flex items-center justify-between p-4 border-b border-slate-100 shrink-0">
-            <h3 class="text-2xl font-bold text-slate-800">Formula Calculation Builder</h3>
-            <button onclick="closeCalcOperatorModal()" class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-colors">
-                <i class="fa-solid fa-times"></i>
-            </button>
-        </div>
-        
-        <!-- Form -->
-        <form id="calcOperatorForm" onsubmit="submitCalcOperator(event)" class="flex-1 flex flex-col overflow-hidden">
-            @csrf
-            <input type="hidden" name="activity_id" id="modal_activity_id" value="">
-            
-            <!-- Scrollable Body -->
-            <div class="p-8 space-y-6 flex-1 overflow-y-auto">
-                <!-- Custom Formula Builder Section -->
-                <div class="space-y-4">
-                    <div class="bg-slate-50 p-6 rounded-2xl border border-slate-200 space-y-4">
-                        <div>
-                            <label class="block text-base font-semibold text-slate-700 mb-2">Formula Editor</label>
-                            <div class="flex gap-3 items-stretch">
-                                <textarea id="custom_formula_input" name="custom_formula" rows="2" class="flex-1 rounded-xl border border-slate-200 p-3 text-sm focus:outline-none bg-white" placeholder="Build formula like [Jan.comp_1] - [Feb.comp_2]. Leave empty for manual entry."></textarea>
-                                <button type="button" onclick="clearFormula()" class="px-5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 rounded-xl text-sm font-semibold transition-colors shrink-0 flex items-center justify-center">Clear</button>
-                            </div>
-                        </div>
-
-                        <!-- Calculator buttons -->
-                        <div class="flex flex-wrap gap-2 items-center">
-                            <button type="button" onclick="insertFormulaToken('+')" class="w-10 h-10 flex items-center justify-center bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 rounded-xl text-base font-bold">+</button>
-                            <button type="button" onclick="insertFormulaToken('-')" class="w-10 h-10 flex items-center justify-center bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 rounded-xl text-base font-bold">-</button>
-                            <button type="button" onclick="insertFormulaToken('*')" class="w-10 h-10 flex items-center justify-center bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 rounded-xl text-base font-bold">*</button>
-                            <button type="button" onclick="insertFormulaToken('/')" class="w-10 h-10 flex items-center justify-center bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 rounded-xl text-base font-bold shadow-none">/</button>
-                            <button type="button" onclick="insertFormulaToken('(')" class="w-10 h-10 flex items-center justify-center bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 rounded-xl text-base font-bold shadow-none">(</button>
-                            <button type="button" onclick="insertFormulaToken(')')" class="w-10 h-10 flex items-center justify-center bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 rounded-xl text-base font-bold shadow-none">)</button>
-                        </div>
-
-                        <div>
-                            <label class="block text-base font-semibold text-slate-700 mb-2">Cell Data Grid Selector (Click a value to insert cell)</label>
-                            <div class="border border-slate-200 rounded-xl overflow-hidden overflow-x-auto bg-white">
-                                <table class="w-full text-sm text-left text-slate-600 border-collapse min-w-[700px]">
-                                    <thead class="bg-slate-50 border-b border-slate-200">
-                                        <tr>
-                                            <th class="p-3 border-r border-slate-200 bg-slate-100 font-semibold text-slate-700 sticky left-0 z-10">Component Name</th>
-                                            @foreach(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'] as $m)
-                                                <th class="p-3 text-center border-r border-slate-200 font-semibold text-slate-700">{{ $m }}</th>
-                                            @endforeach
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @if(!empty($components))
-                                            @foreach($components as $index => $name)
-                                                <tr class="border-b border-slate-100 last:border-0 hover:bg-slate-50/50">
-                                                    <td class="p-3 font-normal text-slate-700 border-r border-slate-200 whitespace-nowrap bg-slate-50 sticky left-0 z-10" title="{{ $name }}">{{ Str::limit($name, 22) }}</td>
-                                                    @foreach(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'] as $m)
-                                                        @php
-                                                            $act = $activities->firstWhere('bulan', $m);
-                                                            $compVal = ($act && $act->{'comp_' . $index} !== null && $act->{'comp_' . $index} !== '') ? $act->{'comp_' . $index} : null;
-                                                        @endphp
-                                                        @if($compVal !== null)
-                                                            <td class="p-3 text-center border-r border-slate-100 cursor-pointer font-normal text-slate-700 hover:bg-slate-100 transition-colors"
-                                                                onclick="insertCellToken('{{ $m }}', 'comp_{{ $index }}')"
-                                                                title="Click to insert value from '{{ $name }}' in {{ $m }}">
-                                                                {{ $compVal }}
-                                                            </td>
-                                                        @else
-                                                            <td class="p-3 text-center border-r border-slate-100 text-slate-300 select-none">
-                                                                <!-- Empty cell -->
-                                                            </td>
-                                                        @endif
-                                                    @endforeach
-                                                </tr>
-                                            @endforeach
-                                        @else
-                                            <tr>
-                                                <td colspan="13" class="p-4 text-center text-slate-400">No components defined for this KPI.</td>
-                                            </tr>
-                                        @endif
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Action Buttons Footer (Sticky) -->
-            <div class="flex justify-end items-center p-4 border-t border-slate-100 bg-white shrink-0 gap-3">
-                <button type="button" onclick="deleteCalculation()" class="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl transition-colors text-sm font-semibold">Delete / Reset Formula</button>
-                <div class="w-px h-6 bg-slate-200 mx-1"></div> <!-- Vertical Separator | -->
-                <button type="button" onclick="closeCalcOperatorModal()" class="px-5 py-2.5 border border-slate-200 text-slate-700 rounded-xl hover:bg-slate-50 transition-colors text-sm font-semibold">Cancel</button>
-                <button type="submit" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition-colors text-sm font-semibold">Save</button>
-            </div>
-        </form>
-    </div>
-</div>
 @endpush
 @endsection

@@ -452,7 +452,7 @@ class KPICompanyController extends Controller
 
         $kpi = DB::table('KPICompany as child')
             ->leftJoin('KPIList as parent', 'child.kpi_list_id', '=', 'parent.id')
-            ->select('child.*', 'parent.objective', 'parent.pillar', 'parent.no_kpi', 'parent.target as target', 'parent.operator', 'parent.unit', 'parent.calculation_method', 'parent.arrow_target')
+            ->select('child.*', 'parent.objective', 'parent.pillar', 'parent.no_kpi', 'parent.target as target', 'parent.operator', 'parent.unit', 'parent.calculation_method', 'parent.arrow_target', 'parent.result')
             ->where('child.id', $dbId)
             ->first();
 
@@ -583,7 +583,7 @@ class KPICompanyController extends Controller
         $departments = DB::table('GenbaDept')->orderBy('Key1', 'asc')->get();
         $problem = DB::table('KPICompanyActivityProblem')->where('kpi_company_activity_id', $dbId)->first();
 
-        return view('kpi.detail-kpi-company.company-kpi-insert', compact('activity', 'departments', 'problem', 'components'));
+        return view('kpi.detail-kpi-company.company-kpi-insert', compact('activity', 'departments', 'problem', 'components', 'formula'));
     }
 
     public function updateActivity(Request $request, string $id)
@@ -642,17 +642,19 @@ class KPICompanyController extends Controller
                     if (!empty($formula->$col)) {
                         $compVal = $request->input('comp_' . $i);
                         if ($compVal !== null) {
-                            $vals[] = (float) filter_var($compVal, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
+                            $vals[] = $this->parseLocalNumber($compVal);
                         }
                     }
                 }
                 
-                $op = $activity->calc_operator;
+                $op = !empty($activity->calc_operator) ? $activity->calc_operator : (DB::table('KPIFormula')->where('kpi_list_id', $activity->kpi_list_id)->value('calc_operator'));
                 $calculatedActual = null;
                 if (!empty($op) && !empty($vals)) {
                     if (strpos($op, '[') !== false) {
                         $expr = $op;
-                        preg_match_all('/\[([A-Za-z]{3})\.(comp_\d+)\]/', $op, $matches, PREG_SET_ORDER);
+                        // Auto-prefix master style [comp_X] with current month name
+                        $expr = preg_replace('/\[(comp_\d+)\]/', '[' . $activity->bulan . '.$1]', $expr);
+                        preg_match_all('/\[([A-Za-z]{3})\.(comp_\d+)\]/', $expr, $matches, PREG_SET_ORDER);
                         foreach ($matches as $match) {
                             $mName = $match[1];
                             $cCol = $match[2];
@@ -666,7 +668,7 @@ class KPICompanyController extends Controller
                                     ->first();
                                 $compVal = ($actForMonth && $actForMonth->$cCol !== null) ? $actForMonth->$cCol : 0;
                             }
-                            $val = (float) filter_var($compVal, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
+                            $val = $this->parseLocalNumber($compVal);
                             $expr = str_replace($match[0], $val, $expr);
                         }
                         $expr = str_replace(['x', 'X'], '*', $expr);
@@ -710,12 +712,12 @@ class KPICompanyController extends Controller
             $status = null;
 
             if ($actualValInput !== null && $actualValInput !== '') {
-                $actualVal = (float) filter_var($actualValInput, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
+                $actualVal = $this->parseLocalNumber($actualValInput);
                 
                 // Automatically calculate status based on actual, master_target, and operator
                 $operator = trim(htmlspecialchars_decode($activity->operator));
                 $targetStr = $activity->master_target;
-                $targetVal = (float) filter_var($targetStr, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
+                $targetVal = $this->parseLocalNumber($targetStr);
 
                 $isAchieved = false;
                 switch ($operator) {
@@ -995,11 +997,11 @@ class KPICompanyController extends Controller
         $formula = DB::table('KPIFormula')->where('kpi_list_id', $kpi->kpi_list_id)->first();
         if (!$formula) return;
 
-        $targetVal = (float) filter_var($kpi->target, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
+        $targetVal = $this->parseLocalNumber($kpi->target);
         $operator = trim(htmlspecialchars_decode($kpi->operator));
 
         foreach ($activities as $activity) {
-            $op = $activity->calc_operator;
+            $op = !empty($activity->calc_operator) ? $activity->calc_operator : ($formula ? $formula->calc_operator : null);
             
             $vals = [];
             $hasSomeComponentValue = false;
@@ -1008,7 +1010,7 @@ class KPICompanyController extends Controller
                 if ($formula && !empty($formula->$col)) {
                     $compVal = $activity->$col;
                     if ($compVal !== null && $compVal !== '') {
-                        $vals[] = (float) filter_var($compVal, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
+                        $vals[] = $this->parseLocalNumber($compVal);
                         $hasSomeComponentValue = true;
                     }
                 }
@@ -1018,22 +1020,32 @@ class KPICompanyController extends Controller
 
             if (!empty($op)) {
                 $expr = $op;
-                preg_match_all('/\[([A-Za-z]{3})\.(comp_\d+)\]/', $op, $matches, PREG_SET_ORDER);
+                // Auto-prefix master style [comp_X] with current month name
+                $expr = preg_replace('/\[(comp_\d+)\]/', '[' . $activity->bulan . '.$1]', $expr);
+                preg_match_all('/\[([A-Za-z]{3})\.(comp_\d+)\]/', $expr, $matches, PREG_SET_ORDER);
+                
+                $hasAnyFormulaComponentValue = false;
                 foreach ($matches as $match) {
                     $mName = $match[1];
                     $cCol = $match[2];
                     $actForMonth = $activities->firstWhere('bulan', $mName);
-                    $compVal = ($actForMonth && $actForMonth->$cCol !== null) ? $actForMonth->$cCol : 0;
-                    $val = (float) filter_var($compVal, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
+                    $rawVal = $actForMonth ? $actForMonth->$cCol : null;
+                    if ($rawVal !== null && $rawVal !== '') {
+                        $hasAnyFormulaComponentValue = true;
+                    }
+                    $compVal = ($actForMonth && $actForMonth->$cCol !== null && $actForMonth->$cCol !== '') ? $actForMonth->$cCol : 0;
+                    $val = $this->parseLocalNumber($compVal);
                     $expr = str_replace($match[0], $val, $expr);
                 }
-                $expr = str_replace(['x', 'X'], '*', $expr);
-                $exprClean = preg_replace('/[^0-9\+\-\*\/\(\)\.\s]/', '', $expr);
-                if (!empty($exprClean)) {
-                    try {
-                        $calculatedActual = @eval("return ({$exprClean});");
-                    } catch (\Throwable $t) {
-                        $calculatedActual = null;
+                if ($hasAnyFormulaComponentValue) {
+                    $expr = str_replace(['x', 'X'], '*', $expr);
+                    $exprClean = preg_replace('/[^0-9\+\-\*\/\(\)\.\s]/', '', $expr);
+                    if (!empty($exprClean)) {
+                        try {
+                            $calculatedActual = @eval("return ({$exprClean});");
+                        } catch (\Throwable $t) {
+                            $calculatedActual = null;
+                        }
                     }
                 }
             } elseif ($hasSomeComponentValue) {
@@ -1062,5 +1074,22 @@ class KPICompanyController extends Controller
                     ]);
             }
         }
+    }
+
+    private function parseLocalNumber($val)
+    {
+        if ($val === null || $val === '') {
+            return 0.0;
+        }
+        $val = trim($val);
+        if (strpos($val, ',') !== false) {
+            $val = str_replace('.', '', $val);
+            $val = str_replace(',', '.', $val);
+        } else {
+            if (substr_count($val, '.') > 1) {
+                $val = str_replace('.', '', $val);
+            }
+        }
+        return (float) filter_var($val, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
     }
 }

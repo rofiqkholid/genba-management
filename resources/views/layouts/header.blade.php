@@ -45,9 +45,9 @@
                 <div class="hidden sm:block w-px h-6 bg-slate-200"></div>
 
                 <!-- Realtime Clock -->
-                <div class="flex items-center gap-2 md:gap-3 mr-2 md:mr-4">
-                    <span id="realtime-date" class="text-xs sm:text-sm lg:text-base xl:text-xl text-slate-700 font-medium whitespace-nowrap">-</span>
-                    <div class="w-px h-4 lg:h-6 bg-slate-200"></div>
+                <div class="flex items-center gap-2 md:gap-3 mr-1 sm:mr-2 md:mr-4">
+                    <span id="realtime-date" class="hidden md:inline text-xs sm:text-sm lg:text-base xl:text-xl text-slate-700 font-medium whitespace-nowrap">-</span>
+                    <div class="hidden md:block w-px h-4 lg:h-6 bg-slate-200"></div>
                     <span id="realtime-time" class="text-xs sm:text-sm lg:text-base xl:text-xl text-slate-700 font-medium tabular-nums min-w-[60px] lg:min-w-[70px] xl:min-w-[85px] text-center">-</span>
                 </div>
 
@@ -137,6 +137,7 @@
         function updateClock() {
             const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
             const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+            const shortMonths = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
             
             const options = {
                 timeZone: 'Asia/Jakarta',
@@ -159,12 +160,13 @@
             const jakartaDate = new Date(year, month, date);
             const dayName = days[jakartaDate.getDay()];
             const monthName = months[month];
+            const shortMonthName = shortMonths[month];
             
             const dateEl = document.getElementById('realtime-date');
             const timeEl = document.getElementById('realtime-time');
             
             if (dateEl) {
-                dateEl.innerHTML = `<span class="hidden sm:inline">${dayName}, </span>${date} ${monthName} ${year}`;
+                dateEl.innerHTML = `<span class="hidden sm:inline">${dayName}, ${date} ${monthName} ${year}</span><span class="sm:hidden">${date} ${shortMonthName} ${year}</span>`;
             }
             if (timeEl) {
                 timeEl.textContent = `${hours}:${minutes}:${seconds}`;

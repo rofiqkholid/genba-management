@@ -88,6 +88,23 @@
                         @endforeach
                     @endif
 
+                    @if(!empty($components))
+                    <div class="md:col-span-2 bg-slate-50 border border-slate-200 rounded-xl p-4 mt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div>
+                            <span class="block text-sm font-bold text-slate-700">Calculated Actual Result</span>
+                            <span class="block text-xs text-slate-500 mt-1">
+                                Calculated based on formula: <span class="font-mono bg-white px-2 py-0.5 rounded border border-slate-100 text-slate-600">{{ $activity->calc_operator ?: ($formula->calc_operator ?? 'Sum of all components') }}</span> 
+                                Result: <span id="actual_preview_value" class="font-mono bg-white px-2 py-0.5 rounded border border-slate-100 text-slate-600 font-bold">-</span>
+                            </span>
+                        </div>
+                        <div class="shrink-0 flex justify-end">
+                            <button type="button" id="check_result_btn" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold transition-colors shadow-sm">
+                                <i class="fa-solid fa-calculator mr-1.5"></i> Check Result
+                            </button>
+                        </div>
+                    </div>
+                    @endif
+
                     @if(empty($components))
                     <!-- Actual -->
                     <div class="md:col-span-2">
@@ -552,9 +569,16 @@
         function updateProblemSolvingVisibility() {
             if (!problemSolvingSection) return;
             
-            const operator = '{{ $activity->operator }}';
+            function parseLocalNumber(valStr) {
+                if (!valStr) return 0;
+                let clean = valStr.replace(/\./g, '');
+                clean = clean.replace(/,/g, '.');
+                return parseFloat(clean) || 0;
+            }
+            
+            const operator = '{!! html_entity_decode($activity->operator) !!}';
             const targetVal = parseFloat('{{ filter_var($activity->master_target, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION) }}') || 0;
-            const calcOperator = '{{ $activity->calc_operator }}';
+            const calcOperator = '{{ $activity->calc_operator ?: ($formula->calc_operator ?? "") }}';
             const bulan = '{{ $activity->bulan }}';
 
             let actualVal = 0;
@@ -563,16 +587,20 @@
             if (actualInput) {
                 const valStr = actualInput.value.trim();
                 if (valStr !== '') {
-                    actualVal = parseFloat(valStr) || 0;
+                    actualVal = parseLocalNumber(valStr);
                     hasActual = true;
                 }
             } else if (calcOperator) {
                 let expr = calcOperator;
+                // Auto-prefix master style [comp_X] with current month name
+                expr = expr.replace(/\[(comp_\d+)\]/g, '[' + bulan + '.$1]');
+                
                 const regex = /\[([A-Za-z]{3})\.(comp_\d+)\]/g;
                 let match;
                 let missingComponent = false;
 
-                const tempExpr = calcOperator;
+                const tempExpr = expr;
+                regex.lastIndex = 0;
                 while ((match = regex.exec(tempExpr)) !== null) {
                     const mName = match[1];
                     const cCol = match[2];
@@ -581,7 +609,7 @@
                         const inputEl = document.querySelector(`input[name="${cCol}"]`);
                         const valStr = inputEl ? inputEl.value.trim() : '';
                         if (valStr !== '') {
-                            const val = parseFloat(valStr);
+                            const val = parseLocalNumber(valStr);
                             expr = expr.replace(match[0], isNaN(val) ? 0 : val);
                         } else {
                             missingComponent = true;
@@ -601,6 +629,34 @@
                         hasActual = false;
                     }
                 }
+            } else if (!actualInput) {
+                // Fallback: sum of all components
+                const compInputs = document.querySelectorAll('input[name^="comp_"]');
+                let sum = 0;
+                let hasAny = false;
+                compInputs.forEach(input => {
+                    const valStr = input.value.trim();
+                    if (valStr !== '') {
+                        sum += parseLocalNumber(valStr);
+                        hasAny = true;
+                    }
+                });
+                if (hasAny) {
+                    actualVal = sum;
+                    hasActual = true;
+                }
+            }
+
+            const previewValEl = document.getElementById('actual_preview_value');
+            if (previewValEl) {
+                if (hasActual) {
+                    const formatted = (actualVal % 1 === 0) 
+                        ? actualVal.toLocaleString('id-ID') 
+                        : actualVal.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                    previewValEl.textContent = formatted;
+                } else {
+                    previewValEl.textContent = '-';
+                }
             }
 
             let isAchieved = false;
@@ -615,19 +671,7 @@
                 }
             }
 
-            // Check if any component input has a value > 0
-            let anyComponentHasValue = false;
-            if (!actualInput) {
-                const compInputs = document.querySelectorAll('input[name^="comp_"]');
-                compInputs.forEach(input => {
-                    const val = parseFloat(input.value) || 0;
-                    if (val > 0) {
-                        anyComponentHasValue = true;
-                    }
-                });
-            }
-
-            const show = (hasActual && !isAchieved) || anyComponentHasValue;
+            const show = hasActual && !isAchieved;
 
             if (show) {
                 problemSolvingSection.classList.remove('hidden');
@@ -656,10 +700,29 @@
             actualInput.addEventListener('input', updateProblemSolvingVisibility);
             actualInput.addEventListener('change', updateProblemSolvingVisibility);
         } else {
+            const checkBtn = document.getElementById('check_result_btn');
+            if (checkBtn) {
+                checkBtn.addEventListener('click', updateProblemSolvingVisibility);
+            }
             const compInputs = document.querySelectorAll('input[name^="comp_"]');
             compInputs.forEach(input => {
-                input.addEventListener('input', updateProblemSolvingVisibility);
-                input.addEventListener('change', updateProblemSolvingVisibility);
+                input.addEventListener('input', () => {
+                    const previewValEl = document.getElementById('actual_preview_value');
+                    if (previewValEl) {
+                        previewValEl.textContent = '-';
+                    }
+                    if (problemSolvingSection) {
+                        problemSolvingSection.classList.add('hidden');
+                        problemSolvingSection.querySelectorAll('.ps-required').forEach(el => {
+                            el.removeAttribute('required');
+                        });
+                        problemSolvingSection.querySelectorAll('input[type="text"]').forEach(el => {
+                            if (el.placeholder && el.placeholder.includes('Select')) {
+                                el.removeAttribute('required');
+                            }
+                        });
+                    }
+                });
             });
         }
 

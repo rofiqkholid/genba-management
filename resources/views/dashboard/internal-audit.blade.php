@@ -35,12 +35,12 @@
             <div class="grid grid-cols-1 xl:grid-cols-5 gap-4">
                 <!-- Left Column: Chart & Table (80%) -->
                 <div class="xl:col-span-4 border-b border-gray-100 pb-8 xl:pb-0 xl:border-b-0 xl:border-r pr-0 xl:pr-4">
-                    <div class="flex items-center justify-between gap-4 mb-3">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
                         <div>
                             <h3 class="text-base sm:text-lg font-bold text-slate-800">Department Performance</h3>
                             <p class="text-[10px] sm:text-sm text-slate-500">Findings status per department</p>
                         </div>
-                        <div class="flex items-center gap-2">
+                        <div class="flex flex-wrap items-center gap-2">
                             @php
                                 $currentYear = (int)date('Y');
                                 $yearsOptions = [];

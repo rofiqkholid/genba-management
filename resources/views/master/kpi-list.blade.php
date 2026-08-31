@@ -1095,23 +1095,22 @@
     function handleFormula(btn) {
         const kpiId = btn.getAttribute('data-id');
         const kpiName = btn.getAttribute('data-kpi_name');
-        // Set Title
         $('#formulaModalTitle').text('Manage Formula: ' + kpiName);
         $('#formula_kpi_list_id').val(kpiId);
 
-        // Fetch existing formula
         $.ajax({
             url: `{{ route('master.kpi_list.formula', '') }}/${kpiId}`,
             type: 'GET',
             success: function(response) {
                 const formula = response.formula || {};
                 
-                // Populate Alpine data
                 const formEl = document.getElementById('formulaForm');
                 if (formEl && window.Alpine) {
                     const alpineData = window.Alpine.$data(formEl);
                     if (alpineData) {
-                        alpineData.isLocked = false;
+                        const hasFormula = formula.calc_operator !== null && formula.calc_operator !== undefined && formula.calc_operator.trim() !== '';
+                        alpineData.calcOperator = hasFormula ? formula.calc_operator : '';
+                        alpineData.isLocked = hasFormula;
                         for (let i = 1; i <= 20; i++) {
                             alpineData.vals[i - 1] = formula['comp_' + i] !== null && formula['comp_' + i] !== undefined ? formula['comp_' + i] : '';
                         }

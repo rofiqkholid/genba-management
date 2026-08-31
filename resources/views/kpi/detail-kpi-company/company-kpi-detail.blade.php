@@ -677,7 +677,7 @@
                                     (operator === '&gt;' || operator === '>') ? '>' :
                                     (operator === '&lt;' || operator === '<') ? '<' : '=';
 
-            const targetColor = isUp ? '#000000' : ((decodedOperator === '<=' || decodedOperator === '<') ? '#FF4560' : '#22c55e'); // target line is red for upper limits, green otherwise
+            const targetColor = isUp ? '#475569' : ((decodedOperator === '<=' || decodedOperator === '<') ? '#FF4560' : '#22c55e'); // target line is slate for upper limits, green otherwise
 
             const fullMonths = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
             const fullTargetData = new Array(12).fill(targetVal);

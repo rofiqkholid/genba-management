@@ -1545,6 +1545,8 @@ class MasterController extends Controller
             $roles = [];
         }
 
+        $userDept = DB::table('t100_user_dept')->where('id_user', $id)->value('department');
+
         return response()->json([
             'success' => true,
             'user' => [
@@ -1553,7 +1555,8 @@ class MasterController extends Controller
                 'full_name' => $user->full_name,
                 'email' => $user->email,
                 'role_id' => $user->role_id,
-                'roles' => $roles
+                'roles' => $roles,
+                'department' => $userDept,
             ],
             'permissions' => $permissionsMapped
         ]);
@@ -1569,32 +1572,40 @@ class MasterController extends Controller
             ];
         })->toArray();
 
-        return view('setting.user-setting', compact('user', 'rolesList'));
+        $departmentsList = DB::table('GenbaDept')->orderBy('Key1', 'asc')->get()->map(function ($item) {
+            return [
+                'id' => $item->Key1,
+                'name' => $item->Key1
+            ];
+        })->toArray();
+
+        return view('setting.user-setting', compact('user', 'rolesList', 'departmentsList'));
     }
 
-    public function update_user_setting(Request $request)
-    {
-        $request->validate([
-            'user_id' => 'required|integer',
-            'full_name' => 'required|string|max:255',
-            'call_name' => 'nullable|string|max:50',
-            'email' => 'nullable|email|max:255',
-            'avatar' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'password' => 'nullable|string|min:6|confirmed',
-            'roles' => 'nullable|string',
-        ]);
-
-        $userId = $request->user_id;
-        $user = DB::table('users')->where('id', $userId)->first();
-        if (!$user) {
-            return redirect()->back()->withErrors(['user_id' => 'User not found.']);
-        }
-
-        $data = [
-            'full_name' => strtoupper($request->full_name),
-            'call_name' => $request->filled('call_name') ? strtoupper($request->call_name) : null,
-            'email' => $request->email,
-        ];
+     public function update_user_setting(Request $request)
+     {
+         $request->validate([
+             'user_id' => 'required|integer',
+             'full_name' => 'required|string|max:255',
+             'call_name' => 'nullable|string|max:50',
+             'email' => 'nullable|email|max:255',
+             'avatar' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+             'password' => 'nullable|string|min:6|confirmed',
+             'roles' => 'nullable|string',
+             'department' => 'nullable|string|max:50',
+         ]);
+ 
+         $userId = $request->user_id;
+         $user = DB::table('users')->where('id', $userId)->first();
+         if (!$user) {
+             return redirect()->back()->withErrors(['user_id' => 'User not found.']);
+         }
+ 
+         $data = [
+             'full_name' => strtoupper($request->full_name),
+             'call_name' => $request->filled('call_name') ? strtoupper($request->call_name) : null,
+             'email' => $request->email,
+         ];
 
         if ($request->filled('password')) {
             $data['password'] = bcrypt($request->password);
@@ -1614,6 +1625,21 @@ class MasterController extends Controller
         }
 
         DB::table('users')->where('id', $userId)->update($data);
+
+        $deptExisting = DB::table('t100_user_dept')->where('id_user', $userId)->first();
+        if ($deptExisting) {
+            DB::table('t100_user_dept')->where('id_user', $userId)->update([
+                'department' => $request->department,
+                'updated_at' => \Carbon\Carbon::now()
+            ]);
+        } else {
+            DB::table('t100_user_dept')->insert([
+                'id_user' => $userId,
+                'department' => $request->department,
+                'created_at' => \Carbon\Carbon::now(),
+                'updated_at' => \Carbon\Carbon::now()
+            ]);
+        }
 
         $rolesInput = $request->roles;
         if (is_array($rolesInput)) {
@@ -1649,26 +1675,27 @@ class MasterController extends Controller
         return redirect()->back()->with('success', 'Profile updated successfully.')->with('selected_user_id', $userId);
     }
 
-    public function store_user(Request $request)
-    {
-        $request->validate([
-            'full_name' => 'required|string|max:255',
-            'username' => 'required|string|max:50|unique:users,username',
-            'email' => 'nullable|email|max:255',
-            'password' => 'required|string|min:6|confirmed',
-            'roles' => 'nullable|string',
-        ]);
-
-        $data = [
-            'full_name' => strtoupper($request->full_name),
-            'username' => $request->username,
-            'email' => $request->email,
-            'password' => bcrypt($request->password),
-            'avatar' => 'blank.png',
-            'role_id' => 1,
-            'created_at' => \Carbon\Carbon::now(),
-            'updated_at' => \Carbon\Carbon::now()
-        ];
+     public function store_user(Request $request)
+     {
+         $request->validate([
+             'full_name' => 'required|string|max:255',
+             'username' => 'required|string|max:50|unique:users,username',
+             'email' => 'nullable|email|max:255',
+             'password' => 'required|string|min:6|confirmed',
+             'roles' => 'nullable|string',
+             'department' => 'nullable|string|max:50',
+         ]);
+ 
+         $data = [
+             'full_name' => strtoupper($request->full_name),
+             'username' => $request->username,
+             'email' => $request->email,
+             'password' => bcrypt($request->password),
+             'avatar' => 'blank.png',
+             'role_id' => 1,
+             'created_at' => \Carbon\Carbon::now(),
+             'updated_at' => \Carbon\Carbon::now()
+         ];
 
         if ($request->hasFile('avatar')) {
             $file = $request->file('avatar');
@@ -1678,6 +1705,13 @@ class MasterController extends Controller
         }
 
         $userId = DB::table('users')->insertGetId($data);
+
+        DB::table('t100_user_dept')->insert([
+            'id_user' => $userId,
+            'department' => $request->department,
+            'created_at' => \Carbon\Carbon::now(),
+            'updated_at' => \Carbon\Carbon::now()
+        ]);
 
         $rolesInput = $request->roles;
         if (is_array($rolesInput)) {

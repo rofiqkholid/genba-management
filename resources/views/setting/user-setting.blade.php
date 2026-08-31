@@ -200,6 +200,17 @@
                                                 maxItems="10"
                                                 :initialOptions="$rolesList" />
                                         </div>
+                                        <div class="flex flex-col">
+                                            <label class="block text-xs font-bold text-slate-700 mb-1.5">Department</label>
+                                            <x-searchable-select
+                                                name="department"
+                                                id="formDepartment"
+                                                label="Department"
+                                                updateEvent="update-user-department"
+                                                hideLabel="true"
+                                                position="up"
+                                                :initialOptions="$departmentsList" />
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -480,6 +491,12 @@
                 name: '' 
             } 
         }));
+        window.dispatchEvent(new CustomEvent('update-user-department', { 
+            detail: { 
+                id: '', 
+                name: '' 
+            } 
+        }));
         $('#password').val('').prop('required', true);
         $('#password_confirmation').val('').prop('required', true);
 
@@ -544,6 +561,13 @@
                     detail: { 
                         id: userRolesList, 
                         name: userRolesList 
+                    } 
+                }));
+                const userDept = response.user.department || '';
+                window.dispatchEvent(new CustomEvent('update-user-department', { 
+                    detail: { 
+                        id: userDept, 
+                        name: userDept 
                     } 
                 }));
                 $('#password').val('');

@@ -97,10 +97,17 @@ class KPICompanyController extends Controller
      */
     public function table(Request $request)
     {
+        $user = Auth::user();
+        $userDept = DB::table('t100_user_dept')->where('id_user', $user->id)->value('department');
+
         $query = DB::table('KPICompany as child')
             ->leftJoin('KPIList as parent', 'child.kpi_list_id', '=', 'parent.id')
             ->select('child.*', 'parent.objective', 'parent.pillar', 'parent.no_kpi', 'parent.target as target', 'parent.operator as operator', 'parent.unit as unit', 'parent.calculation_method as calculation_method')
             ->orderBy('child.id', 'desc');
+
+        if (!empty($userDept) && !in_array($userDept, ['ICT', 'QMS'])) {
+            $query->where('child.department_code', $userDept);
+        }
 
         // Apply filters
         if ($request->has('pillar') && !empty($request->pillar)) {
@@ -129,7 +136,11 @@ class KPICompanyController extends Controller
             });
         }
 
-        $totalRecords = DB::table('KPICompany')->count();
+        $totalQuery = DB::table('KPICompany');
+        if (!empty($userDept) && !in_array($userDept, ['ICT', 'QMS'])) {
+            $totalQuery->where('department_code', $userDept);
+        }
+        $totalRecords = $totalQuery->count();
         $filteredRecords = $query->count();
 
         if ($request->has('start') && $request->has('length')) {

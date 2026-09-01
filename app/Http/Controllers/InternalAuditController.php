@@ -1538,7 +1538,9 @@ class InternalAuditController extends Controller
                     } else {
                         $dept = $header ? $header->auditee_dept : null;
                         $reqNumber = $dept ? $this->generateCarReqNumber($dept) : null;
+                        $hashId = strtolower(\Illuminate\Support\Str::random(3) . '-' . \Illuminate\Support\Str::random(3) . '-' . \Illuminate\Support\Str::random(3));
                         DB::table('CsAuditCar')->insert([
+                            'hash_id' => $hashId,
                             'audit_detail_id' => $detailId,
                             'req_number' => $reqNumber,
                             'department' => $dept,
@@ -2252,7 +2254,9 @@ class InternalAuditController extends Controller
                 if (!$existingCar) {
                     $dept = $header ? $header->auditee_dept : null;
                     $reqNumber = $dept ? $this->generateCarReqNumber($dept) : null;
+                    $hashId = strtolower(\Illuminate\Support\Str::random(3) . '-' . \Illuminate\Support\Str::random(3) . '-' . \Illuminate\Support\Str::random(3));
                     DB::table('CsAuditCar')->insert([
+                        'hash_id' => $hashId,
                         'audit_detail_id' => $detailId,
                         'req_number' => $reqNumber,
                         'department' => $dept,
@@ -2317,7 +2321,9 @@ class InternalAuditController extends Controller
         if (!$car) {
             $reqNumber = $defaultDept ? $this->generateCarReqNumber($defaultDept) : null;
             $auditDate = $schedule->audit_date ?? $schedule->schedule_date ?? null;
+            $hashId = strtolower(\Illuminate\Support\Str::random(3) . '-' . \Illuminate\Support\Str::random(3) . '-' . \Illuminate\Support\Str::random(3));
             $carId = DB::table('CsAuditCar')->insertGetId([
+                'hash_id' => $hashId,
                 'audit_detail_id' => $detail->id,
                 'req_number' => $reqNumber,
                 'department' => $defaultDept,
@@ -2546,7 +2552,9 @@ class InternalAuditController extends Controller
                     ]);
             } else {
                 $reqNumber = $this->generateCarReqNumber($department);
+                $hashId = strtolower(\Illuminate\Support\Str::random(3) . '-' . \Illuminate\Support\Str::random(3) . '-' . \Illuminate\Support\Str::random(3));
                 DB::table('CsAuditCar')->insert([
+                    'hash_id' => $hashId,
                     'audit_detail_id' => $detailId,
                     'req_number' => $reqNumber,
                     'check_item' => $item->check_item_idn ?? null,

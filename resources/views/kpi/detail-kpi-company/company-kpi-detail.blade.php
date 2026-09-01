@@ -3,6 +3,14 @@
 @php
     $hideCentralToast = true;
 
+    $parseLocalNum = function($vStr) {
+        if ($vStr === null || $vStr === '') return 0;
+        if (is_numeric($vStr)) return (float)$vStr;
+        $clean = str_replace('.', '', (string)$vStr);
+        $clean = str_replace(',', '.', $clean);
+        return (float)$clean;
+    };
+
     $calculatedActuals = [];
     $monthsList = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     foreach ($monthsList as $m) {
@@ -30,7 +38,7 @@
                             $countComponentsInExpr++;
                         }
                         $compVal = ($actForMonth && $actForMonth->$cCol !== null && $actForMonth->$cCol !== '') ? $actForMonth->$cCol : 0;
-                        $val = (float) filter_var($compVal, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
+                        $val = $parseLocalNum($compVal);
                         $expr = str_replace($match[0], $val, $expr);
                     }
                     if ($hasAnyFormulaComponentValue) {
@@ -56,7 +64,7 @@
                         if (!empty($formula->$col)) {
                             $compVal = ($act && $act->{'comp_' . $i} !== null) ? $act->{'comp_' . $i} : null;
                             if ($compVal !== null) {
-                                $vals[] = (float) filter_var($compVal, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
+                                $vals[] = $parseLocalNum($compVal);
                             }
                         }
                     }
@@ -94,7 +102,7 @@
                     if (!empty($formula->$col)) {
                         $compVal = ($act && $act->$col !== null && $act->$col !== '') ? $act->$col : null;
                         if ($compVal !== null) {
-                            $vals[] = (float) filter_var($compVal, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
+                            $vals[] = $parseLocalNum($compVal);
                             $hasSomeComponentValue = true;
                         }
                     }

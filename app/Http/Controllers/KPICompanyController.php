@@ -1284,33 +1284,65 @@ class KPICompanyController extends Controller
             $calculatedActual = null;
 
             if (!empty($op)) {
-                $expr = $op;
-                // Auto-prefix master style [comp_X] with current month name
-                $expr = preg_replace('/\[(comp_\d+)\]/', '[' . $activity->bulan . '.$1]', $expr);
-                preg_match_all('/\[([A-Za-z]{3})\.(comp_\d+)\]/', $expr, $matches, PREG_SET_ORDER);
-                
-                $hasAnyFormulaComponentValue = false;
-                foreach ($matches as $match) {
-                    $mName = $match[1];
-                    $cCol = $match[2];
-                    $actForMonth = $activities->firstWhere('bulan', $mName);
-                    $rawVal = $actForMonth ? $actForMonth->$cCol : null;
-                    if ($rawVal !== null && $rawVal !== '') {
-                        $hasAnyFormulaComponentValue = true;
-                    }
-                    $compVal = ($actForMonth && $actForMonth->$cCol !== null && $actForMonth->$cCol !== '') ? $actForMonth->$cCol : 0;
-                    $val = $this->parseLocalNumber($compVal);
-                    $expr = str_replace($match[0], $val, $expr);
-                }
-                if ($hasAnyFormulaComponentValue) {
-                    $expr = str_replace(['x', 'X'], '*', $expr);
-                    $exprClean = preg_replace('/[^0-9\+\-\*\/\(\)\.\s]/', '', $expr);
-                    if (!empty($exprClean)) {
-                        try {
-                            $calculatedActual = @eval("return ({$exprClean});");
-                        } catch (\Throwable $t) {
-                            $calculatedActual = null;
+                if (strpos($op, '[') !== false) {
+                    $expr = $op;
+                    // Auto-prefix master style [comp_X] with current month name
+                    $expr = preg_replace('/\[(comp_\d+)\]/', '[' . $activity->bulan . '.$1]', $expr);
+                    preg_match_all('/\[([A-Za-z]{3})\.(comp_\d+)\]/', $expr, $matches, PREG_SET_ORDER);
+                    
+                    $hasAnyFormulaComponentValue = false;
+                    $countComponentsInExpr = 0;
+                    foreach ($matches as $match) {
+                        $mName = $match[1];
+                        $cCol = $match[2];
+                        $actForMonth = $activities->firstWhere('bulan', $mName);
+                        $rawVal = $actForMonth ? $actForMonth->$cCol : null;
+                        if ($rawVal !== null && $rawVal !== '') {
+                            $hasAnyFormulaComponentValue = true;
+                            $countComponentsInExpr++;
                         }
+                        $compVal = ($actForMonth && $actForMonth->$cCol !== null && $actForMonth->$cCol !== '') ? $actForMonth->$cCol : 0;
+                        $val = $this->parseLocalNumber($compVal);
+                        $expr = str_replace($match[0], $val, $expr);
+                    }
+                    if ($hasAnyFormulaComponentValue) {
+                        $expr = str_replace(['x', 'X'], '*', $expr);
+                        $exprClean = preg_replace('/[^0-9\+\-\*\/\(\)\.\s]/', '', $expr);
+                        if (!empty($exprClean)) {
+                            try {
+                                $calculatedActual = @eval("return ({$exprClean});");
+                                $unit = $activity->unit ?? ($kpi->unit ?? '');
+                                $isPercentUnit = in_array(strtolower(trim($unit)), ['%', 'percent', 'persen']);
+                                if ($isPercentUnit && strpos($exprClean, '*') !== false && strpos($exprClean, '/') === false && $countComponentsInExpr > 1) {
+                                    $calculatedActual = $calculatedActual / pow(100, $countComponentsInExpr - 1);
+                                }
+                            } catch (\Throwable $t) {
+                                $calculatedActual = null;
+                            }
+                        }
+                    }
+                } else {
+                    $unit = $activity->unit ?? ($kpi->unit ?? '');
+                    $isPercentUnit = in_array(strtolower(trim($unit)), ['%', 'percent', 'persen']);
+                    if ($op === '+') {
+                        $calculatedActual = array_sum($vals);
+                    } elseif ($op === '-') {
+                        $calculatedActual = array_reduce(array_slice($vals, 1), function($carry, $item) {
+                            return $carry - $item;
+                        }, $vals[0]);
+                    } elseif ($op === 'x' || $op === '*') {
+                        $calculatedActual = array_reduce($vals, function($carry, $item) {
+                            return $carry * $item;
+                        }, 1);
+                        if ($isPercentUnit && count($vals) > 1) {
+                            $calculatedActual = $calculatedActual / pow(100, count($vals) - 1);
+                        }
+                    } elseif ($op === '/') {
+                        $calculatedActual = array_reduce(array_slice($vals, 1), function($carry, $item) {
+                            return $item != 0 ? $carry / $item : 0;
+                        }, $vals[0]);
+                    } elseif ($op === 'Average') {
+                        $calculatedActual = array_sum($vals) / count($vals);
                     }
                 }
             } elseif ($hasSomeComponentValue) {

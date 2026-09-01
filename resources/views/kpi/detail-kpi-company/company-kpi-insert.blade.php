@@ -580,6 +580,7 @@
             const targetVal = parseFloat('{{ filter_var($activity->master_target, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION) }}') || 0;
             const calcOperator = '{{ $activity->calc_operator ?: ($formula->calc_operator ?? "") }}';
             const bulan = '{{ $activity->bulan }}';
+            const unitStr = '{{ $activity->unit ?? "" }}';
 
             let actualVal = 0;
             let hasActual = false;
@@ -591,42 +592,80 @@
                     hasActual = true;
                 }
             } else if (calcOperator) {
-                let expr = calcOperator;
-                // Auto-prefix master style [comp_X] with current month name
-                expr = expr.replace(/\[(comp_\d+)\]/g, '[' + bulan + '.$1]');
-                
-                const regex = /\[([A-Za-z]{3})\.(comp_\d+)\]/g;
-                let match;
-                let missingComponent = false;
-
-                const tempExpr = expr;
-                regex.lastIndex = 0;
-                while ((match = regex.exec(tempExpr)) !== null) {
-                    const mName = match[1];
-                    const cCol = match[2];
+                if (calcOperator.includes('[')) {
+                    let expr = calcOperator;
+                    // Auto-prefix master style [comp_X] with current month name
+                    expr = expr.replace(/\[(comp_\d+)\]/g, '[' + bulan + '.$1]');
                     
-                    if (mName === bulan) {
-                        const inputEl = document.querySelector(`input[name="${cCol}"]`);
-                        const valStr = inputEl ? inputEl.value.trim() : '';
-                        if (valStr !== '') {
-                            const val = parseLocalNumber(valStr);
-                            expr = expr.replace(match[0], isNaN(val) ? 0 : val);
+                    const regex = /\[([A-Za-z]{3})\.(comp_\d+)\]/g;
+                    let match;
+                    let missingComponent = false;
+                    let countComponentsInExpr = 0;
+
+                    const tempExpr = expr;
+                    regex.lastIndex = 0;
+                    while ((match = regex.exec(tempExpr)) !== null) {
+                        const mName = match[1];
+                        const cCol = match[2];
+                        
+                        if (mName === bulan) {
+                            const inputEl = document.querySelector(`input[name="${cCol}"]`);
+                            const valStr = inputEl ? inputEl.value.trim() : '';
+                            if (valStr !== '') {
+                                const val = parseLocalNumber(valStr);
+                                expr = expr.replace(match[0], isNaN(val) ? 0 : val);
+                                countComponentsInExpr++;
+                            } else {
+                                missingComponent = true;
+                            }
                         } else {
-                            missingComponent = true;
+                            expr = expr.replace(match[0], 0);
                         }
-                    } else {
-                        expr = expr.replace(match[0], 0);
                     }
-                }
-                
-                if (!missingComponent) {
-                    expr = expr.replace(/x/gi, '*');
-                    const exprClean = expr.replace(/[^0-9\+\-\*\/\(\)\.\s]/g, '');
-                    try {
-                        actualVal = eval(exprClean);
+                    
+                    if (!missingComponent) {
+                        expr = expr.replace(/x/gi, '*');
+                        const exprClean = expr.replace(/[^0-9\+\-\*\/\(\)\.\s]/g, '');
+                        try {
+                            actualVal = eval(exprClean);
+                            const isPercentUnit = (unitStr === '%' || unitStr === 'Percent' || unitStr === 'persen' || unitStr === 'Persen');
+                            if (isPercentUnit && exprClean.includes('*') && !exprClean.includes('/') && countComponentsInExpr > 1) {
+                                actualVal = actualVal / Math.pow(100, countComponentsInExpr - 1);
+                            }
+                            hasActual = true;
+                        } catch (e) {
+                            hasActual = false;
+                        }
+                    }
+                } else {
+                    const compInputs = document.querySelectorAll('input[name^="comp_"]');
+                    let vals = [];
+                    compInputs.forEach(input => {
+                        const valStr = input.value.trim();
+                        if (valStr !== '') {
+                            vals.push(parseLocalNumber(valStr));
+                        }
+                    });
+                    if (vals.length > 0) {
+                        const op = calcOperator.trim();
+                        const isPercentUnit = (unitStr === '%' || unitStr === 'Percent' || unitStr === 'persen' || unitStr === 'Persen');
+                        if (op === '+') {
+                            actualVal = vals.reduce((a, b) => a + b, 0);
+                        } else if (op === '-') {
+                            actualVal = vals.slice(1).reduce((a, b) => a - b, vals[0]);
+                        } else if (op === 'x' || op === '*') {
+                            actualVal = vals.reduce((a, b) => a * b, 1);
+                            if (isPercentUnit && vals.length > 1) {
+                                actualVal = actualVal / Math.pow(100, vals.length - 1);
+                            }
+                        } else if (op === '/') {
+                            actualVal = vals.slice(1).reduce((a, b) => b !== 0 ? a / b : 0, vals[0]);
+                        } else if (op === 'Average') {
+                            actualVal = vals.reduce((a, b) => a + b, 0) / vals.length;
+                        } else {
+                            actualVal = vals.reduce((a, b) => a + b, 0);
+                        }
                         hasActual = true;
-                    } catch (e) {
-                        hasActual = false;
                     }
                 }
             } else if (!actualInput) {
@@ -653,7 +692,7 @@
                     const formatted = (actualVal % 1 === 0) 
                         ? actualVal.toLocaleString('id-ID') 
                         : actualVal.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                    previewValEl.textContent = formatted;
+                    previewValEl.textContent = unitStr ? `${formatted} ${unitStr}` : formatted;
                 } else {
                     previewValEl.textContent = '-';
                 }

@@ -19,6 +19,7 @@
                     preg_match_all('/\[([A-Za-z]{3})\.(comp_\d+)\]/', $expr, $matches, PREG_SET_ORDER);
                     
                     $hasAnyFormulaComponentValue = false;
+                    $countComponentsInExpr = 0;
                     foreach ($matches as $match) {
                         $mName = $match[1];
                         $cCol = $match[2];
@@ -26,6 +27,7 @@
                         $rawVal = $actForMonth ? $actForMonth->$cCol : null;
                         if ($rawVal !== null && $rawVal !== '') {
                             $hasAnyFormulaComponentValue = true;
+                            $countComponentsInExpr++;
                         }
                         $compVal = ($actForMonth && $actForMonth->$cCol !== null && $actForMonth->$cCol !== '') ? $actForMonth->$cCol : 0;
                         $val = (float) filter_var($compVal, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
@@ -37,6 +39,11 @@
                         if (!empty($exprClean)) {
                             try {
                                 $calculatedActual = @eval("return ({$exprClean});");
+                                $unit = $act->unit ?? ($kpi->unit ?? '');
+                                $isPercentUnit = in_array(strtolower(trim($unit)), ['%', 'percent', 'persen']);
+                                if ($isPercentUnit && strpos($exprClean, '*') !== false && strpos($exprClean, '/') === false && $countComponentsInExpr > 1) {
+                                    $calculatedActual = $calculatedActual / pow(100, $countComponentsInExpr - 1);
+                                }
                             } catch (\Throwable $t) {
                                 $calculatedActual = null;
                             }
@@ -55,6 +62,8 @@
                     }
 
                     if (!empty($vals)) {
+                        $unit = $act->unit ?? ($kpi->unit ?? '');
+                        $isPercentUnit = in_array(strtolower(trim($unit)), ['%', 'percent', 'persen']);
                         if ($op === '+') {
                             $calculatedActual = array_sum($vals);
                         } elseif ($op === '-') {
@@ -65,6 +74,9 @@
                             $calculatedActual = array_reduce($vals, function($carry, $item) {
                                 return $carry * $item;
                             }, 1);
+                            if ($isPercentUnit && count($vals) > 1) {
+                                $calculatedActual = $calculatedActual / pow(100, count($vals) - 1);
+                            }
                         } elseif ($op === '/') {
                             $calculatedActual = array_reduce(array_slice($vals, 1), function($carry, $item) {
                                 return $item != 0 ? $carry / $item : 0;

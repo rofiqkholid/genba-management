@@ -906,6 +906,7 @@ class KPICompanyController extends Controller
                         // Auto-prefix master style [comp_X] with current month name
                         $expr = preg_replace('/\[(comp_\d+)\]/', '[' . $activity->bulan . '.$1]', $expr);
                         preg_match_all('/\[([A-Za-z]{3})\.(comp_\d+)\]/', $expr, $matches, PREG_SET_ORDER);
+                        $countComponentsInExpr = 0;
                         foreach ($matches as $match) {
                             $mName = $match[1];
                             $cCol = $match[2];
@@ -919,6 +920,9 @@ class KPICompanyController extends Controller
                                     ->first();
                                 $compVal = ($actForMonth && $actForMonth->$cCol !== null) ? $actForMonth->$cCol : 0;
                             }
+                            if ($compVal !== null && $compVal !== '') {
+                                $countComponentsInExpr++;
+                            }
                             $val = $this->parseLocalNumber($compVal);
                             $expr = str_replace($match[0], $val, $expr);
                         }
@@ -927,11 +931,18 @@ class KPICompanyController extends Controller
                         if (!empty($exprClean)) {
                             try {
                                 $calculatedActual = @eval("return ({$exprClean});");
+                                $unit = $activity->unit ?? '';
+                                $isPercentUnit = in_array(strtolower(trim($unit)), ['%', 'percent', 'persen']);
+                                if ($isPercentUnit && strpos($exprClean, '*') !== false && strpos($exprClean, '/') === false && $countComponentsInExpr > 1) {
+                                    $calculatedActual = $calculatedActual / pow(100, $countComponentsInExpr - 1);
+                                }
                             } catch (\Throwable $t) {
                                 $calculatedActual = null;
                             }
                         }
                     } else {
+                        $unit = $activity->unit ?? '';
+                        $isPercentUnit = in_array(strtolower(trim($unit)), ['%', 'percent', 'persen']);
                         if ($op === '+') {
                             $calculatedActual = array_sum($vals);
                         } elseif ($op === '-') {
@@ -942,6 +953,9 @@ class KPICompanyController extends Controller
                             $calculatedActual = array_reduce($vals, function($carry, $item) {
                                 return $carry * $item;
                             }, 1);
+                            if ($isPercentUnit && count($vals) > 1) {
+                                $calculatedActual = $calculatedActual / pow(100, count($vals) - 1);
+                            }
                         } elseif ($op === '/') {
                             $calculatedActual = array_reduce(array_slice($vals, 1), function($carry, $item) {
                                 return $item != 0 ? $carry / $item : 0;

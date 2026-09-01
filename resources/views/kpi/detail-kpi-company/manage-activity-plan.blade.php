@@ -140,12 +140,6 @@
                                         $isClosed = ($remarkVal === 'Closed');
                                         $remarkBg = $isClosed ? 'bg-emerald-500 text-white hover:bg-emerald-600' : 'bg-amber-400 text-slate-900 hover:bg-amber-500';
                                     @endphp
-                                <td rowspan="2" class="p-3 text-center align-middle border border-slate-200">
-                                    @php
-                                        $remarkVal = $plan->remark ?: 'Closed';
-                                        $isClosed = ($remarkVal === 'Closed');
-                                        $remarkBg = $isClosed ? 'bg-emerald-500 text-white hover:bg-emerald-600' : 'bg-amber-400 text-slate-900 hover:bg-amber-500';
-                                    @endphp
                                     <button type="button" class="btn-toggle-remark px-3 py-1 text-xs font-bold rounded-none cursor-pointer select-none transition-all outline-none focus:outline-none focus:ring-0 {{ $remarkBg }}" data-id="{{ $plan->id }}" data-remark="{{ $remarkVal }}">
                                         {{ $remarkVal }}
                                     </button>

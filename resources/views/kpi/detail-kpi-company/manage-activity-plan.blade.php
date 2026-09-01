@@ -140,20 +140,26 @@
                                         $isClosed = ($remarkVal === 'Closed');
                                         $remarkBg = $isClosed ? 'bg-emerald-500 text-white hover:bg-emerald-600' : 'bg-amber-400 text-slate-900 hover:bg-amber-500';
                                     @endphp
-                                    <button type="button" onclick="toggleRemark({{ $plan->id }}, this)" class="px-3 py-1 text-xs font-bold rounded-none cursor-pointer select-none transition-all outline-none focus:outline-none focus:ring-0 {{ $remarkBg }}" data-id="{{ $plan->id }}" data-remark="{{ $remarkVal }}">
+                                <td rowspan="2" class="p-3 text-center align-middle border border-slate-200">
+                                    @php
+                                        $remarkVal = $plan->remark ?: 'Closed';
+                                        $isClosed = ($remarkVal === 'Closed');
+                                        $remarkBg = $isClosed ? 'bg-emerald-500 text-white hover:bg-emerald-600' : 'bg-amber-400 text-slate-900 hover:bg-amber-500';
+                                    @endphp
+                                    <button type="button" class="btn-toggle-remark px-3 py-1 text-xs font-bold rounded-none cursor-pointer select-none transition-all outline-none focus:outline-none focus:ring-0 {{ $remarkBg }}" data-id="{{ $plan->id }}" data-remark="{{ $remarkVal }}">
                                         {{ $remarkVal }}
                                     </button>
                                 </td>
                                 <td rowspan="2" class="p-3 align-middle border border-slate-200">
                                     <div class="flex items-center justify-center gap-1.5">
-                                        <button type="button" onclick='editActivityPlan(@json($plan))' class="w-8 h-8 flex items-center justify-center rounded-lg bg-blue-50 text-blue-500 hover:bg-blue-100 hover:text-blue-600 transition-all duration-200" title="Edit">
+                                        <button type="button" class="btn-edit-plan w-8 h-8 flex items-center justify-center rounded-lg bg-blue-50 text-blue-500 hover:bg-blue-100 hover:text-blue-600 transition-all duration-200" data-plan='@json($plan)' title="Edit">
                                             <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-blue-500" viewBox="0 0 24 24" fill="none">
                                                 <path opacity="0.3" d="M10 4H21C21.6 4 22 4.4 22 5V7H10V4Z" fill="currentColor"></path>
                                                 <path opacity="0.3" d="M10.3 15.3L11 14.6L8.70002 12.3C8.30002 11.9 7.7 11.9 7.3 12.3C6.9 12.7 6.9 13.3 7.3 13.7L10.3 16.7C9.9 16.3 9.9 15.7 10.3 15.3Z" fill="currentColor"></path>
                                                 <path d="M10.4 3.60001L12 6H21C21.6 6 22 6.4 22 7V19C22 19.6 21.6 20 21 20H3C2.4 20 2 19.6 2 19V4C2 3.4 2.4 3 3 3H9.20001C9.70001 3 10.2 3.20001 10.4 3.60001ZM11.7 16.7L16.7 11.7C17.1 11.3 17.1 10.7 16.7 10.3C16.3 9.89999 15.7 9.89999 15.3 10.3L11 14.6L8.70001 12.3C8.30001 11.9 7.69999 11.9 7.29999 12.3C6.89999 12.7 6.89999 13.3 7.29999 13.7L10.3 16.7C10.5 16.9 10.8 17 11 17C11.2 17 11.5 16.9 11.7 16.7Z" fill="currentColor"></path>
                                             </svg>
                                         </button>
-                                        <button type="button" onclick="deleteActivityPlan({{ $plan->id }})" class="w-8 h-8 flex items-center justify-center rounded-lg bg-red-50 text-red-500 hover:bg-red-100 hover:text-red-600 transition-all duration-200" title="Delete">
+                                        <button type="button" class="btn-delete-plan w-8 h-8 flex items-center justify-center rounded-lg bg-red-50 text-red-500 hover:bg-red-100 hover:text-red-600 transition-all duration-200" data-id="{{ $plan->id }}" title="Delete">
                                             <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-red-600" viewBox="0 0 24 24" fill="none">
                                                 <path opacity="0.3" d="M5 9C5 8.44772 5.44772 8 6 8H18C18.5523 8 19 8.44772 19 9V18C19 19.6569 17.6569 21 16 21H8C6.34315 21 5 19.6569 5 18V9Z" fill="currentColor"/>
                                                 <path d="M5 5C5 4.44772 5.44772 4 6 4H18C18.5523 4 19 4.44772 19 5V7H5V5Z" fill="currentColor"/>
@@ -173,7 +179,7 @@
                                     @php
                                         $hasFile = isset($eArr[$m]) && !empty($eArr[$m]);
                                     @endphp
-                                    <td onclick="openUploadEvidenceModal({{ $plan->id }}, {{ $m }}, '{{ $hasFile ? asset($eArr[$m]) : '' }}')" class="p-1 h-8 align-middle border border-slate-200 min-w-[36px] bg-white hover:bg-slate-100 cursor-pointer transition-colors" title="{{ $hasFile ? 'Uploaded Evidence Month ' . $m . ' (Click to View/Edit)' : 'Upload Evidence Month ' . $m }}">
+                                    <td class="btn-upload-evidence p-1 h-8 align-middle border border-slate-200 min-w-[36px] bg-white hover:bg-slate-100 cursor-pointer transition-colors" data-plan-id="{{ $plan->id }}" data-month="{{ $m }}" data-file="{{ $hasFile ? asset($eArr[$m]) : '' }}" title="{{ $hasFile ? 'Uploaded Evidence Month ' . $m . ' (Click to View/Edit)' : 'Upload Evidence Month ' . $m }}">
                                         @if($hasFile)
                                             <div class="w-full h-full rounded-xs bg-emerald-500 hover:bg-emerald-600 transition-colors shadow-2xs" title="Uploaded Evidence Month {{ $m }}"></div>
                                         @else
@@ -622,6 +628,28 @@
     window.addEventListener('end-month-changed', clearQuickPlanSelection);
 
     $(document).ready(function() {
+        $(document).on('click', '.btn-toggle-remark', function() {
+            const planId = $(this).data('id');
+            toggleRemark(planId, this);
+        });
+
+        $(document).on('click', '.btn-edit-plan', function() {
+            const planData = $(this).data('plan');
+            editActivityPlan(planData);
+        });
+
+        $(document).on('click', '.btn-delete-plan', function() {
+            const planId = $(this).data('id');
+            deleteActivityPlan(planId);
+        });
+
+        $(document).on('click', '.btn-upload-evidence', function() {
+            const planId = $(this).data('plan-id');
+            const month = $(this).data('month');
+            const file = $(this).data('file');
+            openUploadEvidenceModal(planId, month, file);
+        });
+
         $('#create_start_month, #create_end_month').on('change', clearQuickPlanSelection);
         // Handle AJAX form submission for Add Activity Plan
         $('#addActivityForm').on('submit', function(e) {

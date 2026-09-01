@@ -1744,7 +1744,17 @@ class MasterController extends Controller
     public function kpi_list()
     {
         $kpiList = DB::table('KPIList')->select('id', 'no_kpi', 'objective')->get();
-        return view('master.kpi-list', compact('kpiList'));
+        $pillars = DB::table('KPIList')->distinct()->whereNotNull('pillar')->where('pillar', '!=', '')->pluck('pillar')->values();
+        if ($pillars->isEmpty()) {
+            $pillars = collect(['Safety', 'Quality', 'People', 'Cost', 'Responsiveness', 'Delivery', 'Environment & Energy']);
+        }
+        $categories = DB::table('KPIList')->distinct()->whereNotNull('category')->where('category', '!=', '')->pluck('category')->values();
+        if ($categories->isEmpty()) {
+            $categories = collect(['Company KPI', 'KPI Department', 'Activity Plan']);
+        }
+        $calculationMethods = collect(['Direct Actual (Input Actual Data)', 'Custom (Using Formula Components)']);
+
+        return view('master.kpi-list', compact('kpiList', 'pillars', 'categories', 'calculationMethods'));
     }
 
     public function kpi_list_table(Request $request)
@@ -1768,6 +1778,18 @@ class MasterController extends Controller
                     ->orWhere('child.unit', 'LIKE', "%{$searchValue}%")
                     ->orWhere('child.calculation_method', 'LIKE', "%{$searchValue}%");
             });
+        }
+
+        if ($request->filled('filter_pillar')) {
+            $query->where('child.pillar', $request->filter_pillar);
+        }
+
+        if ($request->filled('filter_category')) {
+            $query->where('child.category', $request->filter_category);
+        }
+
+        if ($request->filled('filter_calculation_method')) {
+            $query->where('child.calculation_method', $request->filter_calculation_method);
         }
 
         $totalRecords = DB::table('KPIList')->count();

@@ -15,30 +15,77 @@
     <!-- Page Content -->
     <main class="flex-1 p-6">
         <!-- Page Title -->
-        <div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-                <h1 class="text-lg sm:text-2xl font-bold text-slate-800">KPI Master List</h1>
-                <p class="text-slate-500 text-xs sm:text-sm mt-1">Manage definitions, targets, objectives, and categories of KPIs.</p>
-            </div>
-            <!-- Add Button -->
-            <button onclick="openCreateModal()" class="shrink-0 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl flex items-center gap-2 transition-all duration-200 text-xs sm:text-sm font-semibold shadow-sm shadow-blue-200">
-                <i class="fa-solid fa-plus text-xs"></i>
-                <span>Add KPI</span>
-            </button>
+        <div class="mb-6">
+            <h1 class="text-lg sm:text-2xl font-bold text-slate-800">KPI Master List</h1>
+            <p class="text-slate-500 text-xs sm:text-sm mt-1">Manage definitions, targets, objectives, and categories of KPIs.</p>
         </div>
 
         <!-- Main Card -->
         <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
             <!-- Filter Section -->
             <div class="p-4 sm:p-6 border-b border-slate-200 bg-slate-50/50">
-                <div class="flex items-center gap-2 sm:gap-3">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:flex lg:flex-row lg:items-center gap-3 w-full">
                     <!-- Search -->
-                    <div class="flex-1">
+                    <div class="col-span-1 sm:col-span-2 lg:flex-1 lg:min-w-[200px]">
                         <div class="relative">
-                            <input type="text" id="searchInput" placeholder="Search No. KPI, Objective, or Category..."
-                                class="w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-xl focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm outline-none bg-white">
+                            <input type="text" id="searchInput" placeholder="Search No. KPI, Objective, or Definition..."
+                                class="w-full pl-10 pr-4 py-[9px] border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm outline-none bg-white transition-all font-normal text-slate-700">
                             <i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
                         </div>
+                    </div>
+
+                    <!-- Pillar Filter -->
+                    <div class="col-span-1 lg:w-44">
+                        <x-searchable-select
+                            name="filter_pillar"
+                            id="filter_pillar"
+                            label="Pillar"
+                            :initialOptions="$pillars->map(fn($item) => ['id' => $item, 'name' => $item])->toArray()"
+                            updateEvent="set-filter-pillar"
+                            changeEvent="filter-pillar-changed"
+                            hideLabel="true" />
+                    </div>
+
+                    <!-- Category Filter -->
+                    <div class="col-span-1 lg:w-44">
+                        <x-searchable-select
+                            name="filter_category"
+                            id="filter_category"
+                            label="Category"
+                            :initialOptions="$categories->map(fn($item) => ['id' => $item, 'name' => $item])->toArray()"
+                            updateEvent="set-filter-category"
+                            changeEvent="filter-category-changed"
+                            hideLabel="true" />
+                    </div>
+
+                    <!-- Calculation Method Filter -->
+                    <div class="col-span-1 sm:col-span-2 lg:w-56">
+                        <x-searchable-select
+                            name="filter_calculation_method"
+                            id="filter_calculation_method"
+                            label="Calculation Method"
+                            :initialOptions="$calculationMethods->map(fn($item) => ['id' => $item, 'name' => $item])->toArray()"
+                            updateEvent="set-filter-calculation-method"
+                            changeEvent="filter-calculation-method-changed"
+                            hideLabel="true" />
+                    </div>
+
+                    <!-- Reset Filters -->
+                    <div class="col-span-1 lg:w-auto">
+                        <button type="button" id="resetFilters"
+                            class="w-full inline-flex items-center justify-center gap-2 px-4 py-[9px] bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 text-sm font-medium transition-colors whitespace-nowrap">
+                            <i class="fa-solid fa-rotate-right text-sm"></i>
+                            <span>Reset</span>
+                        </button>
+                    </div>
+
+                    <!-- Add Button -->
+                    <div class="col-span-1 sm:col-span-2 lg:w-auto">
+                        <button onclick="openCreateModal()"
+                            class="w-full inline-flex items-center justify-center gap-2 px-4 py-[9px] bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors shadow-sm shadow-blue-200 whitespace-nowrap">
+                            <i class="fa-solid fa-plus text-xs"></i>
+                            <span>Add KPI</span>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -646,6 +693,9 @@
                 data: function(d) {
                     d._token = "{{ csrf_token() }}";
                     d.search.value = $('#searchInput').val();
+                    d.filter_pillar = $('#filter_pillar').val();
+                    d.filter_category = $('#filter_category').val();
+                    d.filter_calculation_method = $('#filter_calculation_method').val();
                 }
             },
             columns: [
@@ -709,6 +759,26 @@
             searchTimer = setTimeout(function() {
                 table.search($(self).val()).draw();
             }, 500);
+        });
+
+        // Redraw on filter changes
+        window.addEventListener('filter-pillar-changed', function() {
+            table.draw();
+        });
+        window.addEventListener('filter-category-changed', function() {
+            table.draw();
+        });
+        window.addEventListener('filter-calculation-method-changed', function() {
+            table.draw();
+        });
+
+        // Reset Filters
+        $('#resetFilters').on('click', function() {
+            $('#searchInput').val('');
+            window.dispatchEvent(new CustomEvent('set-filter-pillar', { detail: { id: '', name: '' } }));
+            window.dispatchEvent(new CustomEvent('set-filter-category', { detail: { id: '', name: '' } }));
+            window.dispatchEvent(new CustomEvent('set-filter-calculation-method', { detail: { id: '', name: '' } }));
+            table.search('').draw();
         });
 
         // Parent Objective is optional, so remove required attribute from searchable-select hidden inputs

@@ -174,10 +174,10 @@
                             </div>
                             <div class="hidden sm:block w-px h-6 bg-slate-200 mx-1"></div>
                             <!-- Manage Activity Button -->
-                            <button type="button" class="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-5 py-3 text-xs font-semibold text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-colors shadow-sm whitespace-nowrap">
-                                <i class="fa-solid fa-list-check text-sm"></i>
+                            <a href="{{ route('kpi.company.manage_activity_plan', \App\Http\Controllers\KPICompanyController::encodeId($kpi->id)) }}" class="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-5 py-3 text-xs font-semibold text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-colors shadow-sm whitespace-nowrap">
+                                <i class="fa-solid fa-bars-progress text-sm"></i>
                                 Manage Activity Plan
-                            </button>
+                            </a>
                         </div>
                     </div>
                 </div>

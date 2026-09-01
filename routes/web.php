@@ -235,6 +235,11 @@ Route::middleware(['auth'])->group(function () {
     Route::prefix('kpi')->group(function () {
         Route::get('/company', [KPICompanyController::class, 'index'])->name('kpi.company');
         Route::get('/company/detail/{id}', [KPICompanyController::class, 'detail'])->name('kpi.company.detail');
+        Route::get('/company/manage-activity-plan/{id}', [KPICompanyController::class, 'manageActivityPlan'])->name('kpi.company.manage_activity_plan');
+        Route::post('/company/activity-plan/store', [KPICompanyController::class, 'storeActivityPlan'])->name('kpi.company.activity_plan.store');
+        Route::post('/company/activity-plan/delete', [KPICompanyController::class, 'deleteActivityPlan'])->name('kpi.company.activity_plan.delete');
+        Route::post('/company/activity-plan/toggle-remark', [KPICompanyController::class, 'toggleRemark'])->name('kpi.company.activity_plan.toggle_remark');
+        Route::post('/company/activity-plan/upload-evidence', [KPICompanyController::class, 'uploadEvidence'])->name('kpi.company.activity_plan.upload_evidence');
         Route::get('/company/activity/edit/{id}', [KPICompanyController::class, 'editActivity'])->name('kpi.company.activity.edit');
         Route::post('/company/activity/update/{id}', [KPICompanyController::class, 'updateActivity'])->name('kpi.company.activity.update');
         Route::get('/company/activity/cancel/{id}', [KPICompanyController::class, 'cancelActivity'])->name('kpi.company.activity.cancel');

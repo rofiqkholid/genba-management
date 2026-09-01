@@ -536,6 +536,246 @@ class KPICompanyController extends Controller
         return view('kpi.detail-kpi-company.company-kpi-detail', compact('kpi', 'departments', 'activities', 'hasDeletePermission', 'components', 'formula'));
     }
 
+    /**
+     * Display the Manage Activity Plan page for a specific Company KPI record.
+     */
+    public function manageActivityPlan(string $id)
+    {
+        $dbId = self::decodeId($id);
+        if (!$dbId) {
+            abort(404, 'Invalid KPI Company ID.');
+        }
+
+        $kpi = DB::table('KPICompany as child')
+            ->leftJoin('KPIList as parent', 'child.kpi_list_id', '=', 'parent.id')
+            ->select('child.*', 'parent.objective', 'parent.pillar', 'parent.no_kpi', 'parent.target as target', 'parent.operator', 'parent.unit', 'parent.calculation_method', 'parent.arrow_target', 'parent.result')
+            ->where('child.id', $dbId)
+            ->first();
+
+        if (!$kpi) {
+            abort(404);
+        }
+
+        $kpi->hash_id = self::encodeId($kpi->id);
+
+        $formula = DB::table('KPIFormula')->where('kpi_list_id', $kpi->kpi_list_id)->first();
+        $components = [];
+        if ($formula) {
+            for ($i = 1; $i <= 20; $i++) {
+                $col = 'comp_' . $i;
+                if (!empty($formula->$col)) {
+                    $components[$i] = $formula->$col;
+                }
+            }
+        }
+
+        $departments = DB::table('GenbaDept')->orderBy('Key1', 'asc')->get();
+
+        $activityPlans = DB::table('kpi_activity_plans')
+            ->where('kpi_company_id', $dbId)
+            ->orderBy('id', 'asc')
+            ->get();
+
+        $hasDeletePermission = UserMenuPermission::canDelete(117);
+
+        return view('kpi.detail-kpi-company.manage-activity-plan', compact('kpi', 'departments', 'activityPlans', 'hasDeletePermission', 'components', 'formula'));
+    }
+
+    public function storeActivityPlan(Request $request)
+    {
+        $request->validate([
+            'kpi_company_id' => 'required',
+            'activity_plan' => 'required|string',
+        ]);
+
+        $dbId = self::decodeId($request->kpi_company_id);
+        if (!$dbId) {
+            return response()->json(['success' => false, 'message' => 'Invalid KPI Company ID'], 400);
+        }
+
+        $supportTopicArr = $request->input('support_topic', []);
+        $supportTopicStr = is_array($supportTopicArr) ? implode(', ', $supportTopicArr) : $supportTopicArr;
+
+        $supportingArr = $request->input('supporting', []);
+        $supportingStr = is_array($supportingArr) ? implode(', ', $supportingArr) : $supportingArr;
+
+        $startMonth = (int) $request->input('start_month', 1);
+        $endMonth = (int) $request->input('end_month', 1);
+
+        // Build active months checklist array
+        $monthsData = [];
+        for ($m = 1; $m <= 12; $m++) {
+            $monthsData[$m] = ($m >= $startMonth && $m <= $endMonth);
+        }
+
+        $id = $request->input('id');
+        $data = [
+            'kpi_company_id' => $dbId,
+            'support_topic' => $supportTopicStr,
+            'activity_plan' => $request->activity_plan,
+            'pic' => $request->pic,
+            'supporting' => $supportingStr,
+            'quick_plan' => $request->quick_plan,
+            'start_month' => $startMonth,
+            'end_month' => $endMonth,
+            'months_data' => json_encode($monthsData),
+            'remark' => $request->remark ?: 'Closed',
+            'updated_at' => Carbon::now()
+        ];
+
+        // Calculate success rate based on uploaded evidence vs active planned months
+        $plannedMonths = [];
+        for ($m = 1; $m <= 12; $m++) {
+            if (!empty($monthsData[$m]) || !empty($monthsData[(string)$m])) {
+                $plannedMonths[] = $m;
+            }
+        }
+        $plannedCount = count($plannedMonths);
+
+        $existingPlan = $id ? DB::table('kpi_activity_plans')->where('id', $id)->first() : null;
+        $evidences = ($existingPlan && is_string($existingPlan->evidences_data)) ? json_decode($existingPlan->evidences_data, true) : [];
+
+        $uploadedCount = 0;
+        foreach ($plannedMonths as $m) {
+            if ((isset($evidences[$m]) && !empty($evidences[$m])) || (isset($evidences[(string)$m]) && !empty($evidences[(string)$m]))) {
+                $uploadedCount++;
+            }
+        }
+
+        $data['success_rate'] = ($plannedCount > 0) ? min(100, round(($uploadedCount / $plannedCount) * 100)) : 0;
+
+        if ($id) {
+            DB::table('kpi_activity_plans')->where('id', $id)->update($data);
+        } else {
+            $data['status'] = 'On Progress';
+            $data['created_at'] = Carbon::now();
+            DB::table('kpi_activity_plans')->insert($data);
+        }
+
+        return response()->json(['success' => true, 'message' => 'Activity Plan saved successfully.']);
+    }
+
+    public function deleteActivityPlan(Request $request)
+    {
+        $id = $request->id;
+        if (!$id) {
+            return response()->json(['success' => false, 'message' => 'Invalid ID'], 400);
+        }
+
+        $plan = DB::table('kpi_activity_plans')->where('id', $id)->first();
+        if ($plan) {
+            // Delete associated physical files from uploads directory
+            $evidences = is_string($plan->evidences_data) ? json_decode($plan->evidences_data, true) : (array)($plan->evidences_data ?? []);
+            if (!empty($evidences)) {
+                foreach ($evidences as $filePath) {
+                    if (!empty($filePath)) {
+                        $fullPath = public_path($filePath);
+                        if (file_exists($fullPath)) {
+                            @unlink($fullPath);
+                        }
+                    }
+                }
+            }
+
+            DB::table('kpi_activity_plans')->where('id', $id)->delete();
+        }
+
+        return response()->json(['success' => true, 'message' => 'Activity Plan deleted successfully.']);
+    }
+
+    public function toggleRemark(Request $request)
+    {
+        $id = $request->input('id');
+        $plan = DB::table('kpi_activity_plans')->where('id', $id)->first();
+        if (!$plan) {
+            return response()->json(['success' => false, 'message' => 'Activity Plan not found.'], 404);
+        }
+
+        $newRemark = ($plan->remark === 'Open') ? 'Closed' : 'Open';
+        DB::table('kpi_activity_plans')->where('id', $id)->update([
+            'remark' => $newRemark,
+            'updated_at' => Carbon::now()
+        ]);
+
+        return response()->json(['success' => true, 'remark' => $newRemark]);
+    }
+
+    public function uploadEvidence(Request $request)
+    {
+        $request->validate([
+            'activity_plan_id' => 'required',
+            'month_num' => 'required|integer|min:1|max:12',
+            'evidence' => 'required|file|max:20480'
+        ]);
+
+        $id = $request->input('activity_plan_id');
+        $month = (int) $request->input('month_num');
+
+        $plan = DB::table('kpi_activity_plans')->where('id', $id)->first();
+        if (!$plan) {
+            return response()->json(['success' => false, 'message' => 'Activity Plan not found.'], 404);
+        }
+
+        if ($request->hasFile('evidence')) {
+            $evidences = is_string($plan->evidences_data) ? json_decode($plan->evidences_data, true) : (array)($plan->evidences_data ?? []);
+
+            // Delete old file if replacing for same month
+            if (isset($evidences[$month]) && !empty($evidences[$month])) {
+                $oldPath = public_path($evidences[$month]);
+                if (file_exists($oldPath)) {
+                    @unlink($oldPath);
+                }
+            }
+
+            $file = $request->file('evidence');
+            $fileName = time() . '_' . $month . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+            $file->move(public_path('kpi/activity-plans'), $fileName);
+            $filePath = 'kpi/activity-plans/' . $fileName;
+
+            $evidences[$month] = $filePath;
+
+            // Recalculate % Success Rate automatically based on uploaded evidence files vs planned active months
+            $monthsData = is_string($plan->months_data) ? json_decode($plan->months_data, true) : (array)($plan->months_data ?? []);
+            
+            $plannedMonths = [];
+            for ($m = 1; $m <= 12; $m++) {
+                $isPlanned = false;
+                if (!empty($monthsData)) {
+                    $isPlanned = !empty($monthsData[$m]) || !empty($monthsData[(string)$m]);
+                } else {
+                    $startM = (int)($plan->start_month ?? 1);
+                    $endM = (int)($plan->end_month ?? 1);
+                    $isPlanned = ($m >= $startM && $m <= $endM);
+                }
+
+                if ($isPlanned) {
+                    $plannedMonths[] = $m;
+                }
+            }
+
+            $plannedCount = count($plannedMonths);
+            $uploadedCount = 0;
+
+            foreach ($plannedMonths as $m) {
+                if ((isset($evidences[$m]) && !empty($evidences[$m])) || (isset($evidences[(string)$m]) && !empty($evidences[(string)$m]))) {
+                    $uploadedCount++;
+                }
+            }
+
+            $successRate = ($plannedCount > 0) ? min(100, round(($uploadedCount / $plannedCount) * 100)) : 0;
+
+            DB::table('kpi_activity_plans')->where('id', $id)->update([
+                'evidences_data' => json_encode($evidences),
+                'success_rate' => $successRate,
+                'updated_at' => Carbon::now()
+            ]);
+
+            return response()->json(['success' => true, 'message' => 'Evidence file uploaded successfully.', 'path' => asset($filePath)]);
+        }
+
+        return response()->json(['success' => false, 'message' => 'No file uploaded.'], 400);
+    }
+
     public function editActivity(string $id)
     {
         $dbId = self::decodeId($id);

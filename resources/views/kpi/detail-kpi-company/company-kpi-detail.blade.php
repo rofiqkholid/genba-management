@@ -11,6 +11,15 @@
         return (float)$clean;
     };
 
+    $unitSuffix = !empty($kpi->unit) ? ' ' . $kpi->unit : '';
+
+    $formatNumWithUnit = function($num) use ($parseLocalNum, $unitSuffix) {
+        if ($num === null || $num === '' || $num === '-') return $num;
+        $val = $parseLocalNum($num);
+        $formatted = (floor($val) == $val) ? number_format($val, 0, ',', '.') : number_format($val, 2, ',', '.');
+        return $formatted . $unitSuffix;
+    };
+
     $calculatedActuals = [];
     $monthsList = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     foreach ($monthsList as $m) {
@@ -168,7 +177,7 @@
                             <span class="text-sm font-semibold text-slate-700 block">{{ $kpi->pillar ?? '-' }} / {{ $kpi->department_code }}</span>
                         </div>
                         <div class="col-span-1 lg:flex-initial">
-                            <span class="text-slate-500 text-[10px] sm:text-xs tracking-wider block mb-1">Period / Target</span>
+                            <span class="text-slate-500 text-[10px] sm:text-xs tracking-wider block mb-1">Periode / Target</span>
                             <span class="text-sm font-semibold text-slate-700 block">{{ $kpi->periode }} / {{ $kpi->operator }} {{ $kpi->target }} {{ $kpi->unit }}</span>
                         </div>
                         <div class="col-span-1 lg:flex-initial">
@@ -282,17 +291,17 @@
                                 @endphp
                                 @foreach(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'] as $m)
                                     @php
-                                        $targetSum += (float) filter_var($kpi->target, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
+                                        $targetSum += $parseLocalNum($kpi->target);
                                     @endphp
                                     <td class="p-3 text-center border-r border-slate-200">
-                                        {{ is_numeric($kpi->target) ? (floor($kpi->target) == $kpi->target ? number_format($kpi->target, 0, ',', '.') : number_format($kpi->target, 2, ',', '.')) : $kpi->target }}
+                                        {{ $formatNumWithUnit($kpi->target) }}
                                     </td>
                                 @endforeach
                                 @php
-                                    $targetFinal = ($kpi->result === 'Average') ? ((float) filter_var($kpi->target, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION)) : $targetSum;
+                                    $targetFinal = ($kpi->result === 'Average') ? ($parseLocalNum($kpi->target)) : $targetSum;
                                 @endphp
                                 <td class="p-3 text-center">
-                                    {{ is_numeric($targetFinal) ? (floor($targetFinal) == $targetFinal ? number_format($targetFinal, 0, ',', '.') : number_format($targetFinal, 2, ',', '.')) : $targetFinal }}
+                                    {{ $formatNumWithUnit($targetFinal) }}
                                 </td>
                             </tr>
 
@@ -312,13 +321,13 @@
                                             @endphp
                                             @if($compVal !== null)
                                                 @php
-                                                    $val = (float) filter_var($compVal, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
+                                                    $val = $parseLocalNum($compVal);
                                                     $compSum += $val;
                                                     $hasComp = true;
                                                     $compCount++;
                                                 @endphp
                                                 <td class="p-3 text-center border-r border-slate-200 font-normal text-slate-700">
-                                                    {{ is_numeric($compVal) ? (floor($compVal) == $compVal ? number_format($compVal, 0, ',', '.') : number_format($compVal, 2, ',', '.')) : $compVal }}
+                                                    {{ $formatNumWithUnit($compVal) }}
                                                 </td>
                                             @else
                                                 <td class="p-3 text-center border-r border-slate-200 text-slate-300 select-none"></td>
@@ -328,7 +337,7 @@
                                             $compFinal = $hasComp ? (($kpi->result === 'Average') ? ($compCount > 0 ? ($compSum / $compCount) : 0) : $compSum) : '';
                                         @endphp
                                         <td class="p-3 text-center font-semibold text-slate-700">
-                                            {{ is_numeric($compFinal) ? (floor($compFinal) == $compFinal ? number_format($compFinal, 0, ',', '.') : number_format($compFinal, 2, ',', '.')) : $compFinal }}
+                                            {{ $compFinal !== '' ? $formatNumWithUnit($compFinal) : '' }}
                                         </td>
                                     </tr>
                                 @endforeach
@@ -346,21 +355,21 @@
                                         $act = $activities->firstWhere('bulan', $m);
                                         $valVal = $calculatedActuals[$m];
                                         if ($valVal !== null) {
-                                            $val = (float) filter_var($valVal, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
+                                            $val = $parseLocalNum($valVal);
                                             $actualSum += $val;
                                             $hasActual = true;
                                             $actualCount++;
                                         }
                                     @endphp
                                     <td class="p-3 text-center border-r border-slate-200">
-                                        {{ $valVal !== null ? (is_numeric($valVal) ? (floor($valVal) == $valVal ? number_format($valVal, 0, ',', '.') : number_format($valVal, 2, ',', '.')) : $valVal) : (empty($components) ? '-' : '') }}
+                                        {{ $valVal !== null ? $formatNumWithUnit($valVal) : (empty($components) ? '-' : '') }}
                                     </td>
                                 @endforeach
                                 @php
                                     $actualFinal = $hasActual ? (($kpi->result === 'Average') ? ($actualCount > 0 ? ($actualSum / $actualCount) : 0) : $actualSum) : '-';
                                 @endphp
                                 <td class="p-3 text-center">
-                                    {{ is_numeric($actualFinal) ? (floor($actualFinal) == $actualFinal ? number_format($actualFinal, 0, ',', '.') : number_format($actualFinal, 2, ',', '.')) : $actualFinal }}
+                                    {{ $actualFinal !== '-' ? $formatNumWithUnit($actualFinal) : '-' }}
                                 </td>
                             </tr>
                             @if(empty($components))

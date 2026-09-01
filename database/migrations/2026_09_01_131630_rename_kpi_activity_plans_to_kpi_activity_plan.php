@@ -13,9 +13,7 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::table('KPIActivityPlan', function (Blueprint $table) {
-            $table->text('evidences_data')->nullable()->after('months_data');
-        });
+        Schema::rename('kpi_activity_plans', 'KPIActivityPlan');
     }
 
     /**
@@ -25,8 +23,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::table('KPIActivityPlan', function (Blueprint $table) {
-            $table->dropColumn('evidences_data');
-        });
+        Schema::rename('KPIActivityPlan', 'kpi_activity_plans');
     }
 };

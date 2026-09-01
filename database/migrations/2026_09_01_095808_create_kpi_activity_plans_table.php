@@ -13,7 +13,7 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('kpi_activity_plans', function (Blueprint $table) {
+        Schema::create('KPIActivityPlan', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('kpi_company_id');
             $table->text('support_topic')->nullable();
@@ -40,6 +40,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('kpi_activity_plans');
+        Schema::dropIfExists('KPIActivityPlan');
     }
 };

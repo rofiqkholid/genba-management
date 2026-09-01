@@ -571,7 +571,7 @@ class KPICompanyController extends Controller
 
         $departments = DB::table('GenbaDept')->orderBy('Key1', 'asc')->get();
 
-        $activityPlans = DB::table('kpi_activity_plans')
+        $activityPlans = DB::table('KPIActivityPlan')
             ->where('kpi_company_id', $dbId)
             ->orderBy('id', 'asc')
             ->get();
@@ -632,7 +632,7 @@ class KPICompanyController extends Controller
         }
         $plannedCount = count($plannedMonths);
 
-        $existingPlan = $id ? DB::table('kpi_activity_plans')->where('id', $id)->first() : null;
+        $existingPlan = $id ? DB::table('KPIActivityPlan')->where('id', $id)->first() : null;
         $evidences = ($existingPlan && is_string($existingPlan->evidences_data)) ? json_decode($existingPlan->evidences_data, true) : [];
 
         $uploadedCount = 0;
@@ -645,11 +645,11 @@ class KPICompanyController extends Controller
         $data['success_rate'] = ($plannedCount > 0) ? min(100, round(($uploadedCount / $plannedCount) * 100)) : 0;
 
         if ($id) {
-            DB::table('kpi_activity_plans')->where('id', $id)->update($data);
+            DB::table('KPIActivityPlan')->where('id', $id)->update($data);
         } else {
             $data['status'] = 'On Progress';
             $data['created_at'] = Carbon::now();
-            DB::table('kpi_activity_plans')->insert($data);
+            DB::table('KPIActivityPlan')->insert($data);
         }
 
         return response()->json(['success' => true, 'message' => 'Activity Plan saved successfully.']);
@@ -662,7 +662,7 @@ class KPICompanyController extends Controller
             return response()->json(['success' => false, 'message' => 'Invalid ID'], 400);
         }
 
-        $plan = DB::table('kpi_activity_plans')->where('id', $id)->first();
+        $plan = DB::table('KPIActivityPlan')->where('id', $id)->first();
         if ($plan) {
             // Delete associated physical files from uploads directory
             $evidences = is_string($plan->evidences_data) ? json_decode($plan->evidences_data, true) : (array)($plan->evidences_data ?? []);
@@ -677,7 +677,7 @@ class KPICompanyController extends Controller
                 }
             }
 
-            DB::table('kpi_activity_plans')->where('id', $id)->delete();
+            DB::table('KPIActivityPlan')->where('id', $id)->delete();
         }
 
         return response()->json(['success' => true, 'message' => 'Activity Plan deleted successfully.']);
@@ -686,13 +686,13 @@ class KPICompanyController extends Controller
     public function toggleRemark(Request $request)
     {
         $id = $request->input('id');
-        $plan = DB::table('kpi_activity_plans')->where('id', $id)->first();
+        $plan = DB::table('KPIActivityPlan')->where('id', $id)->first();
         if (!$plan) {
             return response()->json(['success' => false, 'message' => 'Activity Plan not found.'], 404);
         }
 
         $newRemark = ($plan->remark === 'Open') ? 'Closed' : 'Open';
-        DB::table('kpi_activity_plans')->where('id', $id)->update([
+        DB::table('KPIActivityPlan')->where('id', $id)->update([
             'remark' => $newRemark,
             'updated_at' => Carbon::now()
         ]);
@@ -711,7 +711,7 @@ class KPICompanyController extends Controller
         $id = $request->input('activity_plan_id');
         $month = (int) $request->input('month_num');
 
-        $plan = DB::table('kpi_activity_plans')->where('id', $id)->first();
+        $plan = DB::table('KPIActivityPlan')->where('id', $id)->first();
         if (!$plan) {
             return response()->json(['success' => false, 'message' => 'Activity Plan not found.'], 404);
         }
@@ -764,7 +764,7 @@ class KPICompanyController extends Controller
 
             $successRate = ($plannedCount > 0) ? min(100, round(($uploadedCount / $plannedCount) * 100)) : 0;
 
-            DB::table('kpi_activity_plans')->where('id', $id)->update([
+            DB::table('KPIActivityPlan')->where('id', $id)->update([
                 'evidences_data' => json_encode($evidences),
                 'success_rate' => $successRate,
                 'updated_at' => Carbon::now()

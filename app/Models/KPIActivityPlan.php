@@ -14,7 +14,7 @@ class KPIActivityPlan extends Model
      *
      * @var string
      */
-    protected $table = 'kpi_activity_plans';
+    protected $table = 'KPIActivityPlan';
 
     /**
      * The attributes that are mass assignable.

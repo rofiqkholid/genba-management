@@ -11,7 +11,9 @@
         return (float)$clean;
     };
 
-    $unitSuffix = !empty($kpi->unit) ? ' ' . $kpi->unit : '';
+    $unitVal = trim($kpi->unit ?? '');
+    $isNumberUnit = in_array(strtolower($unitVal), ['number', 'num']);
+    $unitSuffix = (!empty($unitVal) && !$isNumberUnit) ? ' ' . $unitVal : '';
 
     $formatNumWithUnit = function($num) use ($parseLocalNum, $unitSuffix) {
         if ($num === null || $num === '' || $num === '-') return $num;

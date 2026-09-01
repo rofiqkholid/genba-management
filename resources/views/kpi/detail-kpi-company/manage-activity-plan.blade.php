@@ -229,7 +229,7 @@
                     <div>
                         <label class="block text-sm font-semibold text-slate-700 mb-2">Support Topic</label>
                         <div class="flex flex-wrap items-center gap-5 text-sm font-medium text-slate-700">
-                            @foreach(['Quality', 'Cost', 'Delivery', 'Management', 'Safety'] as $topic)
+                            @foreach(['Safety', 'Quality', 'People', 'Cost', 'Responsiveness', 'Delivery', 'Environment & Energy'] as $topic)
                             <label class="relative inline-flex items-center gap-2 cursor-pointer select-none">
                                 <input type="checkbox" name="support_topic[]" value="{{ $topic }}" class="sr-only peer">
                                 <div class="w-5 h-5 rounded-md border border-slate-300 flex items-center justify-center peer-checked:border-sky-400 peer-checked:bg-sky-50 peer-checked:[&_svg]:scale-100 transition-all shrink-0">

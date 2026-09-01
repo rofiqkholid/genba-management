@@ -580,7 +580,9 @@
             const targetVal = parseFloat('{{ filter_var($activity->master_target, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION) }}') || 0;
             const calcOperator = '{{ $activity->calc_operator ?: ($formula->calc_operator ?? "") }}';
             const bulan = '{{ $activity->bulan }}';
-            const unitStr = '{{ $activity->unit ?? "" }}';
+            const rawUnit = '{{ $activity->unit ?? "" }}'.trim();
+            const isNumberUnit = ['number', 'num'].includes(rawUnit.toLowerCase());
+            const unitStr = isNumberUnit ? '' : rawUnit;
 
             let actualVal = 0;
             let hasActual = false;

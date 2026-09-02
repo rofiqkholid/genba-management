@@ -287,7 +287,9 @@
                         </thead>
                         <tbody>
                             <tr class="bg-slate-50 border-b border-slate-200 font-bold text-slate-800">
-                                <td class="p-3 border-r border-slate-200 whitespace-nowrap">Target ({{ $kpi->unit }})</td>
+                                <td class="p-3 border-r border-slate-200 whitespace-nowrap">
+                                    Target <span class="text-slate-500 font-medium">({{ $kpi->unit }}) {{ $kpi->operator }} {{ $kpi->target }}</span>
+                                </td>
                                 @php
                                     $targetSum = 0;
                                 @endphp
@@ -363,9 +365,29 @@
                                             $actualCount++;
                                         }
                                     @endphp
-                                    <td class="p-3 text-center border-r border-slate-200">
-                                        {{ $valVal !== null ? $formatNumWithUnit($valVal) : (empty($components) ? '-' : '') }}
-                                    </td>
+                                     <td class="p-3 text-center border-r border-slate-200">
+                                         @if($act)
+                                             @php
+                                                 $hasInput = ($valVal !== null && $valVal !== '');
+                                                 $editRoute = route('kpi.company.activity.edit', $act->hash_id);
+                                                 $deleteRoute = route('kpi.company.activity.cancel', $act->hash_id);
+                                             @endphp
+                                             @if($hasInput)
+                                                 <button type="button" 
+                                                     onclick="openActionModal('{{ $act->bulan }}', '{{ $editRoute }}', '{{ $deleteRoute }}')"
+                                                     class="inline-block text-slate-700 hover:text-slate-900 font-bold transition-colors" 
+                                                     title="Actual {{ $m }}">
+                                                     {{ $formatNumWithUnit($valVal) }}
+                                                 </button>
+                                             @else
+                                                 <a href="{{ $editRoute }}" class="inline-block w-full h-full min-h-[24px] cursor-pointer hover:bg-slate-100/50 transition-colors" title="Input Actual {{ $m }}">
+                                                     &nbsp;
+                                                 </a>
+                                             @endif
+                                         @else
+                                             {{ $valVal !== null ? $formatNumWithUnit($valVal) : (empty($components) ? '-' : '') }}
+                                         @endif
+                                     </td>
                                 @endforeach
                                 @php
                                     $actualFinal = $hasActual ? (($kpi->result === 'Average') ? ($actualCount > 0 ? ($actualSum / $actualCount) : 0) : $actualSum) : '-';
@@ -374,32 +396,32 @@
                                     {{ $actualFinal !== '-' ? $formatNumWithUnit($actualFinal) : '-' }}
                                 </td>
                             </tr>
-                            @if(empty($components))
-                            <tr>
-                                <td class="p-3 font-semibold border-r border-slate-200 whitespace-nowrap">Status</td>
-                                @foreach(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'] as $m)
-                                    @php
-                                        $act = $activities->firstWhere('bulan', $m);
-                                    @endphp
-                                    @if($act && $act->actual !== null)
-                                        <td class="p-3 text-center border-r border-slate-200">
-                                            @if($act->status === 'Achieved')
-                                                <div class="inline-flex w-8 h-8 rounded-lg items-center justify-center bg-green-50 border border-slate-100 text-green-500" title="Achieved">
-                                                    <i class="fas fa-circle text-[16px]"></i>
-                                                </div>
-                                            @else
-                                                <div class="inline-flex w-8 h-8 rounded-lg items-center justify-center bg-red-50 border border-slate-100 text-red-500" title="Not Achieved">
-                                                    <i class="fas fa-times text-xs font-bold"></i>
-                                                </div>
-                                            @endif
-                                        </td>
-                                    @else
-                                        <td class="p-3 text-center text-slate-400 border-r border-slate-200">-</td>
-                                    @endif
-                                @endforeach
-                                <td class="p-3 text-center">-</td>
-                            </tr>
-                            @endif
+                            <tr class="border-b border-slate-200">
+                                 <td class="p-3 font-semibold border-r border-slate-200 whitespace-nowrap">Status</td>
+                                 @foreach(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'] as $m)
+                                     @php
+                                         $act = $activities->firstWhere('bulan', $m);
+                                         $valVal = $calculatedActuals[$m];
+                                         $hasActVal = ($act && $valVal !== null && $valVal !== '');
+                                     @endphp
+                                     @if($hasActVal)
+                                         <td class="p-3 text-center border-r border-slate-200">
+                                             @if($act->status === 'Achieved')
+                                                 <div class="inline-flex w-7 h-7 rounded-full items-center justify-center bg-green-100 text-green-600" title="Achieved">
+                                                     <i class="fas fa-circle text-[12px]"></i>
+                                                 </div>
+                                             @else
+                                                 <div class="inline-flex w-7 h-7 rounded-full items-center justify-center bg-red-100 text-red-600" title="Not Achieved">
+                                                     <i class="fas fa-circle text-[12px]"></i>
+                                                 </div>
+                                             @endif
+                                         </td>
+                                     @else
+                                         <td class="p-3 text-center text-slate-400 border-r border-slate-200"></td>
+                                     @endif
+                                 @endforeach
+                                 <td class="p-3 text-center"></td>
+                             </tr>
                         </tbody>
                     </table>
                 </div>
@@ -408,142 +430,33 @@
             </div>
             </div>
 
-            <!-- Monthly Performance Detail Card -->
-            <div id="activity-section" class="bg-white rounded-2xl border border-slate-200 p-6 space-y-6">
-                <!-- Title Header -->
-                <div class="flex items-center justify-between">
-                    <h3 class="text-lg font-bold text-slate-700">KPI Company Activity</h3>
-                </div>
 
-                <!-- Data Table -->
-                <div class="overflow-x-auto border border-slate-200 rounded-xl">
-                    <table class="w-full text-sm text-left text-slate-700">
-                        <thead class="bg-slate-50 text-slate-700 font-semibold border-b border-slate-200">
-                            <tr>
-                                <th class="p-3 whitespace-nowrap">Tahun</th>
-                                <th class="p-3 whitespace-nowrap">Bulan</th>
-                                <th class="p-3">Target</th>
-                                <th class="p-3">Actual</th>
-                                <th class="p-3">Status</th>
-                                <th class="p-3">Problem Solve</th>
-                                <th class="p-3 text-right pr-6">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-100">
-                            @foreach($activities as $activity)
-                                <tr class="odd:bg-white even:bg-slate-100/70 hover:bg-slate-50 transition-colors">
-                                    <!-- Tahun -->
-                                    <td class="p-3 font-medium text-slate-700 whitespace-nowrap">
-                                        {{ $activity->tahun }}
-                                    </td>
-
-                                    <!-- Bulan -->
-                                    <td class="p-3 font-medium text-slate-700 whitespace-nowrap">
-                                        {{ $activity->bulan }}
-                                    </td>
-
-                                    <!-- Target -->
-                                    <td class="p-3 text-slate-600">
-                                        {{ $kpi->operator }} {{ $kpi->target }} {{ $kpi->unit }}
-                                    </td>
-
-                                    <td class="p-3 text-slate-600">
-                                        @php
-                                            $dispAct = $calculatedActuals[$activity->bulan];
-                                        @endphp
-                                        {{ $dispAct !== null ? (is_numeric($dispAct) ? round($dispAct, 2) : $dispAct) : '' }}
-                                    </td>
-
-                                    <!-- Status -->
-                                    <td class="p-3">
-                                        @if($activity->status == 'Achieved')
-                                            <span class="inline-flex items-center px-2 py-0.5 rounded-none text-xs font-semibold bg-green-50 text-green-700 border border-green-200">
-                                                Achieved
-                                            </span>
-                                        @elseif($activity->status == 'Not Achieved')
-                                            <span class="inline-flex items-center px-2 py-0.5 rounded-none text-xs font-semibold bg-red-50 text-red-700 border border-red-200">
-                                                Not achieved
-                                            </span>
-                                        @else
-                                            @php
-                                                $hasInputData = false;
-                                                if (!empty($components)) {
-                                                    for ($i = 1; $i <= 20; $i++) {
-                                                        $colName = 'comp_' . $i;
-                                                        if (isset($activity->$colName) && $activity->$colName !== null && $activity->$colName !== '') {
-                                                            $hasInputData = true;
-                                                            break;
-                                                        }
-                                                    }
-                                                } else {
-                                                    if ($activity->actual !== null && $activity->actual !== '') {
-                                                        $hasInputData = true;
-                                                    }
-                                                }
-                                            @endphp
-                                            @if($hasInputData)
-                                                <span class="inline-flex items-center px-2 py-0.5 rounded-none text-xs font-semibold bg-slate-50 text-slate-500 border border-slate-200">
-                                                    Not filled
-                                                </span>
-                                            @endif
-                                        @endif
-                                    </td>
-
-                                    <!-- Problem Solve -->
-                                    <td class="p-3">
-                                        @if($activity->status === 'Not Achieved' && $activity->problem)
-                                            <a href="{{ route('kpi.company.activity.edit', $activity->hash_id) }}?mode=view"
-                                                class="inline-flex w-10 h-10 items-center justify-center rounded-none bg-blue-100 text-blue-500 hover:bg-blue-200 hover:text-blue-600 transition-colors" title="Preview Problem Solving">
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
-                                                    <path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1S9.6 1.84 9.18 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2zm-7-.25a.75.75 0 1 1 0 1.5.75.75 0 0 1 0-1.5zM10.25 17l-3.5-3.5 1.41-1.41 2.09 2.08 5.59-5.59 1.41 1.41-7 7z"/>
-                                                </svg>
-                                            </a>
-                                        @elseif($activity->status === 'Not Achieved' && !$activity->problem)
-                                            <span class="inline-flex items-center px-2 py-0.5 rounded-none text-xs font-semibold bg-red-50 text-red-600 border border-red-200">
-                                                Belum diisi
-                                            </span>
-                                        @elseif($activity->problem_solve)
-                                            <span class="inline-flex items-center px-2 py-0.5 rounded-none text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
-                                                Corrective action
-                                            </span>
-                                        @else
-                                        @endif
-                                    </td>
-
-                                    <!-- Actions -->
-                                    <td class="p-3 text-right pr-6">
-                                        <div class="flex items-center justify-end gap-2">
-                                            <!-- Edit Button -->
-                                            <a href="{{ route('kpi.company.activity.edit', $activity->hash_id) }}" class="w-10 h-10 flex items-center justify-center rounded-xl bg-blue-50 text-blue-500 hover:bg-blue-100 hover:text-blue-600 transition-all duration-200" title="Edit">
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-blue-500" viewBox="0 0 24 24" fill="none">
-                                                    <path opacity="0.3" d="M10 4H21C21.6 4 22 4.4 22 5V7H10V4Z" fill="currentColor"></path>
-                                                    <path opacity="0.3" d="M10.3 15.3L11 14.6L8.70002 12.3C8.30002 11.9 7.7 11.9 7.3 12.3C6.9 12.7 6.9 13.3 7.3 13.7L10.3 16.7C9.9 16.3 9.9 15.7 10.3 15.3Z" fill="currentColor"></path>
-                                                    <path d="M10.4 3.60001L12 6H21C21.6 6 22 6.4 22 7V19C22 19.6 21.6 20 21 20H3C2.4 20 2 19.6 2 19V4C2 3.4 2.4 3 3 3H9.20001C9.70001 3 10.2 3.20001 10.4 3.60001ZM11.7 16.7L16.7 11.7C17.1 11.3 17.1 10.7 16.7 10.3C16.3 9.89999 15.7 9.89999 15.3 10.3L11 14.6L8.70001 12.3C8.30001 11.9 7.69999 11.9 7.29999 12.3C6.89999 12.7 6.89999 13.3 7.29999 13.7L10.3 16.7C10.5 16.9 10.8 17 11 17C11.2 17 11.5 16.9 11.7 16.7Z" fill="currentColor"></path>
-                                                </svg>
-                                            </a>
-                                            @if($hasDeletePermission)
-                                            <button type="button" 
-                                                data-route="{{ route('kpi.company.activity.cancel', $activity->hash_id) }}"
-                                                onclick="openDeleteModal(this)"
-                                                class="w-10 h-10 flex items-center justify-center rounded-xl bg-red-50 text-red-500 hover:bg-red-100 hover:text-red-600 transition-all duration-200" title="Delete">
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-red-600" viewBox="0 0 24 24" fill="none">
-                                                    <path opacity="0.3" d="M5 9C5 8.44772 5.44772 8 6 8H18C18.5523 8 19 8.44772 19 9V18C19 19.6569 17.6569 21 16 21H8C6.34315 21 5 19.6569 5 18V9Z" fill="currentColor"/>
-                                                    <path d="M5 5C5 4.44772 5.44772 4 6 4H18C18.5523 4 19 4.44772 19 5V7H5V5Z" fill="currentColor"/>
-                                                    <path d="M9 4C9 3.44772 9.44772 3 10 3H14C14.5523 3 15 3.44772 15 4V4H9V4Z" fill="currentColor"/>
-                                                </svg>
-                                            </button>
-                                            @endif
-                                        </div>
-                                    </td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-            </div>
         </div>
     </main>
     @include('layouts.footer')
+</div>
+
+<!-- Action Options Modal (Edit or Clear/Delete) -->
+<div id="actionModal" class="fixed inset-0 z-[1000] hidden">
+    <div class="fixed inset-0 bg-slate-900/50 transition-opacity" onclick="closeActionModal()"></div>
+    <div class="fixed inset-0 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl w-full max-w-md transform transition-all shadow-2xl">
+            <div class="p-8 text-center">
+                <div class="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-5">
+                    <svg class="w-10 h-10 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                </div>
+                <h3 class="text-xl font-bold text-slate-800 mb-3" id="actionModalTitle">Data Actual</h3>
+                <p class="text-base text-slate-500 mb-8">Pilih aksi untuk data bulan ini. Anda dapat mengedit data atau menghapus/meresetnya.</p>
+                <div class="flex gap-3 justify-center">
+                    <button type="button" onclick="closeActionModal()" class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium rounded-xl transition-colors text-base min-w-[90px]">Cancel</button>
+                    <a id="actionModalEditBtn" href="#" class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl transition-colors text-base inline-flex items-center justify-center min-w-[100px]">Edit</a>
+                    <button type="button" onclick="triggerDeleteFromActionModal()" class="px-6 py-2.5 bg-red-600 hover:bg-red-700 text-white font-medium rounded-xl transition-colors text-base min-w-[100px]">Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- Delete Confirmation Modal -->
@@ -953,6 +866,25 @@
     renderKPIChart();
     let deleteUrl = null;
     let deleteCallback = null;
+    let currentPendingDeleteUrl = null;
+
+    function openActionModal(month, editUrl, deleteUrlTarget) {
+        document.getElementById('actionModalTitle').textContent = 'Pilih Aksi Bulan ' + month;
+        document.getElementById('actionModalEditBtn').setAttribute('href', editUrl);
+        currentPendingDeleteUrl = deleteUrlTarget;
+        document.getElementById('actionModal').classList.remove('hidden');
+    }
+
+    function closeActionModal() {
+        currentPendingDeleteUrl = null;
+        document.getElementById('actionModal').classList.add('hidden');
+    }
+
+    function triggerDeleteFromActionModal() {
+        const routeUrl = currentPendingDeleteUrl;
+        closeActionModal();
+        openDeleteModal({ dataset: { route: routeUrl } });
+    }
 
     function openDeleteModal(el, callback = null, customText = null) {
         if (customText) {

@@ -51,9 +51,7 @@
             
             <!-- Table Container -->
             <div class="overflow-x-auto border border-slate-200 rounded-xl">
-                <table class="w-full text-xs text-center border-collapse">
-                    <thead>
-                        <!-- Row 1 Header -->
+                <table class="w-full text-sm text-center border-collapse">
                     <thead>
                         <!-- Row 1 Header -->
                         <tr class="bg-slate-100 text-slate-700 font-bold">
@@ -72,7 +70,7 @@
                             <th rowspan="2" class="p-3 whitespace-nowrap min-w-[90px] border border-slate-200">Action</th>
                         </tr>
                         <!-- Row 2 Header (Months) -->
-                        <tr class="bg-slate-100 text-slate-700 text-[11px] font-normal">
+                        <tr class="bg-slate-100 text-slate-700 text-xs font-normal">
                             <th class="py-2 px-2 min-w-[36px] border border-slate-200 font-normal">Jan</th>
                             <th class="py-2 px-2 min-w-[36px] border border-slate-200 font-normal">Feb</th>
                             <th class="py-2 px-2 min-w-[36px] border border-slate-200 font-normal">Mar</th>
@@ -136,13 +134,14 @@
                                 </td>
                                 <td rowspan="2" class="p-3 text-center align-middle border border-slate-200">
                                     @php
-                                        $remarkVal = $plan->remark ?: 'Closed';
+                                        $rateVal = (float) ($plan->success_rate ?? 0);
+                                        $remarkVal = ($rateVal >= 100) ? 'Closed' : 'Open';
                                         $isClosed = ($remarkVal === 'Closed');
-                                        $remarkBg = $isClosed ? 'bg-emerald-500 text-white hover:bg-emerald-600' : 'bg-amber-400 text-slate-900 hover:bg-amber-500';
+                                        $remarkBg = $isClosed ? 'bg-emerald-500 text-white' : 'bg-amber-400 text-slate-900';
                                     @endphp
-                                    <button type="button" class="btn-toggle-remark px-3 py-1 text-xs font-bold rounded-none cursor-pointer select-none transition-all outline-none focus:outline-none focus:ring-0 {{ $remarkBg }}" data-id="{{ $plan->id }}" data-remark="{{ $remarkVal }}">
+                                    <span class="inline-block px-3 py-1 text-xs font-bold rounded-none select-none {{ $remarkBg }}">
                                         {{ $remarkVal }}
-                                    </button>
+                                    </span>
                                 </td>
                                 <td rowspan="2" class="p-3 align-middle border border-slate-200">
                                     <div class="flex items-center justify-center gap-1.5">

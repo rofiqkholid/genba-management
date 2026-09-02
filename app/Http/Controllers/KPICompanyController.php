@@ -105,8 +105,14 @@ class KPICompanyController extends Controller
             ->select('child.*', 'parent.objective', 'parent.pillar', 'parent.no_kpi', 'parent.target as target', 'parent.operator as operator', 'parent.unit as unit', 'parent.calculation_method as calculation_method')
             ->orderBy('child.id', 'desc');
 
-        if (!empty($userDept) && !in_array($userDept, ['ICT', 'QMS'])) {
+        if (in_array($userDept, ['ICT', 'QMS'])) {
+            // ICT / QMS can see all departments
+        } elseif (!empty($userDept)) {
+            // Regular user with department assigned
             $query->where('child.department_code', $userDept);
+        } else {
+            // User has no department assigned -> return no data
+            $query->whereRaw('1 = 0');
         }
 
         // Apply filters
@@ -137,8 +143,12 @@ class KPICompanyController extends Controller
         }
 
         $totalQuery = DB::table('KPICompany');
-        if (!empty($userDept) && !in_array($userDept, ['ICT', 'QMS'])) {
+        if (in_array($userDept, ['ICT', 'QMS'])) {
+            // ICT / QMS
+        } elseif (!empty($userDept)) {
             $totalQuery->where('department_code', $userDept);
+        } else {
+            $totalQuery->whereRaw('1 = 0');
         }
         $totalRecords = $totalQuery->count();
         $filteredRecords = $query->count();
@@ -642,7 +652,9 @@ class KPICompanyController extends Controller
             }
         }
 
-        $data['success_rate'] = ($plannedCount > 0) ? min(100, round(($uploadedCount / $plannedCount) * 100)) : 0;
+        $calculatedRate = ($plannedCount > 0) ? min(100, round(($uploadedCount / $plannedCount) * 100)) : 0;
+        $data['success_rate'] = $calculatedRate;
+        $data['remark'] = ($calculatedRate >= 100) ? 'Closed' : 'Open';
 
         if ($id) {
             DB::table('KPIActivityPlan')->where('id', $id)->update($data);
@@ -763,10 +775,12 @@ class KPICompanyController extends Controller
             }
 
             $successRate = ($plannedCount > 0) ? min(100, round(($uploadedCount / $plannedCount) * 100)) : 0;
+            $remark = ($successRate >= 100) ? 'Closed' : 'Open';
 
             DB::table('KPIActivityPlan')->where('id', $id)->update([
                 'evidences_data' => json_encode($evidences),
                 'success_rate' => $successRate,
+                'remark' => $remark,
                 'updated_at' => Carbon::now()
             ]);
 

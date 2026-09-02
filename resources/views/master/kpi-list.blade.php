@@ -596,77 +596,79 @@
                 @csrf
                 <input type="hidden" name="kpi_list_id" id="formula_kpi_list_id">
 
-                <div class="p-6 space-y-4 overflow-y-auto flex-1 min-h-0">
-                    <!-- 20 Varchar Input Fields -->
-                    <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1.5 font-semibold">Value Inputs (20 Columns)</label>
-                        <div class="grid grid-cols-5 gap-2 transition-all">
-                            @for($i = 1; $i <= 20; $i++)
-                                <div class="relative">
-                                    <input type="text" name="comp_{{ $i }}" x-model="vals[{{ $i - 1 }}]" :readonly="isLocked" 
-                                        :class="isLocked 
-                                            ? (vals[{{ $i - 1 }}] && vals[{{ $i - 1 }}].trim() 
-                                                ? 'bg-white text-slate-800 cursor-pointer font-semibold hover:bg-slate-50 focus:outline-none focus:ring-0' 
-                                                : 'bg-slate-100/40 text-slate-300 cursor-not-allowed border-slate-200 opacity-40 focus:outline-none focus:ring-0 focus:border-slate-200')
-                                            : 'bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500'" 
-                                        placeholder="Comp {{ $i }}" class="w-full px-3 py-3.5 border border-slate-200 rounded-xl text-center text-sm outline-none font-medium transition-all"
-                                        @click="if (isLocked && vals[{{ $i - 1 }}] && vals[{{ $i - 1 }}].trim()) appendToken('comp_{{ $i }}')">
-                                </div>
-                            @endfor
-                        </div>
-                    </div>
-
-                    <!-- Notice & Lock Button Row -->
-                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                        <!-- Left: Info Notice (shown only when locked) -->
-                        <div x-show="isLocked" class="text-xs text-blue-700 font-semibold bg-white border border-blue-200 rounded-xl p-3 flex items-start gap-2.5 flex-1">
-                            <i class="fa-solid fa-circle-info text-sm mt-0.5 text-blue-500"></i>
-                            <div>
-                                <span class="font-bold">Locked Mode Active:</span>
-                                <span class="font-normal text-slate-600">Click on the Component boxes above to insert them into the formula.</span>
-                            </div>
-                        </div>
-                        <div x-show="!isLocked" class="flex-1"></div> <!-- Spacer when unlocked -->
-
-                        <!-- Right: Lock Button -->
-                        <div class="shrink-0 flex justify-end">
-                            <button type="button" @click="isLocked = !isLocked" class="px-5 py-2.5 rounded-xl text-sm font-semibold transition-all flex items-center gap-2 border shadow-sm"
-                                :class="isLocked 
-                                    ? 'bg-blue-600 border-blue-600 text-white hover:bg-blue-700 hover:border-blue-700' 
-                                    : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'">
-                                <span x-show="isLocked" class="flex items-center gap-2">
-                                    <i class="fa-solid fa-lock"></i> Unlock Component
-                                </span>
-                                <span x-show="!isLocked" class="flex items-center gap-2">
-                                    <i class="fa-solid fa-lock-open"></i> Lock Component
-                                </span>
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Formula Editor Section (shown when locked) -->
-                    <div x-show="isLocked" class="bg-white p-6 rounded-2xl border border-slate-200 space-y-4">
+                <div class="p-6 overflow-y-auto flex-1 min-h-0">
+                    <div class="bg-white rounded-2xl border border-slate-200 p-6 space-y-6">
+                        <!-- 20 Varchar Input Fields -->
                         <div>
-                            <label class="block text-sm font-bold text-slate-700 mb-2">Formula Editor</label>
-                            <div class="flex gap-3 items-stretch">
-                                <textarea id="custom_formula_input" name="calc_operator" x-model="calcOperator" rows="2" class="flex-1 rounded-xl border border-slate-200 p-3.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-slate-50/50 font-medium placeholder-slate-400" placeholder="Click active components above or use the calculator buttons below to build your formula. E.g. [comp_2] + [comp_3]"></textarea>
-                                <button type="button" @click="calcOperator = ''" class="px-5 bg-white hover:bg-red-50 hover:text-red-600 hover:border-red-200 text-slate-500 border border-slate-200 rounded-xl text-sm font-semibold transition-all shrink-0 flex items-center justify-center">Clear</button>
+                            <label class="block text-base font-bold text-slate-800 mb-2.5">Value Inputs (20 Columns)</label>
+                            <div class="grid grid-cols-5 gap-2.5 transition-all">
+                                @for($i = 1; $i <= 20; $i++)
+                                    <div class="relative">
+                                        <input type="text" name="comp_{{ $i }}" x-model="vals[{{ $i - 1 }}]" :readonly="isLocked" 
+                                            :class="isLocked 
+                                                ? (vals[{{ $i - 1 }}] && vals[{{ $i - 1 }}].trim() 
+                                                    ? 'bg-white text-slate-800 cursor-pointer font-semibold hover:bg-slate-50 focus:outline-none focus:ring-0 border-slate-200' 
+                                                    : 'bg-slate-50 text-slate-300 cursor-not-allowed border-slate-100 opacity-40 focus:outline-none focus:ring-0')
+                                                : 'bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500'" 
+                                            placeholder="Comp {{ $i }}" class="w-full px-3 py-3 border border-slate-200 rounded-xl text-center text-sm outline-none font-medium transition-all"
+                                            @click="if (isLocked && vals[{{ $i - 1 }}] && vals[{{ $i - 1 }}].trim()) appendToken('comp_{{ $i }}')">
+                                    </div>
+                                @endfor
                             </div>
                         </div>
 
-                        <!-- Calculator buttons -->
-                        <div class="flex flex-wrap gap-2.5 items-center">
-                            <button type="button" @click="calcOperator += ' + '" class="w-12 h-12 flex items-center justify-center bg-slate-50 hover:bg-blue-600 hover:text-white hover:border-blue-600 border border-slate-200 text-slate-700 rounded-xl text-lg font-bold transition-all duration-150 shadow-sm">+</button>
-                            <button type="button" @click="calcOperator += ' - '" class="w-12 h-12 flex items-center justify-center bg-slate-50 hover:bg-blue-600 hover:text-white hover:border-blue-600 border border-slate-200 text-slate-700 rounded-xl text-lg font-bold transition-all duration-150 shadow-sm">-</button>
-                            <button type="button" @click="calcOperator += ' * '" class="w-12 h-12 flex items-center justify-center bg-slate-50 hover:bg-blue-600 hover:text-white hover:border-blue-600 border border-slate-200 text-slate-700 rounded-xl text-lg font-bold transition-all duration-150 shadow-sm">*</button>
-                            <button type="button" @click="calcOperator += ' / '" class="w-12 h-12 flex items-center justify-center bg-slate-50 hover:bg-blue-600 hover:text-white hover:border-blue-600 border border-slate-200 text-slate-700 rounded-xl text-lg font-bold transition-all duration-150 shadow-sm">/</button>
-                            <button type="button" @click="calcOperator += ' ( '" class="w-12 h-12 flex items-center justify-center bg-slate-50 hover:bg-blue-600 hover:text-white hover:border-blue-600 border border-slate-200 text-slate-700 rounded-xl text-lg font-bold transition-all duration-150 shadow-sm">(</button>
-                            <button type="button" @click="calcOperator += ' ) '" class="w-12 h-12 flex items-center justify-center bg-slate-50 hover:bg-blue-600 hover:text-white hover:border-blue-600 border border-slate-200 text-slate-700 rounded-xl text-lg font-bold transition-all duration-150 shadow-sm">)</button>
-                            
-                            <!-- Backspace button -->
-                            <button type="button" @click="calcOperator = calcOperator.trim().includes(' ') ? calcOperator.trim().substring(0, calcOperator.trim().lastIndexOf(' ')) + ' ' : ''" class="px-4 h-12 flex items-center justify-center bg-slate-50 hover:bg-amber-600 hover:text-white hover:border-amber-600 border border-slate-200 text-slate-600 rounded-xl text-sm font-semibold transition-all duration-150 shadow-sm">
-                                <i class="fa-solid fa-delete-left mr-1.5 text-base"></i> Backspace
-                            </button>
+                        <!-- Notice & Lock Button Row -->
+                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                            <!-- Left: Info Notice (shown only when locked) -->
+                            <div x-show="isLocked" class="text-xs text-blue-700 font-semibold bg-blue-50/50 border border-blue-100 rounded-xl p-3 flex items-start gap-2.5 flex-1">
+                                <i class="fa-solid fa-circle-info text-sm mt-0.5 text-blue-500"></i>
+                                <div>
+                                    <span class="font-bold">Locked Mode Active:</span>
+                                    <span class="font-normal text-slate-600">Click on the Component boxes above to insert them into the formula.</span>
+                                </div>
+                            </div>
+                            <div x-show="!isLocked" class="flex-1"></div> <!-- Spacer when unlocked -->
+
+                            <!-- Right: Lock Button -->
+                            <div class="shrink-0 flex justify-end">
+                                <button type="button" @click="isLocked = !isLocked" class="px-5 py-2.5 rounded-xl text-sm font-semibold transition-all flex items-center gap-2 border shadow-sm"
+                                    :class="isLocked 
+                                        ? 'bg-blue-600 border-blue-600 text-white hover:bg-blue-700 hover:border-blue-700' 
+                                        : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'">
+                                    <span x-show="isLocked" class="flex items-center gap-2">
+                                        <i class="fa-solid fa-lock"></i> Unlock Component
+                                    </span>
+                                    <span x-show="!isLocked" class="flex items-center gap-2">
+                                        <i class="fa-solid fa-lock-open"></i> Lock Component
+                                    </span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Formula Editor Section (shown when locked) -->
+                        <div x-show="isLocked" class="pt-4 border-t border-slate-100 space-y-4">
+                            <div>
+                                <label class="block text-base font-bold text-slate-800 mb-2">Formula Editor</label>
+                                <div class="flex gap-3 items-stretch">
+                                    <textarea id="custom_formula_input" name="calc_operator" x-model="calcOperator" rows="2" class="flex-1 rounded-xl border border-slate-200 p-3.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-slate-50/50 font-normal placeholder-slate-400" placeholder="Click active components above or use the calculator buttons below to build your formula. E.g. [comp_2] + [comp_3]"></textarea>
+                                    <button type="button" @click="calcOperator = ''" class="px-5 bg-white hover:bg-red-50 hover:text-red-600 hover:border-red-200 text-slate-500 border border-slate-200 rounded-xl text-sm font-semibold transition-all shrink-0 flex items-center justify-center">Clear</button>
+                                </div>
+                            </div>
+
+                            <!-- Calculator buttons -->
+                            <div class="flex flex-wrap gap-2.5 items-center">
+                                <button type="button" @click="calcOperator += ' + '" class="w-12 h-12 flex items-center justify-center bg-slate-50 hover:bg-blue-600 hover:text-white hover:border-blue-600 border border-slate-200 text-slate-700 rounded-xl text-lg font-bold transition-all duration-150 shadow-sm">+</button>
+                                <button type="button" @click="calcOperator += ' - '" class="w-12 h-12 flex items-center justify-center bg-slate-50 hover:bg-blue-600 hover:text-white hover:border-blue-600 border border-slate-200 text-slate-700 rounded-xl text-lg font-bold transition-all duration-150 shadow-sm">-</button>
+                                <button type="button" @click="calcOperator += ' * '" class="w-12 h-12 flex items-center justify-center bg-slate-50 hover:bg-blue-600 hover:text-white hover:border-blue-600 border border-slate-200 text-slate-700 rounded-xl text-lg font-bold transition-all duration-150 shadow-sm">*</button>
+                                <button type="button" @click="calcOperator += ' / '" class="w-12 h-12 flex items-center justify-center bg-slate-50 hover:bg-blue-600 hover:text-white hover:border-blue-600 border border-slate-200 text-slate-700 rounded-xl text-lg font-bold transition-all duration-150 shadow-sm">/</button>
+                                <button type="button" @click="calcOperator += ' ( '" class="w-12 h-12 flex items-center justify-center bg-slate-50 hover:bg-blue-600 hover:text-white hover:border-blue-600 border border-slate-200 text-slate-700 rounded-xl text-lg font-bold transition-all duration-150 shadow-sm">(</button>
+                                <button type="button" @click="calcOperator += ' ) '" class="w-12 h-12 flex items-center justify-center bg-slate-50 hover:bg-blue-600 hover:text-white hover:border-blue-600 border border-slate-200 text-slate-700 rounded-xl text-lg font-bold transition-all duration-150 shadow-sm">)</button>
+                                
+                                <!-- Backspace button -->
+                                <button type="button" @click="calcOperator = calcOperator.trim().includes(' ') ? calcOperator.trim().substring(0, calcOperator.trim().lastIndexOf(' ')) + ' ' : ''" class="px-4 h-12 flex items-center justify-center bg-slate-50 hover:bg-amber-600 hover:text-white hover:border-amber-600 border border-slate-200 text-slate-600 rounded-xl text-sm font-semibold transition-all duration-150 shadow-sm">
+                                    <i class="fa-solid fa-delete-left mr-1.5 text-base"></i> Backspace
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>

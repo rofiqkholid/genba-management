@@ -2264,7 +2264,12 @@ class MasterController extends Controller
             for ($i = 1; $i <= 20; $i++) {
                 $data['comp_' . $i] = $request->input('comp_' . $i);
             }
-            $data['calc_operator'] = $request->input('calc_operator');
+            $calcOp = $request->input('calc_operator');
+            if (!empty($calcOp)) {
+                // Normalize C1..C20 or [C1]..[C20] (case-insensitive) to [comp_X]
+                $calcOp = preg_replace('/\[?[Cc](\d+)\]?/', '[comp_$1]', $calcOp);
+            }
+            $data['calc_operator'] = $calcOp;
 
             // Check if exists
             $exists = DB::table('KPIFormula')->where('kpi_list_id', $request->kpi_list_id)->exists();

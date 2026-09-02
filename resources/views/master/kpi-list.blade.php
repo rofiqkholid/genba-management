@@ -589,8 +589,23 @@
                     vals: ['', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''],
                     isLocked: false,
                     calcOperator: '',
-                    appendToken(token) {
-                        this.calcOperator += ' [' + token + '] ';
+                    appendToken(index) {
+                        this.calcOperator += ' C' + index + ' ';
+                    },
+                    appendOperator(op) {
+                        let cur = this.calcOperator.trim();
+                        if (!cur) {
+                            this.calcOperator += ' ' + op + ' ';
+                            return;
+                        }
+                        if (op === '*' || op === '/') {
+                            // If the current expression has + or - and isn't already fully enclosed in (), wrap the entire expression in ()
+                            if ((cur.includes('+') || cur.includes('-')) && !(cur.startsWith('(') && cur.endsWith(')'))) {
+                                this.calcOperator = '(' + cur + ') ' + op + ' ';
+                                return;
+                            }
+                        }
+                        this.calcOperator += ' ' + op + ' ';
                     }
                 }">
                 @csrf
@@ -610,8 +625,11 @@
                                                     ? 'bg-white text-slate-800 cursor-pointer font-semibold hover:bg-slate-50 focus:outline-none focus:ring-0 border-slate-200' 
                                                     : 'bg-slate-50 text-slate-300 cursor-not-allowed border-slate-100 opacity-40 focus:outline-none focus:ring-0')
                                                 : 'bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500'" 
-                                            placeholder="Comp {{ $i }}" class="w-full px-3 py-3 border border-slate-200 rounded-xl text-center text-sm outline-none font-medium transition-all"
-                                            @click="if (isLocked && vals[{{ $i - 1 }}] && vals[{{ $i - 1 }}].trim()) appendToken('comp_{{ $i }}')">
+                                            placeholder="Comp {{ $i }}" class="w-full pl-10 pr-3 py-2.5 border border-slate-200 rounded-xl text-center text-sm outline-none font-medium transition-all"
+                                            @click="if (isLocked && vals[{{ $i - 1 }}] && vals[{{ $i - 1 }}].trim()) appendToken({{ $i }})">
+                                        <span class="absolute left-2.5 top-1/2 -translate-y-1/2 px-1.5 py-0.5 rounded-none bg-slate-700/70 text-white text-[11px] font-semibold tracking-wider pointer-events-none select-none">
+                                            C{{ $i }}
+                                        </span>
                                     </div>
                                 @endfor
                             </div>
@@ -650,19 +668,19 @@
                             <div>
                                 <label class="block text-base font-bold text-slate-800 mb-2">Formula Editor</label>
                                 <div class="flex gap-3 items-stretch">
-                                    <textarea id="custom_formula_input" name="calc_operator" x-model="calcOperator" rows="2" class="flex-1 rounded-xl border border-slate-200 p-3.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-slate-50/50 font-normal placeholder-slate-400" placeholder="Click active components above or use the calculator buttons below to build your formula. E.g. [comp_2] + [comp_3]"></textarea>
+                                    <textarea id="custom_formula_input" name="calc_operator" x-model="calcOperator" rows="2" class="flex-1 rounded-xl border border-slate-200 p-3.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-slate-50/50 font-normal placeholder-slate-400" placeholder="Click active components above or use the calculator buttons below to build your formula. E.g. C2 * C3 + C4"></textarea>
                                     <button type="button" @click="calcOperator = ''" class="px-5 bg-white hover:bg-red-50 hover:text-red-600 hover:border-red-200 text-slate-500 border border-slate-200 rounded-xl text-sm font-semibold transition-all shrink-0 flex items-center justify-center">Clear</button>
                                 </div>
                             </div>
 
                             <!-- Calculator buttons -->
                             <div class="flex flex-wrap gap-2.5 items-center">
-                                <button type="button" @click="calcOperator += ' + '" class="w-12 h-12 flex items-center justify-center bg-slate-50 hover:bg-blue-600 hover:text-white hover:border-blue-600 border border-slate-200 text-slate-700 rounded-xl text-lg font-bold transition-all duration-150 shadow-sm">+</button>
-                                <button type="button" @click="calcOperator += ' - '" class="w-12 h-12 flex items-center justify-center bg-slate-50 hover:bg-blue-600 hover:text-white hover:border-blue-600 border border-slate-200 text-slate-700 rounded-xl text-lg font-bold transition-all duration-150 shadow-sm">-</button>
-                                <button type="button" @click="calcOperator += ' * '" class="w-12 h-12 flex items-center justify-center bg-slate-50 hover:bg-blue-600 hover:text-white hover:border-blue-600 border border-slate-200 text-slate-700 rounded-xl text-lg font-bold transition-all duration-150 shadow-sm">*</button>
-                                <button type="button" @click="calcOperator += ' / '" class="w-12 h-12 flex items-center justify-center bg-slate-50 hover:bg-blue-600 hover:text-white hover:border-blue-600 border border-slate-200 text-slate-700 rounded-xl text-lg font-bold transition-all duration-150 shadow-sm">/</button>
-                                <button type="button" @click="calcOperator += ' ( '" class="w-12 h-12 flex items-center justify-center bg-slate-50 hover:bg-blue-600 hover:text-white hover:border-blue-600 border border-slate-200 text-slate-700 rounded-xl text-lg font-bold transition-all duration-150 shadow-sm">(</button>
-                                <button type="button" @click="calcOperator += ' ) '" class="w-12 h-12 flex items-center justify-center bg-slate-50 hover:bg-blue-600 hover:text-white hover:border-blue-600 border border-slate-200 text-slate-700 rounded-xl text-lg font-bold transition-all duration-150 shadow-sm">)</button>
+                                <button type="button" @click="appendOperator('+')" class="w-12 h-12 flex items-center justify-center bg-slate-50 hover:bg-blue-600 hover:text-white hover:border-blue-600 border border-slate-200 text-slate-700 rounded-xl text-lg font-bold transition-all duration-150 shadow-sm">+</button>
+                                <button type="button" @click="appendOperator('-')" class="w-12 h-12 flex items-center justify-center bg-slate-50 hover:bg-blue-600 hover:text-white hover:border-blue-600 border border-slate-200 text-slate-700 rounded-xl text-lg font-bold transition-all duration-150 shadow-sm">-</button>
+                                <button type="button" @click="appendOperator('*')" class="w-12 h-12 flex items-center justify-center bg-slate-50 hover:bg-blue-600 hover:text-white hover:border-blue-600 border border-slate-200 text-slate-700 rounded-xl text-lg font-bold transition-all duration-150 shadow-sm">*</button>
+                                <button type="button" @click="appendOperator('/')" class="w-12 h-12 flex items-center justify-center bg-slate-50 hover:bg-blue-600 hover:text-white hover:border-blue-600 border border-slate-200 text-slate-700 rounded-xl text-lg font-bold transition-all duration-150 shadow-sm">/</button>
+                                <button type="button" @click="appendOperator('(')" class="w-12 h-12 flex items-center justify-center bg-slate-50 hover:bg-blue-600 hover:text-white hover:border-blue-600 border border-slate-200 text-slate-700 rounded-xl text-lg font-bold transition-all duration-150 shadow-sm">(</button>
+                                <button type="button" @click="appendOperator(')')" class="w-12 h-12 flex items-center justify-center bg-slate-50 hover:bg-blue-600 hover:text-white hover:border-blue-600 border border-slate-200 text-slate-700 rounded-xl text-lg font-bold transition-all duration-150 shadow-sm">)</button>
                                 
                                 <!-- Backspace button -->
                                 <button type="button" @click="calcOperator = calcOperator.trim().includes(' ') ? calcOperator.trim().substring(0, calcOperator.trim().lastIndexOf(' ')) + ' ' : ''" class="px-4 h-12 flex items-center justify-center bg-slate-50 hover:bg-amber-600 hover:text-white hover:border-amber-600 border border-slate-200 text-slate-600 rounded-xl text-sm font-semibold transition-all duration-150 shadow-sm">
@@ -1189,7 +1207,11 @@
                     const alpineData = window.Alpine.$data(formEl);
                     if (alpineData) {
                         const hasFormula = formula.calc_operator !== null && formula.calc_operator !== undefined && formula.calc_operator.trim() !== '';
-                        alpineData.calcOperator = hasFormula ? formula.calc_operator : '';
+                        let rawOp = hasFormula ? formula.calc_operator : '';
+                        if (rawOp) {
+                            rawOp = rawOp.replace(/\[?comp_(\d+)\]?/g, 'C$1');
+                        }
+                        alpineData.calcOperator = rawOp;
                         alpineData.isLocked = hasFormula;
                         for (let i = 1; i <= 20; i++) {
                             alpineData.vals[i - 1] = formula['comp_' + i] !== null && formula['comp_' + i] !== undefined ? formula['comp_' + i] : '';
